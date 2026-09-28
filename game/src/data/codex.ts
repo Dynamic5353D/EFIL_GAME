@@ -125,4 +125,28 @@ export const CODEX: Record<string, CodexEntry> = {
       'In his head he is fast, brave and funny under pressure, and the girl says "Ragul, you\'re amazing". In the room, a mirror lies in pieces on the floor.',
       'Avan thalaikkulla avan vegamaanavan, dhairiyasaali, nerukkadila kooda comedy, andha ponnu "Ragul, kalakkura" solraa. Room-la, oru kannaadi thundu thundaa tharaila.'),
   },
+  p01_lullaby: {
+    id: 'p01_lullaby',
+    title: loc('The lullaby', 'Thaalaattu'),
+    art: 'gen:house_night',
+    text: loc(
+      'Her mother hummed it every night in the old house. When Dhanasree was eight, she took off her bracelet and put it in her hands: "As long as this is safe, Amma is with you."',
+      'Pazhaya veettula amma dhinamum raathiri munumunuppaa. Dhanasree-ku ettu vayasu irukkumbodhu, than bracelet-a kazhatti aval kaila vechaa: "Idhu bathrama evlo naal iruko, avlo naal amma un-kooda irupan."'),
+  },
+  p01_locket: {
+    id: 'p01_locket',
+    title: loc('The lotus locket', 'Thaamarai locket'),
+    art: 'gen:restroom',
+    text: loc(
+      'Her father\'s gift when she left for college: "A lotus is a symbol of growth and the ability to heal. As long as it\'s with you, you\'ll keep healing."',
+      'College-ku kelambumbodhu appa kodutha parisu: "A lotus is a symbol of growth and ability to heal. Indha lotus un-kooda irukura varaikum, you\'ll continue to heal."'),
+  },
+  p01_stronger: {
+    id: 'p01_stronger',
+    title: loc('"Stronger than you think"', '"Nee nenaikuradha vida strong"'),
+    art: 'gen:corridor_day',
+    text: loc(
+      'Through a locked door: "You chose to stay in a hostel and study, with all this. That shows your strength. The first step is yours to take. And it can be now." The lock clicked open.',
+      'Poottina kadhavu vazhiya: "Ipdi oru prechana irundhum nee hostel-la thangi padikira-nu decision yedhuthuruka. That shows your strength. Andha first step nee yeduthu-dhaan aganum. And it can be now." Poottu thirandhuchu.'),
+  },
 };

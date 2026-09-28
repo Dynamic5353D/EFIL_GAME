@@ -5,6 +5,7 @@ import '@fontsource/cormorant-garamond/500.css';
 import '@fontsource/cormorant-garamond/500-italic.css';
 import '@fontsource/cormorant-garamond/600.css';
 import Phaser from 'phaser';
+import { effectOf } from './battle/WordCore';
 import { audio } from './core/AudioSynth';
 import { input } from './core/Input';
 import { session } from './core/Session';
@@ -38,4 +39,5 @@ const game = new Phaser.Game({
 // Input is polled once per frame, before any scene updates.
 game.events.on(Phaser.Core.Events.PRE_STEP, () => input.update());
 
-if (import.meta.env.DEV) Object.assign(window, { game, __efil_state: () => session.state });
+// Dev builds expose the game for automated play-throughs (tools in the test scratchpad).
+if (import.meta.env.DEV) Object.assign(window, { game, __efil_state: () => session.state, __efil_word: { effectOf } });

@@ -71,6 +71,17 @@ function hostelRoad(): RoomDef {
   b.at(98, 13, { type: 'pickup', id: 'p01_airpods', script: V(1), label: 'airpods', visual: 'fragment' });
   b.at(104, 17, { type: 'trigger', id: 'monologue', script: V(1), label: 'monologue', requires: 'v01_passed_krishnaa', unless: 'v01_monologue', height: 8 });
   b.at(110, 17, { type: 'prop', visual: 'lamp' });
+  // Venture 11: the hostel gate during the fire. The bin, the jeep, Ramanan; then Nithish gives chase (to the right).
+  b.at(30, 17, { type: 'spawn', id: 'gate' });
+  b.at(24, 17, { type: 'hide', id: 'gate_bin', visual: 'bin' });
+  b.at(14, 17, { type: 'prop', visual: 'jeep', requires: 'v11_gate', hideIf: 'v11_done' });
+  b.at(18, 17, { type: 'npc', id: 'ramanan_v11', speaker: 'ramanan', radius: 0, face: 1, requires: 'v11_gate', hideIf: 'v11_ramanan_down' });
+  b.at(18, 17, { type: 'npc', id: 'ramanan_down', speaker: 'ramanan', radius: 0, pose: 'ko', requires: 'v11_ramanan_down', hideIf: 'v11_done' });
+  b.at(12, 17, { type: 'npc', id: 'nithish_jeep', speaker: 'nithish', radius: 0, face: 1, cuffed: true, requires: 'v11_gate', hideIf: 'v11_chase' });
+  b.at(26, 17, { type: 'trigger', id: 'v11_bin', script: V(11), label: 'bin', requires: 'v11_gate', unless: 'v11_went_out', height: 6 });
+  b.at(13, 17, { type: 'chaser', id: 'nithish_chase', rig: 'nithish', speed: 300, delay: 1.0, requires: 'v11_chase', unless: 'v11_done' });
+  b.at(21, 17, { type: 'section', id: 'chase_start' });
+  b.at(118, 17, { type: 'trigger', id: 'chase_meanwhile', script: V(11), label: 'meanwhile', requires: 'v11_chase', unless: 'v11_door_open', height: 8 });
   // Venture 3: the veranda at night, the restroom and Subramani.
   b.at(8, 17, { type: 'spawn', id: 'veranda' });
   b.at(10, 17, { type: 'npc', id: 'nithish_veranda', speaker: 'nithish', radius: 0, pose: 'sit', requires: 'v03_veranda', hideIf: 'v03_done' });
@@ -109,6 +120,15 @@ function cutRoad(): RoomDef {
   b.at(46, 17, { type: 'prop', visual: 'lying', requires: 'v01_left_room', hideIf: 'v01_passed_body' });
   b.at(38, 17, { type: 'trigger', id: 'man', script: V(1), label: 'man', requires: 'v01_monologue', unless: 'v01_passed_body', height: 6 });
   b.at(92, 17, { type: 'npc', id: 'red_shirt', speaker: 'guy', rig: 'red_shirt', radius: 0, face: 1, requires: 'v01_monologue', hideIf: 'v01_passed_body' });
+  // Venture 11: the chase ends where the first body lay. Venture 12: the standoff.
+  b.at(9, 17, { type: 'spawn', id: 'chase_in' });
+  b.at(1, 17, { type: 'chaser', id: 'nithish_chase_cut', rig: 'nithish', speed: 300, delay: 1.2, requires: 'v11_chase', unless: 'v11_done' });
+  b.at(9, 17, { type: 'section', id: 'cut_chase' });
+  b.at(44, 17, { type: 'trigger', id: 'nithish_trips', script: V(11), label: 'trips', requires: 'v11_chase', unless: 'v11_done', height: 8 });
+  b.at(42, 17, { type: 'npc', id: 'nithish_down', speaker: 'nithish', radius: 0, pose: 'kneel', cuffed: true, requires: 'v11_done', hideIf: 'v12_fled' });
+  b.at(36, 17, { type: 'npc', id: 'rajesh_standoff', speaker: 'rajesh', radius: 0, face: 1, requires: 'v11_done', hideIf: 'v12_fled' });
+  b.at(60, 17, { type: 'npc', id: 'ragul_standoff', speaker: 'ragul', radius: 0, face: -1, requires: 'v11_done', hideIf: 'v12_fled' });
+  b.at(55, 17, { type: 'npc', id: 'dharshna_standoff', speaker: 'dharshna', radius: 0, face: -1, requires: 'v11_done', hideIf: 'v12_fled' });
   // After the first death the spot stays taped off for a few days.
   b.at(46, 17, { type: 'prop', visual: 'tape', requires: 'v01_fest_cancelled', hideIf: 'v06_started' });
   b.at(66, 17, { type: 'prop', visual: 'lamp' });
@@ -154,6 +174,8 @@ function mitRoad(): RoomDef {
   for (const [x, rig] of [[52, 'girl'], [55, 'guy'], [58, 'sneya'], [79, 'guy'], [82, 'girl'], [85, 'kabi']] as const) {
     b.at(x, 17, { type: 'npc', id: `crowd_${x}`, speaker: 'guy', rig, radius: 0, requires: 'v01_flashmob', hideIf: 'v01_fest_cancelled' });
   }
+  // Venture 12: Nithish reaches Rajam Hall.
+  b.at(40, 17, { type: 'trigger', id: 'rajam_final', script: V(12), label: 'rajam', requires: 'v12_slipped', unless: 'v12_snap', height: 8 });
   // Venture 5: the walk at dusk, Pranav and Krishnaa on the bike.
   b.at(84, 17, { type: 'trigger', id: 'pranav_call', script: V(5), label: 'pranav_call', requires: 'v05_walk', unless: 'v05_pranav_called', height: 6 });
   b.at(98, 17, { type: 'prop', visual: 'bike', requires: 'v05_pranav_called', hideIf: 'v05_left_pranav', flip: true });
@@ -377,5 +399,109 @@ function daydream(): RoomDef {
   });
 }
 
-export const P01_ROOMS: RoomDef[] = [hostelRoom(), hostelRoad(), cutRoad(), mitRoad(), snowDream(), cheeseFreeze(), radhaNagar(), backGate(), dhanaHouse(), daydream()];
+/** Hangar 1 and the plane yard (V9 flashback, V12): the rusty vehicle, old fighter planes, the maintenance shed, the wall gap. */
+function hangarYard(): RoomDef {
+  const b = new RoomBuilder(132, 22);
+  b.ground(0, 132, 18);
+  b.ground(116, 2, 15);                  // crates stacked below the gap
+  b.rect(120, 3, 2, 15);                 // the wall...
+  b.rect(120, 9, 2, 3, '.');             // ...with a gap in it
+  b.ground(124, 2, 15);                  // steps back up on the far side
+  b.at(3, 17, { type: 'spawn', id: 'west' });
+  b.at(0, 17, { type: 'exit', id: 'to_mit', to: 'mit_road', entry: 'east', height: 6 });
+  b.at(127, 17, { type: 'spawn', id: 'far_side' });
+  b.at(8, 17, { type: 'sign', text: loc('Hangar 1', 'Hangar 1') });
+  b.at(30, 17, { type: 'prop', visual: 'jeep' });
+  b.at(30, 17, { type: 'use', id: 'rusty_vehicle', items: [], script: V(9), label: 'jeep', prompt: loc('Search the rusty vehicle', 'Thuru vandiya thedu'), requires: 'flashback', unless: 'v09_gun_found' });
+  b.at(52, 17, { type: 'hide', id: 'plane_a', visual: 'plane' });
+  b.at(70, 17, { type: 'hide', id: 'plane_b', visual: 'plane' });
+  b.at(86, 17, { type: 'hide', id: 'banner', visual: 'banner' });
+  b.at(101, 17, { type: 'prop', visual: 'shed' });
+  b.at(4, 17, { type: 'chaser', id: 'hangar_cop', rig: 'police', speed: 300, delay: 1.5, requires: 'v09_gun_found', unless: 'v09_wall' });
+  b.at(121, 11, { type: 'trigger', id: 'wall_gap', script: V(9), label: 'wall_gap', requires: 'v09_gun_found', unless: 'v09_wall', height: 3 });
+  b.at(28, 17, { type: 'section', id: 'jeep' });
+  // Venture 12: the plane yard as Nithish.
+  b.at(68, 17, { type: 'spawn', id: 'yard' });
+  b.at(68, 17, { type: 'section', id: 'yard' });
+  b.at(56, 17, { type: 'guard', id: 'officer4', rig: 'police', patrol: 6, range: 8, facing: 1, speed: 60, requires: 'v12_planes', hideIf: 'v12_slipped' });
+  b.at(92, 17, { type: 'guard', id: 'officer5', rig: 'police', patrol: 5, range: 8, facing: -1, speed: 55, requires: 'v12_planes', hideIf: 'v12_slipped' });
+  b.at(78, 17, { type: 'section', id: 'banner' });
+  b.at(104, 17, { type: 'use', id: 'shed_search', items: [], script: V(12), label: 'shed', prompt: loc('Search the shed', 'Shed-a thedu'), requires: 'v12_planes', unless: 'v12_have_things' });
+  b.at(97, 17, { type: 'use', id: 'pour_oil', items: ['oil_can'], script: V(12), label: 'oil', prompt: loc('Pour the oil', 'Oil-a oothu'), requires: 'v12_have_things', unless: 'v12_oiled' });
+  b.at(106, 17, { type: 'use', id: 'tie_rope', items: ['rope'], script: V(12), label: 'rope', prompt: loc('Tie the rope inside', 'Ulla kayiru kattu'), requires: 'v12_oiled', unless: 'v12_roped' });
+  b.at(110, 17, { type: 'trigger', id: 'decoy', script: V(12), label: 'decoy', requires: 'v12_roped', unless: 'v12_slipped', height: 6 });
+  for (const x of [16, 44, 76, 112]) b.at(x, 17, { type: 'prop', visual: 'lamp' });
+  return finish(b, {
+    id: 'hangar_yard', name: loc('Hangar 1', 'Hangar 1'), area: 'mit',
+    backdrop: 'gen:hangar_day', palette: 'gen:hangar_day', music: 'stealth', ambient: 0xc8c0b0,
+    grade: { brightness: 1.02, saturation: 0.95, contrast: 0.07 }, weather: ['dust'], terrain: 'concrete',
+    scenery: { trees: 'palm', density: 0.5, ridge: false, icicles: false },
+    mapPos: { x: 22, y: 4, w: 7, h: 2 },
+    variants: [{ flag: 'hangar_rain', backdrop: 'gen:hangar_rain', music: 'chase', weather: ['rain', 'mist'], ambient: 0x6a7a98,
+      grade: { brightness: 0.92, saturation: 0.85, contrast: 0.08, tint: 0x8aa8d8, tintAmount: 0.1 } }],
+  });
+}
+
+/** The NRI girls' hostel on fire (V10): a burning corridor, Dharshna running for the stairs. */
+function nriHostel(): RoomDef {
+  const b = new RoomBuilder(70, 18);
+  b.rect(0, 0, 2, 18).rect(68, 0, 2, 18);
+  b.ground(2, 66, 15);
+  // Burning debris and fallen ceiling: fire on the floor to jump, a ledge to cross over the worst of it.
+  b.rect(52, 14, 3, 1, 'x');
+  b.rect(40, 14, 2, 1, 'x');
+  b.ground(33, 3, 14);
+  b.rect(24, 14, 5, 1, 'x');
+  b.rect(22, 10, 9, 1, '=');
+  b.rect(12, 14, 2, 1, 'x');
+  b.at(62, 14, { type: 'spawn', id: 'room' });
+  b.at(64, 14, { type: 'prop', visual: 'door' });
+  b.at(58, 14, { type: 'section', id: 'room_door' });
+  b.at(36, 13, { type: 'section', id: 'middle' });
+  b.at(6, 14, { type: 'section', id: 'stairs' });
+  b.at(4, 14, { type: 'trigger', id: 'out', script: V(10), label: 'out', requires: 'v10_fire', unless: 'v10_out', height: 6 });
+  b.at(3, 14, { type: 'prop', visual: 'door' });
+  return finish(b, {
+    id: 'nri_hostel', name: loc('NRI girls\' hostel', 'NRI girls hostel'), area: 'mit',
+    backdrop: 'gen:hostel_fire', palette: 'gen:hostel_fire', music: 'fire', ambient: 0xff9a5a,
+    grade: { brightness: 1.0, saturation: 1.1, contrast: 0.1, tint: 0xff8a3a, tintAmount: 0.1 }, weather: ['smoke', 'embers'], interior: true, terrain: 'tile',
+    scenery: { trees: 'none', density: 1, ridge: false, icicles: false },
+    mapPos: { x: 10, y: 3, w: 4, h: 2 },
+  });
+}
+
+/** The Department of Applied Science and Humanities (V10-V12): two floors, the girls' restroom, the big door upstairs. */
+function humanities(): RoomDef {
+  const b = new RoomBuilder(64, 24);
+  b.rect(0, 0, 2, 16).rect(62, 0, 2, 24);   // the entrance is open on the left
+  b.ground(0, 62, 21);
+  b.rect(14, 12, 48, 2);                  // the first floor
+  b.rect(4, 18, 3, 1, '=').rect(8, 15, 3, 1, '=');   // the stairs up
+  b.rect(11, 12, 3, 1, '=');
+  b.at(4, 20, { type: 'spawn', id: 'entrance' });
+  b.at(0, 20, { type: 'exit', id: 'to_hangar', to: 'hangar_yard', entry: 'west', height: 6 });
+  b.at(20, 11, { type: 'spawn', id: 'upstairs' });
+  b.at(8, 20, { type: 'sign', text: loc('Dept. of Applied Science and Humanities', 'Science & Humanities') });
+  b.at(44, 20, { type: 'prop', visual: 'door' });
+  b.at(46, 20, { type: 'sign', text: loc('Girls\' restroom', 'Girls restroom') });
+  b.at(42, 20, { type: 'trigger', id: 'restroom_v10', script: V(10), label: 'restroom', requires: 'v10_out', unless: 'v10_locked', height: 6 });
+  b.at(40, 20, { type: 'trigger', id: 'restroom_v11', script: V(11), label: 'restroom', requires: 'v11_find_dharshna', unless: 'v11_door_open', height: 6 });
+  // Venture 12: hiding upstairs behind the big door while the police search.
+  b.at(36, 11, { type: 'hide', id: 'big_door', visual: 'door', w: 3 });
+  b.at(30, 11, { type: 'trigger', id: 'police_in', script: V(12), label: 'police_in', requires: 'v12_hum', unless: 'v12_search', height: 4 });
+  b.at(26, 11, { type: 'section', id: 'upper' });
+  b.at(50, 11, { type: 'guard', id: 'search_a', rig: 'police', patrol: 8, range: 9, facing: -1, speed: 60, requires: 'v12_search', hideIf: 'v12_escaped_hum' });
+  b.at(30, 20, { type: 'guard', id: 'search_b', rig: 'police', patrol: 6, range: 8, facing: 1, speed: 50, requires: 'v12_search', hideIf: 'v12_escaped_hum' });
+  b.at(3, 20, { type: 'trigger', id: 'hum_escape', script: V(12), label: 'hum_escape', requires: 'v12_search', unless: 'v12_escaped_hum', height: 6 });
+  for (const x of [20, 34, 52]) b.at(x, 20, { type: 'prop', visual: 'lamp', scale: 0.6 });
+  return finish(b, {
+    id: 'humanities', name: loc('Science & Humanities', 'Science & Humanities'), area: 'mit',
+    backdrop: 'gen:corridor_day', palette: 'gen:corridor_day', music: 'mystery', ambient: 0xd8d0b8,
+    grade: INDOOR, weather: ['dust'], interior: true, terrain: 'tile',
+    scenery: { trees: 'none', density: 1, ridge: false, icicles: false },
+    mapPos: { x: 14, y: 3, w: 4, h: 3 },
+  });
+}
+
+export const P01_ROOMS: RoomDef[] = [hostelRoom(), hostelRoad(), cutRoad(), mitRoad(), snowDream(), cheeseFreeze(), radhaNagar(), backGate(), dhanaHouse(), daydream(), hangarYard(), nriHostel(), humanities()];
 export const P01_AREA = { name: loc('MIT Chromepet', 'MIT Chromepet'), rooms: P01_ROOMS.map((r) => r.id) };

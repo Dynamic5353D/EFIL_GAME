@@ -41,6 +41,8 @@ export interface StoryStage {
   warp(entry: string): void;
   /** Saves the game where the player stands. */
   save(): void;
+  /** Rolls the credits and returns to the title. */
+  credits(): void;
 }
 
 export class Director implements StoryHost {
@@ -194,6 +196,7 @@ export class Director implements StoryHost {
         break;
       }
       case 'next': this.chain = a; break;
+      case 'credits': this.dialogue.hide(); this.stage.credits(); this.cancelled = true; break;
       case 'add': st.flags[a] = (Number(st.flags[a]) || 0) + (Number(args[1]) || 1); break;
       case 'save':
         st.resume = { script: this.script, label: a };

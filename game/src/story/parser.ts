@@ -89,6 +89,8 @@ export const COMMANDS: Record<string, { min: number; max: number }> = {
   next: { min: 1, max: 1 },
   /** Saves, so loading resumes this script at the given label. */
   save: { min: 1, max: 1 },
+  /** Ends the act: the credits roll, then the title screen. */
+  credits: { min: 0, max: 0 },
   /** Adds to a numeric flag: `@add v04_asked` (1) or `@add score 5`. */
   add: { min: 1, max: 2 },
 };

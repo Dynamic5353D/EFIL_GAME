@@ -299,6 +299,36 @@ function fragment(scene: Phaser.Scene) {
   addCanvas(scene, 'icon:gen:fragment', c);
 }
 
+/** Small item icons for Act I (a gun, an oil can, a rope) and the clue pin. */
+function earthIcons(scene: Phaser.Scene) {
+  const icon = (key: string, draw: (g: CanvasRenderingContext2D) => void) => {
+    const { c, g } = canvas(128, 128);
+    draw(g);
+    addCanvas(scene, key, c);
+  };
+  icon('icon:gen:gun', (g) => {
+    g.fillStyle = '#1e2228'; g.strokeStyle = '#9fb4cc'; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(18, 44); g.lineTo(110, 44); g.lineTo(110, 62); g.lineTo(58, 62); g.lineTo(50, 104); g.lineTo(28, 104); g.lineTo(36, 62); g.lineTo(18, 62); g.closePath(); g.fill(); g.stroke();
+    g.strokeRect(58, 62, 14, 16);
+  });
+  icon('icon:gen:oil', (g) => {
+    g.fillStyle = '#7a5a1a'; g.strokeStyle = '#ffd98a'; g.lineWidth = 3;
+    g.fillRect(34, 38, 60, 72); g.strokeRect(34, 38, 60, 72);
+    g.fillRect(52, 22, 24, 16); g.strokeRect(52, 22, 24, 16);
+    g.fillStyle = '#2a1a08'; g.beginPath(); g.ellipse(64, 74, 14, 18, 0, 0, Math.PI * 2); g.fill();
+  });
+  icon('icon:gen:rope', (g) => {
+    g.strokeStyle = '#c8a870'; g.lineWidth = 9;
+    for (let i = 0; i < 4; i++) { g.beginPath(); g.ellipse(64, 64, 42 - i * 9, 30 - i * 6, 0, 0, Math.PI * 2); g.stroke(); }
+    g.beginPath(); g.moveTo(100, 70); g.quadraticCurveTo(118, 96, 104, 118); g.stroke();
+  });
+  icon('icon:gen:clue', (g) => {
+    g.fillStyle = '#e8dcc0'; g.fillRect(24, 30, 80, 78);
+    g.fillStyle = '#6a5a40'; for (let i = 0; i < 4; i++) g.fillRect(34, 50 + i * 12, 60 - (i % 2) * 18, 5);
+    g.fillStyle = '#d84040'; g.beginPath(); g.arc(64, 30, 10, 0, Math.PI * 2); g.fill();
+  });
+}
+
 export function generateTextures(scene: Phaser.Scene): void {
   for (const id of Object.keys(CHARACTERS) as MemberId[]) {
     if (!hasOverride(`portraits/${id}.webp`)) addCanvas(scene, `portrait:gen:${id}`, drawPortrait(rigStyle(id)));
@@ -323,6 +353,7 @@ export function generateTextures(scene: Phaser.Scene): void {
   g.fillStyle = '#fff';
   g.fillRect(0, 0, 4, 4);
   addCanvas(scene, 'fx:px', c);
+  earthIcons(scene);
   // A rain streak and a small petal (tinted per use).
   {
     const { c, g } = canvas(4, 40);

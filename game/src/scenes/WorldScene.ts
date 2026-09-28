@@ -208,6 +208,7 @@ export class WorldScene extends Phaser.Scene {
       },
       warp: (entry) => this.warp(entry),
       save: () => this.autosave(),
+      credits: () => this.rollCredits(),
     };
     this.director = new Director(stage);
     audio.music(r.music);
@@ -679,6 +680,22 @@ export class WorldScene extends Phaser.Scene {
     this.section = { x: p.x, y: p.y };
     this.trail = [];
     this.cameras.main.centerOn(p.x, p.y - 70);
+  }
+
+  /** The end of an act: credits over a dark screen, then the title. */
+  rollCredits() {
+    this.leaving = true;
+    this.player.locked = true;
+    audio.music('title');
+    this.scene.setVisible(false, 'Hud');
+    this.scene.launch('Credits', {
+      onClose: () => {
+        this.scene.stop('Hud');
+        this.scene.stop('Dialogue');
+        this.scene.start('Title');
+      },
+    });
+    this.scene.bringToTop('Credits');
   }
 
   /** `@save`: saves where the player stands; the resume point was set by the script. */
