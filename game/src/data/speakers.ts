@@ -21,6 +21,11 @@ export const SPEAKERS: Record<string, SpeakerDef> = {
   kin: { id: 'kin', name: loc('Kin'), portrait: 'kin', color: 0xffc8d8 },
 
   // ---------------------------------------------------------------- Earth (Act I)
+  // Venture 1 doesn't name its two leads yet: "that guy" is Ragul, "Guy 1" is Nithish.
+  that_guy: { id: 'that_guy', name: loc('That guy', 'Andha paiyan'), portrait: 'gen:ragul', color: 0x7fd4ff },
+  guy1: { id: 'guy1', name: loc('Guy 1', 'Paiyan 1'), portrait: 'gen:nithish', color: 0xff8a8a },
+  guy1_mother: { id: 'guy1_mother', name: loc('His mother (on the phone)', 'Avan amma (phone-la)'), portrait: null, color: 0xe8c8a8 },
+  kfriend: { id: 'kfriend', name: loc('Krishnaa\'s friend', 'Krishnaa friend'), portrait: 'gen:guy', color: 0xc0a890 },
   arun: { id: 'arun', name: loc('Arun'), portrait: 'gen:arun', color: 0x9cc4ff },
   krishnaa: { id: 'krishnaa', name: loc('Krishnaa'), portrait: 'gen:krishnaa', color: 0xff9f7a },
   kabi: { id: 'kabi', name: loc('Kabi'), portrait: 'gen:kabi', color: 0xd8c27a },

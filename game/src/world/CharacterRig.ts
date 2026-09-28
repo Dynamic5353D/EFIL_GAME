@@ -7,7 +7,7 @@
 import Phaser from 'phaser';
 import { rigStyle, type Hair, type RigStyle } from '../data/rigs';
 
-export type RigState = 'idle' | 'run' | 'jump' | 'fall' | 'dash' | 'hurt' | 'attack' | 'interact' | 'battle' | 'cast' | 'ko';
+export type RigState = 'idle' | 'run' | 'jump' | 'fall' | 'dash' | 'hurt' | 'attack' | 'interact' | 'battle' | 'cast' | 'ko' | 'dance' | 'sit' | 'kneel';
 
 interface Pose {
   lean: number; bob: number; head: number;
@@ -46,6 +46,8 @@ export class CharacterRig {
   vy = 0;
   alpha = 1;
   flash = 0;
+  /** Hands cuffed together in front (Nithish, Ventures 11-12). */
+  cuffed = false;
   private readonly body: number;
   private readonly rim: number;
   private readonly vein: number;
@@ -108,6 +110,18 @@ export class CharacterRig {
         return { ...ZERO, lean: 0.1, bob: -1, thighF: 0.3, shinF: 0.1, thighB: -0.3, shinB: -0.4, armF: 1.9, foreF: 1.7, armB: 1.2, foreB: 1.6, head: -0.15 };
       case 'ko':
         return { ...ZERO, lean: 1.3, bob: 22, thighF: 1.4, shinF: -0.4, thighB: 1.2, shinB: -1.2, armF: 0.9, foreF: 0.4, armB: 0.4, foreB: 0.2, head: 0.5 };
+      case 'dance': {
+        const b = Math.sin(this.t * 7.8), c = Math.cos(this.t * 3.9);
+        return {
+          lean: c * 0.12, bob: Math.abs(b) * 4 - 2, head: -c * 0.15,
+          thighF: 0.25 + b * 0.35, shinF: -0.2 - Math.max(0, b) * 0.5, thighB: -0.2 - b * 0.3, shinB: -0.3 - Math.max(0, -b) * 0.5,
+          armF: -2.2 + c * 0.9, foreF: -2.6 + c * 0.6, armB: -1.4 - c * 0.9, foreB: -1.0 - c * 0.7,
+        };
+      }
+      case 'sit':
+        return { ...ZERO, bob: 16, thighF: 1.5, shinF: 0, thighB: 1.4, shinB: -0.1, armF: 0.6, foreF: 1.3, armB: 0.4, foreB: 1.1, head: 0.2 + Math.sin(this.t * 1.2) * 0.03 };
+      case 'kneel':
+        return { ...ZERO, lean: 0.35, bob: 14, thighF: 1.4, shinF: -0.2, thighB: 0.1, shinB: -1.5, armF: 1.1, foreF: 1.3, armB: 0.6, foreB: 0.9, head: 0.4 };
       case 'battle':
         return { ...ZERO, lean: 0.1, bob: Math.sin(this.t * 2.4) * 1.2, thighF: 0.35, shinF: 0.05, thighB: -0.3, shinB: -0.45, armF: 0.5, foreF: 1.5, armB: 0.3, foreB: 1.3, head: 0 };
       default: {
@@ -123,7 +137,9 @@ export class CharacterRig {
     this.stateTime += dt;
     if (this.state === 'run') this.phase += dt * (6 + Math.abs(this.speed) / 34);
     const snap = this.state === 'attack' || this.state === 'dash' ? 0.6 : 0.25;
-    this.pose = mixPose(this.pose, this.target(), 1 - Math.pow(1 - snap, dt * 60));
+    const tgt = this.target();
+    if (this.cuffed) { tgt.armF = 0.45; tgt.foreF = 1.25; tgt.armB = 0.55; tgt.foreB = 1.35; }
+    this.pose = mixPose(this.pose, tgt, 1 - Math.pow(1 - snap, dt * 60));
     this.flash = Math.max(0, this.flash - dt * 4);
     this.draw(x, y, dt);
   }

@@ -20,7 +20,7 @@ interface MaterialLook { cap: RGB; capShade: RGB; capMin: number; capVar: number
 function materialLook(m: TerrainMaterial, hi: RGB, dom: RGB, sh: RGB): MaterialLook {
   const darkBase: RGB = luma(sh) > 60 ? scaleRgb(sh, 0.45) : sh;
   switch (m) {
-    case 'asphalt': return { cap: mixRgb(dom, [96, 96, 100], 0.6), capShade: mixRgb(dom, [52, 52, 58], 0.6), capMin: 3, capVar: 2, body: mixRgb(darkBase, [70, 58, 48], 0.5), deep: scaleRgb(darkBase, 0.45), strata: 0.06 };
+    case 'asphalt': return { cap: mixRgb(dom, [124, 124, 130], 0.65), capShade: mixRgb(dom, [72, 72, 80], 0.6), capMin: 9, capVar: 1, body: mixRgb(darkBase, [104, 86, 68], 0.6), deep: scaleRgb(mixRgb(darkBase, [70, 56, 44], 0.5), 0.6), strata: 0.08 };
     case 'grass': return { cap: mixRgb([92, 138, 62], hi, 0.2), capShade: mixRgb([48, 84, 40], dom, 0.25), capMin: 4, capVar: 5, body: mixRgb([92, 68, 48], dom, 0.3), deep: scaleRgb(mixRgb([60, 44, 32], darkBase, 0.5), 0.6), strata: 0.08, bright: 0.25 };
     case 'tile': return { cap: mixRgb(hi, [230, 228, 220], 0.4), capShade: mixRgb(dom, hi, 0.4), capMin: 4, capVar: 0, body: mixRgb(dom, darkBase, 0.55), deep: scaleRgb(darkBase, 0.5), strata: 0, seams: 20 };
     case 'wood': return { cap: mixRgb([150, 100, 62], hi, 0.2), capShade: mixRgb([90, 58, 36], dom, 0.2), capMin: 4, capVar: 0, body: mixRgb([74, 50, 34], darkBase, 0.4), deep: scaleRgb(darkBase, 0.5), strata: 0.12, seams: 34 };

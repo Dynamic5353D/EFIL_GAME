@@ -6,4 +6,46 @@ export const FLAGS: Record<string, string> = {
   slice_vale_pack_defeated: 'Test slice: the Vale pack on the Winter Path is gone',
   slice_feather_taken: 'Test slice: the Acanus feather has been picked up',
   won: 'Set by @battle: the last battle was won',
+
+  // ---------------------------------------------------------------- shared state
+  hunger_known: 'Ragul knows about his Soul Hunger (the HUD and battles show it)',
+  truth_known: 'The player knows Ragul framed Nithish (V8): the Case Board shows the truth',
+  ragul_named: '"That guy" has been named: Ragul (V2)',
+  disguised: 'The lead is in disguise: watchers see half as far',
+  nithish_cuffed: 'Nithish is handcuffed (V6 to the Snap)',
+  at_night: 'Rooms use their night look',
+  hostel_fire: 'The NRI hostel is burning (V10-V11): smoke over the campus',
+  mit_dusk: 'The MIT road at dusk (V5)',
+  mit_cloudy: 'The MIT road on the cloudy afternoon (V11-V12)',
+
+  // ---------------------------------------------------------------- Venture 1
+  v01_left_room: 'V1: That guy has left the hostel room',
+  v01_saw_krishnaa: 'V1: he has spotted Krishnaa on the road',
+  v01_passed_krishnaa: 'V1: he got past Krishnaa',
+  v01_monologue: 'V1: the walk to college',
+  v01_passed_body: 'V1: he walked past the man on the road',
+  v01_flashmob: 'V1: the flashmob is on (10:30 AM)',
+  v01_dhana_dance: 'V1: Dhanasree dances',
+  v01_fest_cancelled: 'V1: the fest is cancelled',
+
+  // ---------------------------------------------------------------- Venture 2
+  v02_leaving: 'V2: class is off; leaving Rajam Hall',
+  v02_done: 'V2: Krishnaa has admitted it',
+
+  v03_janani_runs: 'V3: Nithish\'s dream, Janani runs toward the dark',
+  v03_veranda: 'V3: the veranda at night',
+  v03_vomited: 'V3: Ragul threw up in the restroom',
+  v03_touched: 'V3: Ragul held Subramani\'s hand to steady himself',
+  v03_done: 'V3: the veranda talk is over',
+  dizzy: 'The lead is dizzy: slow, swaying walk',
+
+  v04_investigate: 'V4: asking around the IT department',
+  v04_asked_rawin: 'V4: asked Rawin',
+  v04_asked_sneya: 'V4: asked Sneya',
+  v04_asked_security: 'V4: asked the security guard',
+  v04_asked_mahil: 'V4: asked Mahil',
+  v04_asked: 'V4: how many people have been asked',
+  v04_done: 'V4: the questions are done; the library',
+
+  v06_started: 'V6 has begun (the tape on the cut road is gone)',
 };

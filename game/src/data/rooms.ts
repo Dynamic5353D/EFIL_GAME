@@ -1,5 +1,6 @@
 import { loc } from '../core/Localization';
 import { RoomBuilder, type RoomDef } from '../world/RoomDef';
+import { P01_AREA, P01_ROOMS } from './rooms_p01';
 
 const SLICE = 'slice/glacia_slice';
 
@@ -88,8 +89,10 @@ function winterPath(): RoomDef {
 export const ROOMS: Record<string, RoomDef> = {
   frozen_shore: frozenShore(),
   winter_path: winterPath(),
+  ...Object.fromEntries(P01_ROOMS.map((r) => [r.id, r])),
 };
 
 export const AREAS: Record<string, { name: ReturnType<typeof loc>; rooms: string[] }> = {
   glacia_test: { name: loc('Glacia (engine test)'), rooms: ['frozen_shore', 'winter_path'] },
+  mit: P01_AREA,
 };

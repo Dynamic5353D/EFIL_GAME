@@ -63,7 +63,7 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
         const a = n.args[0] ?? '';
         const check = (ok: boolean, what: string) => { if (!ok) bad(n.line, `unknown ${what} "${a}"`); };
         switch (n.name) {
-          case 'scene': check(ctx.scenes.has(a) || EARTH_SCENE_NAMES.includes(a), 'scene (not an environment in asset-manifest.json or an Earth scene)'); break;
+          case 'scene': check(a === 'none' || ctx.scenes.has(a) || EARTH_SCENE_NAMES.includes(a), 'scene (not an environment in asset-manifest.json or an Earth scene)'); break;
           case 'room':
             check(a in ROOMS, 'room');
             if (n.args[2] && !(n.args[2] in script.labels)) bad(n.line, `unknown label "${n.args[2]}"`);
@@ -72,6 +72,7 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
           case 'party': for (const m of n.args) if (!(m in CHARACTERS)) bad(n.line, `unknown party member "${m}"`); break;
           case 'clue': check(a in CLUES, 'clue'); break;
           case 'wordbattle': check(a in WORD_BATTLES, 'word battle'); break;
+          case 'add': checkFlag(a, n.line); break;
           case 'next': if (ctx.scripts && !ctx.scripts.has(a)) bad(n.line, `unknown script "${a}"`); break;
           case 'battle': check(a in BATTLES, 'battle'); break;
           case 'give': case 'take': check(a in ITEMS, 'item'); break;

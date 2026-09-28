@@ -30,6 +30,8 @@ export class Player {
   private safeT = 0;
   dropThrough = 0;
   gliding = false;
+  /** Scales running speed (Ragul's dizzy walk in V3). */
+  speedMul = 1;
   onAttack: ((hitbox: Phaser.Geom.Rectangle) => void) | null = null;
   private dust: Phaser.GameObjects.Particles.ParticleEmitter;
 
@@ -119,7 +121,7 @@ export class Player {
       b.setAllowGravity(true);
       // Horizontal: accelerate toward the target speed.
       const sprint = ctl && can('sprint') && input.isDown('dash') && ground ? MOVE.sprint : MOVE.run;
-      const target = ax * (Math.abs(b.velocity.x) > MOVE.run + 10 && !ground ? Math.abs(b.velocity.x) : sprint);
+      const target = ax * (Math.abs(b.velocity.x) > MOVE.run + 10 && !ground ? Math.abs(b.velocity.x) : sprint) * this.speedMul;
       const accel = ground ? (ax ? MOVE.accelGround : MOVE.decelGround) : MOVE.accelAir;
       const dv = target - b.velocity.x;
       b.setVelocityX(b.velocity.x + Math.sign(dv) * Math.min(Math.abs(dv), accel * dt));

@@ -60,6 +60,10 @@ export const NPC_RIGS: Record<string, RigStyle> = {
   ramanan: civ('ramanan', KHAKI, 1.02, 1.1, 'short', { cap: KHAKI }),
   nagaraj: civ('nagaraj', KHAKI, 1.0, 1.14, 'short', { cap: KHAKI }),
   mufti: civ('mufti', 0x4a4038, 1.04, 1.06, 'short'),
+  // The man in the red shirt on the morning of the first death (it was Nithish).
+  red_shirt: civ('red_shirt', 0x9a2020, 1.06, 1.15, 'short'),
+  dance_girl: civ('dance_girl', 0xb0306a, 0.92, 0.88, 'ponytail'),
+  dance_guy: civ('dance_guy', 0x2a6aa0, 1.02, 1.0, 'messy'),
   soldier: { id: 'soldier', body: 0x07080c, cloth: 0x10131c, vein: 0x49b8ff, height: 1.08, width: 1.05, hair: 'short', glowEyes: true },
   captain: { id: 'captain', body: 0x06070a, cloth: 0x1a2440, vein: 0x7fd4ff, height: 1.22, width: 1.2, hair: 'messy', glowEyes: true },
 };

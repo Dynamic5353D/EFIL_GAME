@@ -17,6 +17,7 @@ import { AREAS, ROOMS } from '../data/rooms';
 import { MenuList, type MenuItem } from '../ui/MenuList';
 import { addText, bar, C, drawPanel, H, W } from '../ui/theme';
 import type { OverlayData } from './SettingsScene';
+import { ensureEarthTextures } from '../world/EarthPainter';
 
 const PX = 350, PY = 96, PW = 880, PH = 580;
 type Section = 'party' | 'items' | 'codex' | 'case' | 'map' | 'guide' | 'settings' | 'title' | 'resume';
@@ -260,6 +261,12 @@ export class MenuScene extends Phaser.Scene {
       const e = CODEX[id]!;
       body.setText(tr(e.text));
       const seq = ++this.artSeq;
+      if (e.art.startsWith('gen:')) {
+        ensureEarthTextures(this, e.art);
+        art.setTexture(`bg:${e.art}`).setVisible(true);
+        art.setScale(Math.min(400 / art.width, 280 / art.height));
+        return;
+      }
       const s = spec('art', e.art) ?? spec('bg', e.art);
       if (!s) { art.setVisible(false); return; }
       void ensureTextures(this, [s]).then(() => {

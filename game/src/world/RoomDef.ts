@@ -13,7 +13,9 @@ export type EntityDef =
    * A character standing in the room. With `talk` the player presses interact to start the script;
    * otherwise it starts when the player comes within `radius` px. `rig` defaults to the speaker id.
    */
-  | { type: 'npc'; id: string; speaker: string; script?: string; label?: string; radius: number; hideIf?: string; requires?: string; talk?: boolean; rig?: string; face?: 1 | -1; once?: string }
+  | { type: 'npc'; id: string; speaker: string; script?: string; label?: string; radius: number; hideIf?: string; requires?: string; talk?: boolean; rig?: string; face?: 1 | -1; once?: string; pose?: 'dance' | 'sit' | 'kneel' | 'ko'; cuffed?: boolean;
+      /** Once `walkFlag` is set, walks (runs) to tile column `walkTo` at `walkSpeed` px/s. */
+      walkTo?: number; walkSpeed?: number; walkFlag?: string }
   | { type: 'trigger'; id: string; script: string; label: string; unless?: string; requires?: string; height: number }
   | { type: 'exit'; id: string; to: string; entry: string; height: number }
   | { type: 'crystal'; color: number }
@@ -33,12 +35,14 @@ export type EntityDef =
   | { type: 'crate'; id: string; w: number; h: number }
   /** Interact here while carrying every item in `items` to run the script label. */
   | { type: 'use'; id: string; items: string[]; script: string; label: string; prompt: Loc; requires?: string; unless?: string }
-  /** Scenery object (no collision). */
-  | { type: 'prop'; visual: PropVisual; flip?: boolean; scale?: number; front?: boolean }
+  /** Scenery object (no collision), optionally shown only while a flag is (or isn't) set. */
+  | { type: 'prop'; visual: PropVisual; flip?: boolean; scale?: number; front?: boolean; requires?: string; hideIf?: string }
+  /** A signboard with a place name. */
+  | { type: 'sign'; text: Loc }
   /** Stealth and chase restart point. */
   | { type: 'section'; id: string };
 
-export type PropVisual = 'bin' | 'chair' | 'stall' | 'auto' | 'plane' | 'statue' | 'lamp' | 'bench' | 'shed' | 'banner' | 'jeep'
+export type PropVisual = 'abyss' | 'lying' | 'bed_sleeper' | 'tape' | 'bin' | 'chair' | 'stall' | 'auto' | 'plane' | 'statue' | 'lamp' | 'bench' | 'shed' | 'banner' | 'jeep'
   | 'crate' | 'door' | 'car' | 'bed' | 'desk' | 'shelf' | 'bike' | 'gate' | 'tv' | 'mirror' | 'firetruck';
 
 export interface PlacedEntity { def: EntityDef; x: number; y: number; tx: number; ty: number }
@@ -67,6 +71,29 @@ export interface RoomDef {
   terrain?: TerrainMaterial;
   /** Position on the area map, in tiles of the map screen. */
   mapPos: { x: number; y: number; w: number; h: number };
+  /**
+   * The same place at another time of day or in another state: the first variant whose flag is set
+   * replaces these fields (e.g. the MIT road at dusk, or with smoke from the fire).
+   */
+  variants?: { flag: string; backdrop: string; palette?: string; grade?: RoomDef['grade']; weather?: RoomDef['weather']; music?: MusicId; ambient?: number }[];
+  /** Texture cache key (set by `roomFor` when a variant applies). */
+  cacheKey?: string;
+}
+
+/** The room as it looks now: the first variant whose flag is set, applied. */
+export function roomFor(room: RoomDef, flags: Record<string, unknown>): RoomDef {
+  const v = room.variants?.find((x) => !!flags[x.flag]);
+  if (!v) return room;
+  return {
+    ...room,
+    backdrop: v.backdrop,
+    palette: v.palette ?? v.backdrop,
+    grade: v.grade ?? room.grade,
+    weather: v.weather ?? room.weather,
+    music: v.music ?? room.music,
+    ambient: v.ambient ?? room.ambient,
+    cacheKey: `${room.id}@${v.flag}`,
+  };
 }
 
 /** Builds a tile grid plus entities with readable calls instead of hand-typed ASCII. */

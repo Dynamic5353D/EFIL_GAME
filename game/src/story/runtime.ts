@@ -11,7 +11,8 @@ export interface StoryHost {
   objective(text: Loc): Promise<void>;
   choose(options: Loc[], id?: string): Promise<number>;
   /** scene, time, music, sfx, fx, wait, battle, give, ability, join, leave, codex, rel, tag, venture, card */
-  command(name: string, args: string[]): Promise<void>;
+  /** May return a label to continue from (a `@room` into the room you are already in). */
+  command(name: string, args: string[]): Promise<void | { goto: string }>;
   getFlag(flag: string): FlagValue | undefined;
   setFlag(flag: string, value: FlagValue): void;
 }
@@ -61,7 +62,11 @@ export async function runStory(script: Script, host: StoryHost, from?: string, i
         jump(opt.target);
         break;
       }
-      case 'cmd': await host.command(n.name, n.args); break;
+      case 'cmd': {
+        const r = await host.command(n.name, n.args);
+        if (r && r.goto) jump(r.goto);
+        break;
+      }
       case 'set': host.setFlag(n.flag, n.value); break;
       case 'if': if (evalCond(n.cond, (f) => host.getFlag(f))) jump(n.target); break;
       case 'goto': jump(n.target); break;

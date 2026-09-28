@@ -52,8 +52,8 @@ export class Scenery {
       gr.addColorStop(1, rgbCss(mixRgb(dom, sh, 0.5)));
       g.fillStyle = gr;
       g.fillRect(0, 0, 8, VH);
-      addCanvasTexture(s, `sky:${r.id}`, c);
-      this.objects.push(s.add.image(0, 0, `sky:${r.id}`).setOrigin(0).setDisplaySize(VW, VH).setScrollFactor(0).setDepth(DEPTH.sky));
+      addCanvasTexture(s, `sky:${r.cacheKey ?? r.id}`, c);
+      this.objects.push(s.add.image(0, 0, `sky:${r.cacheKey ?? r.id}`).setOrigin(0).setDisplaySize(VW, VH).setScrollFactor(0).setDepth(DEPTH.sky));
     }
     // Far (blurred) and main backdrop art, cover-scaled over their scroll range.
     const place = (key: string, sx: number, sy: number, depth: number, alpha: number) => {
@@ -82,8 +82,8 @@ export class Scenery {
       gr.addColorStop(1, rgbCss(scaleRgb(this.fogColor, 0.55), 0.85));
       g.fillStyle = gr;
       g.fillRect(0, 0, 8, 256);
-      addCanvasTexture(s, `fade:${r.id}`, c);
-      this.objects.push(s.add.image(0, VH * 0.45, `fade:${r.id}`).setOrigin(0).setDisplaySize(VW, VH * 0.55).setScrollFactor(0).setDepth(DEPTH.backdrop + 1));
+      addCanvasTexture(s, `fade:${r.cacheKey ?? r.id}`, c);
+      this.objects.push(s.add.image(0, VH * 0.45, `fade:${r.cacheKey ?? r.id}`).setOrigin(0).setDisplaySize(VW, VH * 0.55).setScrollFactor(0).setDepth(DEPTH.backdrop + 1));
     }
 
     const noise = new Noise(r.id.length * 7919 + roomW);
@@ -110,7 +110,7 @@ export class Scenery {
   /** Indoors: a soft shadow where the wall meets the floor. */
   private floorShade(roomW: number, roomH: number) {
     const s = this.scene;
-    const key = `floorshade:${this.room.id}`;
+    const key = `floorshade:${this.room.cacheKey ?? this.room.id}`;
     if (!s.textures.exists(key)) {
       const { c, g } = makeCanvas(8, 256);
       const gr = g.createLinearGradient(0, 0, 0, 256);
@@ -129,7 +129,7 @@ export class Scenery {
    */
   private earthTrees(roomW: number, roomH: number, noise: Noise, sx: number, depth: number, col: RGB, scale: number, alpha: number) {
     const s = this.scene;
-    const key = `trees:${this.room.id}:${depth}`;
+    const key = `trees:${this.room.cacheKey ?? this.room.id}:${depth}`;
     const sy = sx * 0.8;
     if (!s.textures.exists(key)) {
       const e = this.earth!;
@@ -140,7 +140,8 @@ export class Scenery {
       const spacing = (style === 'palm' ? 170 : 260) * scale / this.room.scenery.density;
       const bark = scaleRgb(col, 0.45);
       const lit = mixRgb(col, hexRgb(e.light.color), 0.35);
-      const puffLit = this.puff(lit, 0.5), puffShade = this.puff(scaleRgb(col, 0.8), 0.55);
+      const puffLit = this.blob(lit), puffShade = this.blob(scaleRgb(col, 0.72));
+      const puffHi = this.blob(mixRgb(lit, hexRgb(e.light.color), 0.4));
       const bloom = this.puff(mixRgb(hexRgb(e.bloom ?? '#f2c53a'), col, depth === DEPTH.treesFar ? 0.45 : 0.15), 0.3);
       let rnd = 0;
       const r01 = () => noise.value(rnd++ * 0.917, depth * 0.41 + 3.3);
@@ -176,27 +177,40 @@ export class Scenery {
         g.strokeStyle = rgbCss(bark);
         const wide = kind === 'copperpod' ? 1.5 : 1;
         for (let k = 0; k < 4; k++) {
-          const a = -Math.PI / 2 + (k - 1.5) * 0.55 * wide;
-          g.lineWidth = trunkW * 0.55;
-          g.beginPath(); g.moveTo(tx, ty); g.lineTo(tx + Math.cos(a) * h * 0.28 * wide, ty + Math.sin(a) * h * 0.22); g.stroke();
+          const a = -Math.PI / 2 + (k - 1.5) * 0.5 * wide;
+          g.lineWidth = trunkW * 0.5;
+          g.beginPath(); g.moveTo(tx, ty); g.lineTo(tx + Math.cos(a) * h * 0.2 * wide, ty + Math.sin(a) * h * 0.16 - h * 0.08); g.stroke();
         }
         const crownW = h * 0.42 * wide, crownH = h * (kind === 'neem' ? 0.36 : 0.22);
         const cy = ty - h * (kind === 'neem' ? 0.22 : 0.16);
-        const n = Math.round(90 * scale * wide);
-        for (let k = 0; k < n; k++) {
-          const a = r01() * Math.PI * 2, d = Math.sqrt(r01());
-          const px = tx + Math.cos(a) * crownW * d, py = cy + Math.sin(a) * crownH * d;
-          const rr = (14 + r01() * 22) * scale;
-          const litSide = py < cy - crownH * 0.2 || px < tx - crownW * 0.3;
-          g.globalAlpha = 0.6 + r01() * 0.4;
-          g.drawImage(litSide ? puffLit : puffShade, px - rr, py - rr, rr * 2, rr * 2);
+        // The crown is built from clumps of small leaf stamps: a dark mass first, then lit clusters
+        // on the side facing the light, so it reads as foliage rather than as discs.
+        const clumps = 5 + Math.round(r01() * 4 * wide);
+        const light = e.light.x < 0.5 ? -1 : 1;
+        for (const pass of [0, 1, 2]) {
+          for (let c = 0; c < clumps; c++) {
+            const ca = (c / clumps) * Math.PI * 2 + r01() * 0.6;
+            const cr = Math.sqrt(r01()) * 0.7;
+            const cxp = tx + Math.cos(ca) * crownW * cr, cyp = cy + Math.sin(ca) * crownH * cr;
+            const cw = crownW * (0.35 + r01() * 0.25), ch = crownH * (0.4 + r01() * 0.3);
+            const n = Math.round((pass === 0 ? 46 : pass === 1 ? 26 : 12) * scale * wide);
+            for (let k = 0; k < n; k++) {
+              const a = r01() * Math.PI * 2, d = Math.sqrt(r01());
+              let px = cxp + Math.cos(a) * cw * d, py = cyp + Math.sin(a) * ch * d;
+              if (pass > 0) { px -= light * cw * 0.25 * (pass === 2 ? 1.3 : 1) * -1; py -= ch * 0.25 * pass; }
+              const rr = (pass === 0 ? 10 + r01() * 12 : 5 + r01() * 8) * scale;
+              g.globalAlpha = pass === 0 ? 0.95 : pass === 1 ? 0.6 + r01() * 0.3 : 0.4 + r01() * 0.3;
+              g.drawImage(pass === 0 ? puffShade : pass === 1 ? puffLit : puffHi, px - rr, py - rr, rr * 2, rr * 1.6);
+            }
+          }
         }
         if (kind === 'copperpod') {
-          for (let k = 0; k < n * 0.7; k++) {
+          const nb = Math.round(70 * scale * wide);
+          for (let k = 0; k < nb; k++) {
             const a = r01() * Math.PI * 2, d = Math.sqrt(r01());
-            const px = tx + Math.cos(a) * crownW * d, py = cy + Math.sin(a) * crownH * d - crownH * 0.2;
-            const rr = (4 + r01() * 7) * scale;
-            g.globalAlpha = 0.7 + r01() * 0.3;
+            const px = tx + Math.cos(a) * crownW * d * 0.85, py = cy + Math.sin(a) * crownH * d * 0.8 - crownH * 0.25;
+            const rr = (2.5 + r01() * 4) * scale;
+            g.globalAlpha = 0.65 + r01() * 0.35;
             g.drawImage(bloom, px - rr, py - rr, rr * 2, rr * 2);
           }
         }
@@ -217,7 +231,7 @@ export class Scenery {
   private ridge(roomW: number, roomH: number, noise: Noise, col: RGB, sx: number, depth: number, alpha: number) {
     const s = this.scene;
     const size = layerSize(roomW, roomH, sx, sx * 0.6);
-    const key = `ridge:${this.room.id}`;
+    const key = `ridge:${this.room.cacheKey ?? this.room.id}`;
     if (s.textures.exists(key)) {
       this.objects.push(s.add.image(0, 0, key).setOrigin(0).setScrollFactor(sx, sx * 0.6).setDepth(depth).setAlpha(alpha));
       return;
@@ -238,8 +252,20 @@ export class Scenery {
     gr.addColorStop(1, rgbCss(scaleRgb(col, 0.6)));
     g.fillStyle = gr;
     g.fill();
-    addCanvasTexture(s, `ridge:${this.room.id}`, c);
-    this.objects.push(s.add.image(0, 0, `ridge:${this.room.id}`).setOrigin(0).setScrollFactor(sx, sx * 0.6).setDepth(depth).setAlpha(alpha));
+    addCanvasTexture(s, `ridge:${this.room.cacheKey ?? this.room.id}`, c);
+    this.objects.push(s.add.image(0, 0, `ridge:${this.room.cacheKey ?? this.room.id}`).setOrigin(0).setScrollFactor(sx, sx * 0.6).setDepth(depth).setAlpha(alpha));
+  }
+
+  /** A flat-coloured blob with a soft edge (no highlight), for foliage masses. */
+  private blob(col: RGB): HTMLCanvasElement {
+    const { c, g } = makeCanvas(48, 48);
+    const gr = g.createRadialGradient(24, 24, 0, 24, 24, 24);
+    gr.addColorStop(0, rgbCss(col, 1));
+    gr.addColorStop(0.55, rgbCss(col, 0.95));
+    gr.addColorStop(1, rgbCss(col, 0));
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 48, 48);
+    return c;
   }
 
   /** A soft round puff tinted `col`, stamped many times to build frost and foliage. */
@@ -256,7 +282,7 @@ export class Scenery {
 
   private trees(roomW: number, roomH: number, noise: Noise, sx: number, depth: number, col: RGB, scale: number, alpha: number) {
     const s = this.scene;
-    const key = `trees:${this.room.id}:${depth}`;
+    const key = `trees:${this.room.cacheKey ?? this.room.id}:${depth}`;
     const sy = sx * 0.8;
     if (!s.textures.exists(key)) {
       const size = layerSize(roomW, roomH, sx, sy);
@@ -340,7 +366,7 @@ export class Scenery {
 
   private fogBand(roomW: number, roomH: number, sx: number, depth: number, alpha: number) {
     const s = this.scene;
-    const key = `fogband:${this.room.id}`;
+    const key = `fogband:${this.room.cacheKey ?? this.room.id}`;
     if (!s.textures.exists(key)) {
       const { c, g } = makeCanvas(8, 256);
       const gr = g.createLinearGradient(0, 0, 0, 256);
@@ -360,7 +386,7 @@ export class Scenery {
     const sx = 1.3;
     const w = VW + Math.max(0, roomW - VW) * sx + 200;
     const h = 220;
-    const key = `fg:${this.room.id}`;
+    const key = `fg:${this.room.cacheKey ?? this.room.id}`;
     if (s.textures.exists(key)) {
       this.objects.push(s.add.image(0, roomH - h + 30, key).setOrigin(0).setScrollFactor(sx, 1).setDepth(DEPTH.foreground));
       return;
@@ -378,13 +404,24 @@ export class Scenery {
     g.strokeStyle = rgbCss(col, 0.95);
     g.lineCap = 'round';
     if (this.earth) {
-      // Tall grass and weeds.
-      for (let x = 40; x < w; x += 60 + noise.value(x, 5) * 160) {
-        const n = 5 + Math.floor(noise.value(x, 7) * 6);
+      // Clumps of fine grass blades and low shrubs, very dark, only along the bottom edge.
+      const shrub = this.puff(scaleRgb(col, 1.1), 0.35);
+      for (let x = 30; x < w; x += 90 + noise.value(x, 5) * 260) {
+        if (noise.value(x, 13) < 0.35) {
+          for (let k = 0; k < 14; k++) {
+            const r = 10 + noise.value(x + k, 17) * 22;
+            g.globalAlpha = 0.9;
+            g.drawImage(shrub, x + (noise.value(k, x) - 0.5) * 90 - r, h - 14 - noise.value(k, x + 3) * 40 - r, r * 2, r * 2);
+          }
+          g.globalAlpha = 1;
+        }
+        const n = 14 + Math.floor(noise.value(x, 7) * 16);
         for (let k = 0; k < n; k++) {
-          const hh = 30 + noise.value(x + k, 9) * 70;
-          g.lineWidth = 2 + noise.value(k, x) * 2;
-          g.beginPath(); g.moveTo(x + k * 5, h - 8); g.quadraticCurveTo(x + k * 5 + 4, h - hh * 0.6, x + k * 5 + (k - n / 2) * 6, h - hh); g.stroke();
+          const bx = x + (noise.value(k, x * 0.3) - 0.5) * 50;
+          const hh = 14 + noise.value(x + k * 3.1, 9) * 44;
+          const bend = (noise.value(k * 1.7, x) - 0.5) * 22;
+          g.lineWidth = 1 + noise.value(k, x + 1) * 1.4;
+          g.beginPath(); g.moveTo(bx, h - 6); g.quadraticCurveTo(bx + bend * 0.3, h - hh * 0.6, bx + bend, h - hh); g.stroke();
         }
       }
       addCanvasTexture(s, key, c);

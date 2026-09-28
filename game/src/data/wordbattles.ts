@@ -61,8 +61,7 @@ export const WORD_BATTLES: Record<string, WordBattleDef> = {
     hurt: [L('Tch.', 'Tch.'), L('(His jaw tightens.)', '(Avan thaadai irukkudhu.)')],
     shrug: [L('Ha! That\'s all you\'ve got?', 'Ha! Ivlo dhaana?'), L('Whatever, da.', 'Poda.')],
     win: [
-      nar('The crowd drifts off. Krishnaa steps close and drops his voice.', 'Kootam kalaiyudhu. Krishnaa pakkathula vandhu kural-a korachu pesuraan.'),
-      foe('Yes. I stuck my leg out when he walked past. So what? Going to hit me?', 'Aama. Naan-dhaan avan pogumbodhu kaal-eh kurukka vittan. Yenna pannuva nee, adippiya?'),
+      nar('Krishnaa\'s smirk slips. The students watching have gone quiet. Then someone calls out from behind them.', 'Krishnaa sirippu marayudhu. Paathutu irundha students amaidhiya aayitaanga. Appo pinnaadi irundhu oru kural.'),
     ],
     lose: L('Nithish\'s fists shake. The words won\'t come.', 'Nithish kai nadungudhu. Vaarthai varala.'),
   },

@@ -42,8 +42,8 @@ function sky(g: G, w: number, h: number, s: EarthScene, r: () => number) {
   g.fillRect(0, 0, w, h);
   const L = s.light;
   const lg = g.createRadialGradient(L.x * w, L.y * h, 0, L.x * w, L.y * h, L.size * w);
-  lg.addColorStop(0, rgbCss(col(L.color), 0.55 * L.strength));
-  lg.addColorStop(0.35, rgbCss(col(L.color), 0.18 * L.strength));
+  lg.addColorStop(0, rgbCss(col(L.color), 0.4 * L.strength));
+  lg.addColorStop(0.3, rgbCss(col(L.color), 0.12 * L.strength));
   lg.addColorStop(1, rgbCss(col(L.color), 0));
   g.fillStyle = lg;
   g.fillRect(0, 0, w, h);
@@ -462,6 +462,24 @@ function paintIndoor(g: G, w: number, h: number, s: EarthScene, seed: number) {
         windowAt(x + 450, h * 0.2, 140, 130, outside);
       }
       g.fillStyle = furn(); for (let x = 40; x < w; x += 150) { g.fillRect(x, floorY - 60, 120, 10); g.fillRect(x + 6, floorY - 50, 8, 50); } // benches
+      break;
+    }
+    case 'library': {
+      // Tall shelves of coloured spines, reading tables, warm lamps.
+      const spines = ['#8a2a24', '#2a4a7a', '#b89a3a', '#3a6a3a', '#6a3a7a', '#c8b8a0'];
+      for (let x = 60; x < w; x += 260) {
+        g.fillStyle = furn(); g.fillRect(x, h * 0.12, 180, floorY - h * 0.12);
+        for (let row = 0; row < 7; row++) {
+          const y = h * 0.14 + row * ((floorY - h * 0.16) / 7);
+          for (let bx = x + 8; bx < x + 172; bx += 9 + r() * 5) {
+            g.fillStyle = rgbCss(mixRgb(col(spines[Math.floor(r() * spines.length)]!), shade, 0.35));
+            const bh = (floorY - h * 0.16) / 7 - 8 - r() * 10;
+            g.fillRect(bx, y + ((floorY - h * 0.16) / 7 - 4 - bh), 7, bh);
+          }
+        }
+      }
+      g.fillStyle = furn(); for (let x = 200; x < w; x += 520) { g.fillRect(x, floorY - 70, 200, 12); g.fillRect(x + 10, floorY - 58, 10, 58); g.fillRect(x + 180, floorY - 58, 10, 58); }
+      for (let x = 300; x < w; x += 520) addLight(x, floorY - 120, 160, 0.35);
       break;
     }
     case 'hospital': {

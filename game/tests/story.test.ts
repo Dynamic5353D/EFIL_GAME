@@ -43,7 +43,7 @@ class FakeHost implements StoryHost {
   async warn(t: Loc) { this.said.push(`warn:${t.en}`); }
   async objective(t: Loc) { this.said.push(`objective:${t.en}`); }
   async choose(o: Loc[]) { return this.picks.shift() ?? 0; }
-  async command(name: string, args: string[]) { this.cmds.push([name, ...args].join(' ')); }
+  async command(name: string, args: string[]): Promise<void> { this.cmds.push([name, ...args].join(' ')); }
   getFlag(f: string) { return this.flags[f]; }
   setFlag(f: string, v: FlagValue) { this.flags[f] = v; }
 }

@@ -36,7 +36,8 @@ export interface StoryStage {
   runWordBattle(id: string): Promise<boolean>;
   partyChanged(): void;
   /** Leaves for another room; `then` is the story to carry on with once it has loaded. */
-  gotoRoom(room: string, entry: string, then: { script: string; label: string } | null): void;
+  /** Returns true when already there: the player is moved and the script carries straight on. */
+  gotoRoom(room: string, entry: string, then: { script: string; label: string } | null): boolean;
   warp(entry: string): void;
   /** Saves the game where the player stands. */
   save(): void;
@@ -94,7 +95,7 @@ export class Director implements StoryHost {
 
   private toast(text: string, icon?: string) { bus.emit('toast', { text, icon }); }
 
-  async command(name: string, args: string[]): Promise<void> {
+  async command(name: string, args: string[]): Promise<void | { goto: string }> {
     const st = session.state;
     const a = args[0] ?? '';
     switch (name) {
@@ -113,7 +114,7 @@ export class Director implements StoryHost {
       case 'sfx': audio.sfx(a as SfxId); break;
       case 'fx': await this.stage.fx(a); break;
       case 'wait': await new Promise((r) => setTimeout(r, Number(a) || 0)); break;
-      case 'scene': await this.dialogue.setBackdrop(a); break;
+      case 'scene': await this.dialogue.setBackdrop(a === 'none' ? null : a); break;
       case 'battle': {
         this.dialogue.hide();
         const result = await this.stage.runBattle(a);
@@ -171,7 +172,9 @@ export class Director implements StoryHost {
       }
       case 'room':
         this.dialogue.hide();
-        this.stage.gotoRoom(a, args[1] ?? 'start', args[2] ? { script: this.script, label: args[2] } : null);
+        if (this.stage.gotoRoom(a, args[1] ?? 'start', args[2] ? { script: this.script, label: args[2] } : null)) {
+          return args[2] ? { goto: args[2] } : undefined;
+        }
         this.cancelled = true;
         break;
       case 'warp': this.stage.warp(a); break;
@@ -191,6 +194,7 @@ export class Director implements StoryHost {
         break;
       }
       case 'next': this.chain = a; break;
+      case 'add': st.flags[a] = (Number(st.flags[a]) || 0) + (Number(args[1]) || 1); break;
       case 'save':
         st.resume = { script: this.script, label: a };
         this.stage.save();

@@ -45,7 +45,7 @@ export class ReachMap {
     if (below !== '#' && below !== '=') return false;
     if (y + 1 >= this.rows) return false;
     const here = this.at(x, y), above = this.at(x, y - 1);
-    return here !== '#' && here !== '^' && here !== '=' && above !== '#' && above !== '^';
+    return here !== '#' && here !== '^' && here !== 'x' && here !== '=' && above !== '#' && above !== '^' && above !== 'x';
   }
 
   standingCells(): Cell[] {

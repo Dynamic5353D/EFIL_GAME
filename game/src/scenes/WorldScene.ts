@@ -25,7 +25,7 @@ import { ensureGenSprites } from '../world/GenSprites';
 import { Player } from '../world/Player';
 import { crystal, chest as chestTex, rosoarTree } from '../world/Props';
 import { Puppet } from '../world/Puppet';
-import { TILE, type EntityDef, type PlacedEntity, type RoomDef } from '../world/RoomDef';
+import { roomFor, TILE, type EntityDef, type PlacedEntity, type RoomDef } from '../world/RoomDef';
 import { buildRoom, type RoomPhysics } from '../world/RoomView';
 import { DEPTH } from '../world/Scenery';
 import type { HudScene } from './HudScene';
@@ -118,6 +118,7 @@ export class WorldScene extends Phaser.Scene {
   private hidden: Live | null = null;
   private crates: Phaser.Physics.Arcade.Image[] = [];
   private caught = false;
+  private swaying = false;
 
   constructor() { super({ key: 'World' }); }
 
@@ -137,7 +138,7 @@ export class WorldScene extends Phaser.Scene {
     this.leaving = false;
     const st = session.state;
     const roomId = data.room ?? st.location.room;
-    this.room = ROOMS[roomId] ?? ROOMS.frozen_shore!;
+    this.room = roomFor(ROOMS[roomId] ?? ROOMS.frozen_shore!, st.flags);
     st.location.room = this.room.id;
     this.cameras.main.setBackgroundColor(0x05070d);
     this.cameras.main.fadeIn(settings.get('reducedMotion') ? 100 : 500, 0, 0, 0);
@@ -175,6 +176,7 @@ export class WorldScene extends Phaser.Scene {
     for (const p of r.entities) this.spawnEntity(p);
     this.updateCrates();
     this.buildFollowers();
+    this.applyCuffs();
 
     const cam = this.cameras.main;
     cam.startFollow(this.player.body, true, 0.1, 0.12);
@@ -195,7 +197,15 @@ export class WorldScene extends Phaser.Scene {
       runBattle: (id) => this.runBattle(id),
       runWordBattle: (id) => this.runWordBattle(id),
       partyChanged: () => this.partyChanged(),
-      gotoRoom: (room, entry, then) => this.leave(room, entry, then ?? undefined),
+      gotoRoom: (room, entry, then) => {
+        const target = ROOMS[room];
+        if (target && target.id === this.room.id && (roomFor(target, session.state.flags).cacheKey ?? target.id) === (this.room.cacheKey ?? this.room.id)) {
+          this.warp(entry);
+          return true;
+        }
+        this.leave(room, entry, then ?? undefined);
+        return false;
+      },
       warp: (entry) => this.warp(entry),
       save: () => this.autosave(),
     };
@@ -290,7 +300,8 @@ export class WorldScene extends Phaser.Scene {
       }
       case 'npc': {
         const rig = new CharacterRig(this, d.rig ?? d.speaker, DEPTH.entities);
-        rig.setState('idle');
+        rig.setState(d.pose ?? 'idle');
+        rig.cuffed = !!d.cuffed;
         const shown = () => (!d.requires || !!st.flags[d.requires]) && !(d.hideIf && st.flags[d.hideIf]);
         let vis = shown() ? 1 : 0;
         const spent = () => !!(d.once && st.flags[d.once]);
@@ -303,17 +314,26 @@ export class WorldScene extends Phaser.Scene {
           L.prompt = () => (shown() && !spent() && d.script ? 'Talk' : null);
           L.interact = () => void talk();
         }
+        let nx = p.x;
         L.update = (dt) => {
           vis = Phaser.Math.Linear(vis, shown() ? 1 : 0, Math.min(1, dt * 4));
           rig.alpha = vis;
           rig.g.setVisible(vis > 0.02);
           rig.glow.setVisible(vis > 0.02);
+          let moving = 0;
+          if (d.walkTo !== undefined && d.walkFlag && st.flags[d.walkFlag]) {
+            const tx = d.walkTo * TILE + TILE / 2;
+            const step = (d.walkSpeed ?? 120) * dt;
+            if (Math.abs(tx - nx) > step) { moving = Math.sign(tx - nx); nx += moving * step; } else nx = tx;
+          }
           if (vis > 0.02) {
-            rig.facing = d.face ?? (this.player.x < p.x ? -1 : 1);
-            rig.update(dt, p.x, p.y);
+            rig.facing = moving || (d.face ?? (this.player.x < nx ? -1 : 1));
+            rig.speed = moving * (d.walkSpeed ?? 120);
+            rig.setState(moving ? 'run' : d.pose ?? 'idle');
+            rig.update(dt, nx, p.y);
           }
           if (d.talk || L.gone || this.busy || !shown() || spent() || !d.script) return;
-          if (Math.abs(this.player.x - p.x) < d.radius && Math.abs(this.player.y - p.y) < 160) void talk();
+          if (Math.abs(this.player.x - nx) < d.radius && Math.abs(this.player.y - p.y) < 160) void talk();
         };
         L.destroy = () => rig.destroy();
         break;
@@ -334,6 +354,15 @@ export class WorldScene extends Phaser.Scene {
         L.objs.push(img);
         if (d.visual === 'lamp') this.lights.addLight(p.x, p.y - 260 * (d.scale ?? 1), 320, 0xffe2a8, 1.1);
         if (d.visual === 'tv') this.lights.addLight(p.x, p.y - 90, 240, 0x9ab8ff, 0.9);
+        if (!d.requires && !d.hideIf) return;
+        L.update = () => img.setVisible((!d.requires || !!st.flags[d.requires]) && !(d.hideIf && st.flags[d.hideIf]));
+        break;
+      }
+      case 'sign': {
+        const post = this.add.rectangle(p.x, p.y, 6, 110, 0x2a2c32).setOrigin(0.5, 1).setDepth(DEPTH.props);
+        const t = addText(this, p.x, p.y - 118, tr(d.text), { size: 17, bold: true, color: '#ffffff', backgroundColor: '#1f6a3a', padding: { x: 10, y: 5 } })
+          .setOrigin(0.5, 1).setDepth(DEPTH.props);
+        L.objs.push(post, t);
         return;
       }
       case 'hide': {
@@ -616,6 +645,7 @@ export class WorldScene extends Phaser.Scene {
       this.player.setMember(lead);
       this.trail = [];
     }
+    this.applyCuffs();
     this.updateCrates();
     this.buildFollowers();
     bus.emit('hud', undefined);
@@ -656,6 +686,13 @@ export class WorldScene extends Phaser.Scene {
     const st = session.state;
     st.location = { room: this.room.id, x: this.player?.x ?? 0, y: this.player?.y ?? 0, checkpoint: null };
     if (session.save(this.room.id)) bus.emit('toast', { text: 'Saved.' });
+  }
+
+  /** Nithish is handcuffed from his arrest until the Snap (flag `nithish_cuffed`). */
+  applyCuffs() {
+    const on = !!session.state.flags.nithish_cuffed;
+    if (this.player) this.player.rig.cuffed = on && session.state.party[0] === 'nithish';
+    for (const f of this.followers) f.rig.cuffed = on && f.id === 'nithish';
   }
 
   /** Nithish can shove crates; for anyone else they are as solid as a wall. */
@@ -1013,6 +1050,7 @@ export class WorldScene extends Phaser.Scene {
     if (!this.player) return;
     const party = session.state.party;
     party.slice(1).forEach((id) => this.followers.push({ id, rig: new CharacterRig(this, id, DEPTH.player - 1 - this.followers.length) }));
+    this.applyCuffs();
   }
 
   private updateFollowers(dt: number) {
@@ -1055,6 +1093,10 @@ export class WorldScene extends Phaser.Scene {
     session.tickPlaytime();
     const st = session.state;
 
+    const dizzy = !!st.flags.dizzy;
+    this.player.speedMul = dizzy ? 0.55 : 1;
+    if (dizzy && !settings.get('reducedMotion')) { this.cameras.main.setRotation(Math.sin(this.clock * 1.3) * 0.035); this.swaying = true; }
+    else if (this.swaying) { this.cameras.main.setRotation(0); this.swaying = false; }
     if (this.hidden) {
       this.player.rig.alpha = 0.4;
       if (!this.busy && (input.pressed('jump') || input.pressed('up') || Math.abs(input.axisX) > 0.5)) { input.consume('jump', 'up'); this.unhide(); }

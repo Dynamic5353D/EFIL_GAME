@@ -106,6 +106,51 @@ export function drawPlaneShape(g: G, x: number, base: number, s: number, body: s
 }
 
 const SPECS: Record<PropVisual, PropSpec> = {
+  abyss: { w: 520, h: 640, draw(g, w, h) {
+    // A darkness standing in the snow (Nithish's dream, V3): soft-edged, deepest at the base.
+    const gr = g.createRadialGradient(w / 2, h * 0.7, 10, w / 2, h * 0.7, w * 0.55);
+    gr.addColorStop(0, 'rgba(0,0,0,1)');
+    gr.addColorStop(0.55, 'rgba(4,2,10,0.92)');
+    gr.addColorStop(1, 'rgba(4,2,10,0)');
+    g.fillStyle = gr;
+    g.fillRect(0, 0, w, h);
+  } },
+  lying: { w: 150, h: 44, draw(g, w, h) {
+    // A man lying face down on the road. No wounds are shown (there were none).
+    g.fillStyle = '#1a1c22';
+    g.beginPath(); g.ellipse(26, h - 16, 13, 11, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#3a4252';
+    rr(g, 36, h - 28, 70, 22, 9); g.fill();
+    g.fillStyle = '#26282e';
+    rr(g, 100, h - 24, 46, 14, 6); g.fill();
+    g.strokeStyle = '#1a1c22'; g.lineWidth = 8; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(44, h - 10); g.lineTo(30, h - 4); g.stroke();
+    g.strokeStyle = RIM; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(38, h - 27); g.lineTo(104, h - 27); g.stroke();
+  } },
+  bed_sleeper: { w: 230, h: 100, draw(g, w, h) {
+    box(g, 0, 20, 16, h - 20, '#4a3624', '#241a10', 2);
+    box(g, 10, 50, w - 10, 30, '#3a3440', '#1c1820', 3);
+    // Someone asleep with the sheet over his face.
+    const gr = g.createLinearGradient(0, 22, 0, 60);
+    gr.addColorStop(0, '#8a8aa8'); gr.addColorStop(1, '#4a4a64');
+    g.fillStyle = gr;
+    g.beginPath();
+    g.moveTo(18, 54); g.quadraticCurveTo(30, 26, 58, 34); g.quadraticCurveTo(110, 20, 150, 38); g.quadraticCurveTo(190, 30, w - 6, 50); g.lineTo(w - 6, 58); g.lineTo(18, 58);
+    g.fill();
+    g.strokeStyle = RIM; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(20, 52); g.quadraticCurveTo(30, 27, 58, 35); g.quadraticCurveTo(110, 21, 150, 39); g.stroke();
+    g.fillStyle = '#1a1410';
+    g.fillRect(14, 80, 8, h - 80); g.fillRect(w - 14, 80, 8, h - 80);
+  } },
+  tape: { w: 320, h: 90, draw(g, w, h) {
+    g.fillStyle = '#2a2a2a';
+    for (const x of [8, w / 2 - 4, w - 16]) g.fillRect(x, 20, 8, h - 20);
+    g.fillStyle = '#e8c830';
+    g.beginPath(); g.moveTo(8, 34); g.lineTo(w - 8, 30); g.lineTo(w - 8, 44); g.lineTo(8, 48); g.fill();
+    g.fillStyle = '#1a1a1a';
+    for (let x = 20; x < w - 20; x += 34) g.fillRect(x, 35, 16, 8);
+  } },
   bin: { w: 70, h: 96, draw(g, w, h) {
     box(g, 6, 16, w - 12, h - 16, '#2f5a3a', '#12241a', 4);
     box(g, 2, 8, w - 4, 14, '#3b6c47', '#1b3324', 3);

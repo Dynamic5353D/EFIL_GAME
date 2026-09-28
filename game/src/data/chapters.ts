@@ -19,7 +19,7 @@ const ch = (venture: number, title: Loc, room: string): Chapter => ({
 
 export const CHAPTERS: Chapter[] = [
   ch(1, loc('The world is cruel', 'Ulagam kodumaiyaanadhu'), 'hostel_room'),
-  ch(2, loc('The man with no wounds', 'Kaayam illaadha aal'), 'cut_road'),
+  ch(2, loc('The man with no wounds', 'Kaayam illaadha aal'), 'mit_road'),
   ch(3, loc('Snow in a dream', 'Kanavula pani'), 'hostel_room'),
   ch(4, loc('The red shirt', 'Sivappu sattai'), 'mit_road'),
   ch(5, loc('The back door', 'Pinvaasal'), 'mit_road'),

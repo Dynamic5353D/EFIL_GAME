@@ -47,7 +47,9 @@ export class HudScene extends Phaser.Scene {
         this.texts.push(p);
       }
       this.g.lineStyle(2, c.vein, 0.8).strokeCircle(x + 26, y + 26, 27);
-      this.texts.push(addText(this, x + 62, y + 2, tr(c.name), { size: 17, bold: true }));
+      // Venture 1 hasn't named him yet.
+      const name = id === 'ragul' && st.venture.purpose === 1 && !st.flags.ragul_named ? 'That guy' : tr(c.name);
+      this.texts.push(addText(this, x + 62, y + 2, name, { size: 17, bold: true }));
       bar(this.g, x + 62, y + 26, 120, 8, m.hp / max, m.hp / max < 0.3 ? C.hpLow : C.hp);
       this.texts.push(addText(this, x + 186, y + 21, `${m.hp}`, { size: 14, color: C.textDim }));
       if (id === 'ragul' && st.flags.hunger_known) {

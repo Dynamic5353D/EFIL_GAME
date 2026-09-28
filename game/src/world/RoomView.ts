@@ -65,10 +65,10 @@ export function buildRoom(scene: Phaser.Scene, room: RoomDef): RoomPhysics {
   // Terrain, painted once into canvas chunks and lit by the room lights.
   // Textures outlive the scene, so a room is painted once per session.
   const chunks = Math.ceil(roomW / CHUNK);
-  if (!scene.textures.exists(`terrain:${room.id}:0`)) {
-    paintTerrain(room.grid, pal, room.id.length * 131 + room.cols, room.terrain ?? (earth ? 'concrete' : 'snow')).canvases.forEach((c, i) => scene.textures.addCanvas(`terrain:${room.id}:${i}`, c));
+  if (!scene.textures.exists(`terrain:${room.cacheKey ?? room.id}:0`)) {
+    paintTerrain(room.grid, pal, room.id.length * 131 + room.cols, room.terrain ?? (earth ? 'concrete' : 'snow')).canvases.forEach((c, i) => scene.textures.addCanvas(`terrain:${room.cacheKey ?? room.id}:${i}`, c));
   }
-  for (let i = 0; i < chunks; i++) scene.add.image(i * CHUNK, 0, `terrain:${room.id}:${i}`).setOrigin(0).setDepth(DEPTH.terrain).setLighting(true);
+  for (let i = 0; i < chunks; i++) scene.add.image(i * CHUNK, 0, `terrain:${room.cacheKey ?? room.id}:${i}`).setOrigin(0).setDepth(DEPTH.terrain).setLighting(true);
 
   const solids = scene.physics.add.staticGroup();
   for (const r of mergeTiles(room.grid, '#')) {

@@ -29,7 +29,7 @@ export interface EarthScene {
   skyline?: boolean;
   campus?: 'lecture' | 'hostel' | 'market' | 'hangar' | 'none';
   /** Indoor furniture of the scene. */
-  room?: 'hostel' | 'house' | 'station' | 'interrogation' | 'corridor' | 'cafe' | 'shed' | 'classroom' | 'hospital' | 'train' | 'warehouse' | 'restroom';
+  room?: 'hostel' | 'house' | 'station' | 'interrogation' | 'corridor' | 'cafe' | 'shed' | 'classroom' | 'library' | 'hospital' | 'train' | 'warehouse' | 'restroom';
   /** Terrain palette. */
   ground: { dominant: string; shadow: string; highlight: string; accent: string };
 }
@@ -146,6 +146,11 @@ export const EARTH_SCENES: Record<string, EarthScene> = {
     id: 'shed', kind: 'indoor', top: '#4a4238', bottom: '#1e1a16', light: { color: '#ffd8a0', x: 0.4, y: 0.15, size: 0.4, strength: 0.6 },
     shade: '#14100c', lamp: '#ffd8a0', leaf: '#000000', room: 'shed',
     ground: { dominant: '#4a4034', shadow: '#100c08', highlight: '#a89478', accent: '#ffd8a0' },
+  }),
+  library: S({
+    id: 'library', kind: 'indoor', top: '#6a5440', bottom: '#2e2418', light: { color: '#ffd8a0', x: 0.5, y: 0.3, size: 0.7, strength: 0.6 },
+    shade: '#2a1e14', lamp: '#ffd8a0', leaf: '#4a7c3e', room: 'library',
+    ground: { dominant: '#6a5440', shadow: '#1a120c', highlight: '#d8c0a0', accent: '#ffd8a0' },
   }),
   classroom: S({
     id: 'classroom', kind: 'indoor', top: '#c8c4b0', bottom: '#8a8672', light: { color: '#fffbe8', x: 0.85, y: 0.3, size: 0.6, strength: 0.6 },
