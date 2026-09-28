@@ -45,3 +45,37 @@ test('@room and @warp targets exist, and chapters start somewhere real', () => {
     if (scripts[c.script]) expect('start' in scripts[c.script]!.labels, `chapter ${c.venture} start label`).toBe(true);
   }
 });
+
+test('every flag a room hook waits for is set somewhere else first (no self-locking triggers)', () => {
+  // Where each flag is set to a truthy value: script name and node index.
+  const sets: Record<string, { script: string; at: number }[]> = {};
+  for (const [name, s] of Object.entries(scripts)) {
+    s.nodes.forEach((n, i) => {
+      if (n.k === 'set' && n.value !== false && n.value !== 0) (sets[n.flag] ??= []).push({ script: name, at: i });
+      if (n.k === 'cmd' && n.name === 'add') (sets[n.args[0]!] ??= []).push({ script: name, at: i });
+    });
+  }
+  // Flags the engine sets itself.
+  const engine = new Set(['disguised', 'won']);
+  const section = (script: string, label: string): [number, number] => {
+    const s = scripts[script]!;
+    const start = s.labels[label]!;
+    let end = s.nodes.findIndex((n, i) => i > start && n.k === 'end');
+    if (end < 0) end = s.nodes.length;
+    return [start, end];
+  };
+  for (const room of Object.values(ROOMS)) {
+    for (const e of room.entities) {
+      const d = e.def as { type: string; requires?: string; script?: string; label?: string };
+      if (!d.requires || engine.has(d.requires) || d.requires.startsWith('slice_')) continue;
+      const where = `${room.id}: ${d.type} @${e.tx},${e.ty} requires ${d.requires}`;
+      const at = sets[d.requires] ?? [];
+      expect(at.length, `${where}: never set`).toBeGreaterThan(0);
+      if (d.script && d.label && scripts[d.script]) {
+        const [a, b] = section(d.script, d.label);
+        const elsewhere = at.some((x) => x.script !== d.script || x.at < a || x.at > b);
+        expect(elsewhere, `${where}: only set by its own script section`).toBe(true);
+      }
+    }
+  }
+});

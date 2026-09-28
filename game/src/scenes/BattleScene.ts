@@ -901,7 +901,8 @@ export class BattleScene extends Phaser.Scene {
       await this.results('You got away', ['The party slips away into the snow.'], '#cfe6ff', C.accentInt);
     } else {
       audio.music('none');
-      await this.results('The party has fallen', ['You wake at your last rest.'], C.danger, C.dangerInt);
+      if (BATTLES[this.data_.battle]?.retry) await this.results('Knocked down', ['Get up. Try again.'], C.danger, C.dangerInt);
+      else await this.results('The party has fallen', ['You wake at your last rest.'], C.danger, C.dangerInt);
     }
     bus.emit('hud', undefined);
     this.data_.onDone(r.outcome);

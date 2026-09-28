@@ -22,6 +22,7 @@ NARRATOR: 6:05 AM. His breathing slows. Across the small room, someone is still 
   ta: Kaalai 6:05. Moochu mella sariyaagudhu. Chinna room-la innoru kattil-la, bedsheet-ala mugatha moodi innoruthan thoongitu irukaan.
 @music campus
 @label room
+@set v01_awake
 @save room
 @objective Get ready and head to college.
   ta: Ready aagi college-ku kelambu.

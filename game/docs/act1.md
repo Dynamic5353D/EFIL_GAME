@@ -21,21 +21,21 @@ Terrain gets materials: asphalt road, grass verge, tiled floors, wooden floors. 
 
 | Room | Used in | Notes |
 |---|---|---|
-| `hostel_room` | V1, V2, V3 | Ragul and Nithish's room; bed, desk, laptop. Rest point: Ragul's bunk. |
-| `hostel_road` | V1, V6, V10 | Boys' hostel, hostel store road, NRI hostel gate. Krishnaa blocks the main road in V1. |
-| `cut_road` | V1, V11, V12 | Wall on one side, college on the other. The body, the red shirt, the standoff. |
-| `mit_road` | V2, V4, V5, V11, V12 | The long road: Rajam Hall and its statue, library, IT department; yellow flowers fall. |
-| `hangar_yard` | V9, V12 | Hangar 1, the rusty vehicle, old fighter planes, maintenance shed, banner, wall gap. |
-| `humanities` | V10, V11, V12 | Science & Humanities building: stairs, the big door, the restroom. |
-| `nri_hostel` | V10 | Burning corridor (fire escape). |
-| `radha_nagar` | V6 | Market street, stalls, alleys, the bridge, bins. |
-| `back_gate` | V6 | Back gate, the auto, the rainy road. |
-| `dhana_house` | V7, V8, V9 | Hall, kitchen, her mother's locked room; the mirror and the bracelet shelf. |
-| `police_station` | V7, V9 | Front desk, interrogation room, cell. |
-| `daydream` | V8 | Dhanasree's hallway as Ragul imagines it (anime tint): the fantasy battles. |
+| `hostel_room` | V1, V3 | Ragul and Nithish's room; bunk (rest point), desk, laptop, the bookshelf fragment. Night variant. |
+| `hostel_road` | V1, V3, V11 | Krishnaa on the road in V1 (stealth, wall-top path); the veranda and restroom at night in V3; the jeep at the gate and the start of the chase in V11 (smoke variant). |
+| `cut_road` | V1, V11, V12 | The man on the road, the red shirt; where Nithish trips; the standoff. |
+| `mit_road` | V1, V2, V4, V5, V12 | The flashmob; Krishnaa's trip; asking around the IT department; the dusk walk and Pranav; Rajam Hall at the end. Dusk and cloudy variants. |
+| `snow_dream` | V3 | Nithish's dream: Glacia art, Janani running into the dark. |
+| `cheese_freeze` | V5 | Out the back door past the police. |
+| `radha_nagar` | V6 | Alley, disguise, market guards, the chase to the bridge and the bins. |
+| `back_gate` | V6 | The rain chase; Nithish falls. |
+| `dhana_house` | V7, V8, V9 | Hall, TV, kitchen, her mother's room (rest point), mirror, the shelf with the gun. Day variant. |
+| `daydream` | V8 | Ragul's anime hallway: soldiers and the Captain. |
+| `hangar_yard` | V9, V12 | The rain flashback (the gun, the wall gap); the plane yard, the shed, oil and rope. |
+| `nri_hostel` | V10 | The burning corridor (fire tiles). |
+| `humanities` | V10, V11, V12 | Two floors; the girls' restroom; the big door upstairs. |
 
-Other places are cutscene backdrops only: the shed, the cafés, the mortuary, the hospital, the train, the warehouse
-memory.
+The police station, interrogation room, cafés, mortuary, hospital, train and warehouse are cutscene backdrops only.
 
 **Rest points.** There are no Red Rosoar trees on Earth. Rest points are quiet spots such as a hostel bunk, a bench under
 the copper-pod tree, or a tea-stall bench. They behave exactly like the trees: rest, heal, save.

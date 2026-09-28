@@ -56,7 +56,7 @@ export class HudScene extends Phaser.Scene {
         bar(this.g, x + 62, y + 40, 120, 5, st.soulHunger / 100, st.soulHunger >= 70 ? 0xff5a7a : 0x9a7cff);
         this.texts.push(addText(this, x + 186, y + 35, 'hunger', { size: 12, color: C.textFaint }));
       }
-      if (id === 'dhanasree') {
+      if (id === 'dhanasree' && (st.venture.purpose !== 1 || st.inventory.handgun)) {
         for (let i = 0; i < 6; i++) {
           this.g.fillStyle(i < st.ammo ? 0xffd98a : 0x2a3348, 1).fillRect(x + 62 + i * 9, y + 41, 6, 4);
         }

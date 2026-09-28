@@ -157,7 +157,7 @@ export class WorldScene extends Phaser.Scene {
     const st = session.state;
     const find = (pred: (p: PlacedEntity) => boolean) => r.entities.find(pred);
     let pos = find((p) => p.def.type === 'spawn' && p.def.id === (data.entry ?? 'start')) ?? find((p) => p.def.type === 'spawn');
-    if (!data.entry && st.location.checkpoint) pos = find((p) => p.def.type === 'tree' && p.def.id === st.location.checkpoint) ?? pos;
+    if (!data.entry && st.location.checkpoint) pos = find((p) => (p.def.type === 'tree' || p.def.type === 'rest') && p.def.id === st.location.checkpoint) ?? pos;
     let x = pos?.x ?? 200, y = pos?.y ?? 400;
     if (!data.entry && !st.location.checkpoint && (st.location.x || st.location.y)) { x = st.location.x; y = st.location.y; }
 
@@ -220,7 +220,10 @@ export class WorldScene extends Phaser.Scene {
     this.ready = true;
     const next = data.story ?? (data.resume && st.resume ? st.resume : null);
     if (next) {
-      this.time.delayedCall(350, () => void this.story(next.script, next.label).then(banner));
+      // Hold everything until the story starts, so no trigger or key press can pre-empt it.
+      this.busy = true;
+      this.player.locked = true;
+      this.time.delayedCall(350, () => { this.busy = false; void this.story(next.script, next.label).then(banner); });
     } else if (!st.flags.slice_intro_done && r.id === 'frozen_shore') {
       this.time.delayedCall(400, () => void this.story('slice/glacia_slice', 'intro').then(banner));
     } else this.time.delayedCall(700, banner);

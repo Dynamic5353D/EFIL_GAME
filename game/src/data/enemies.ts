@@ -50,7 +50,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
   dream_soldier: {
     id: 'dream_soldier',
     name: loc('Masked soldier', 'Mugamoodi sippai'),
-    stats: { maxHp: 38, atk: 9, def: 4, spd: 9 },
+    stats: { maxHp: 32, atk: 8, def: 4, spd: 9 },
     tags: ['dream'],
     statuses: [],
     skills: ['rifle_butt', 'volley'],
@@ -62,7 +62,7 @@ export const ENEMIES: Record<string, EnemyDef> = {
   dream_captain: {
     id: 'dream_captain',
     name: loc('The Captain', 'Captain'),
-    stats: { maxHp: 150, atk: 12, def: 6, spd: 10 },
+    stats: { maxHp: 120, atk: 10, def: 5, spd: 9 },
     tags: ['dream', 'boss'],
     statuses: [],
     skills: ['saber', 'volley', 'rifle_butt'],

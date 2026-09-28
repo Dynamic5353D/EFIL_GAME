@@ -44,7 +44,9 @@ A 2D side-scrolling story RPG (16+), adapted from the user's novel and art.
 - [x] **M1 (engine vertical slice):** built, **awaiting the user's review**. Two Glacia test rooms (Frozen Shore, Winter Path) built from the user's art, with parallax, painted terrain, lighting, weather, colour grade and the platforming feel. Also: Rosoar-tree rest and save, three save slots, Vale encounters leading into turn-based battles (timeline, Death Touch/Doom, Vale ink and re-forming, cubes, handgun, Loop Sense, Rewind, results), dialogue with the EN/Tanglish toggle and choices, the chapter card, the pause menu (party and keepsakes, items, Memory Fragments, map), settings with key rebinding, and credits with the Tele-MANAS note. The script is `src/story/slice/glacia_slice.story`.
   - Dev jump (dev server only): `?room=winter_path&flags=a,b&party=dhanasree&items=acanus_feather` starts in slot 3 in that room. Add `&fast` to run battles at 6× speed.
   - A room's painted layers are drawn on the CPU on first visit and then cached for the session. That took about 3.5 s in headless Chromium, which renders in software; it has not been timed on real hardware.
-- [ ] M2: Act I (Purpose 1)
+- [x] **M2 (Act I, Purpose 1):** built, **awaiting the user's review**. New game starts at Venture 1; Title, Chapters starts any Venture (all unlocked in this build) or the M1 Glacia slice. See `docs/act1.md` and `docs/decisions.md`.
+  - 13 Earth rooms with code-painted backdrops (`data/rooms_p01.ts`), 12 scripts `src/story/p01/v01..v12.story` in English and the novel's Tanglish, 5 word battles, the daydream fights, stealth, chases, the Case Board and Memory Fragments.
+  - Dev jump: `?venture=5` starts that Venture in slot 3; add `&label=walk` to start at a label, `&fast` for fast battles.
 - [ ] M3–M11: Acts II–X
 - [ ] M12: polish
 

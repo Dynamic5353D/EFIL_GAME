@@ -60,7 +60,7 @@ function hostelRoad(): RoomDef {
   b.at(14, 17, { type: 'pickup', id: 'p01_fest_poster', script: V(1), label: 'poster', visual: 'fragment' });
   b.at(24, 17, { type: 'prop', visual: 'lamp' });
   b.at(34, 17, { type: 'section', id: 'before_krishnaa' });
-  b.at(30, 17, { type: 'trigger', id: 'see_krishnaa', script: V(1), label: 'see_krishnaa', requires: 'v01_left_room', unless: 'v01_saw_krishnaa', height: 6 });
+  b.at(30, 17, { type: 'trigger', id: 'see_krishnaa', script: V(1), label: 'see_krishnaa', requires: 'v01_awake', unless: 'v01_saw_krishnaa', height: 6 });
   b.at(52, 17, { type: 'hide', id: 'road_bin', visual: 'bin' });
   b.at(62, 17, { type: 'guard', id: 'krishnaa', rig: 'krishnaa', patrol: 0, range: 9, facing: -1, requires: 'v01_saw_krishnaa', hideIf: 'v01_passed_krishnaa', script: V(1), fail: 'krishnaa_sees' });
   b.at(65, 17, { type: 'npc', id: 'kfriend', speaker: 'kfriend', rig: 'guy', radius: 0, face: 1, requires: 'v01_saw_krishnaa', hideIf: 'v01_passed_krishnaa' });

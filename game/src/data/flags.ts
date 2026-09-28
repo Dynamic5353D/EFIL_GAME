@@ -19,6 +19,7 @@ export const FLAGS: Record<string, string> = {
   mit_cloudy: 'The MIT road on the cloudy afternoon (V11-V12)',
 
   // ---------------------------------------------------------------- Venture 1
+  v01_awake: 'V1: That guy is up and ready',
   v01_left_room: 'V1: That guy has left the hostel room',
   v01_saw_krishnaa: 'V1: he has spotted Krishnaa on the road',
   v01_passed_krishnaa: 'V1: he got past Krishnaa',
