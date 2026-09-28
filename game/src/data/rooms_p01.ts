@@ -154,6 +154,13 @@ function mitRoad(): RoomDef {
   for (const [x, rig] of [[52, 'girl'], [55, 'guy'], [58, 'sneya'], [79, 'guy'], [82, 'girl'], [85, 'kabi']] as const) {
     b.at(x, 17, { type: 'npc', id: `crowd_${x}`, speaker: 'guy', rig, radius: 0, requires: 'v01_flashmob', hideIf: 'v01_fest_cancelled' });
   }
+  // Venture 5: the walk at dusk, Pranav and Krishnaa on the bike.
+  b.at(84, 17, { type: 'trigger', id: 'pranav_call', script: V(5), label: 'pranav_call', requires: 'v05_walk', unless: 'v05_pranav_called', height: 6 });
+  b.at(98, 17, { type: 'prop', visual: 'bike', requires: 'v05_pranav_called', hideIf: 'v05_left_pranav', flip: true });
+  b.at(96, 17, { type: 'npc', id: 'pranav_v5', speaker: 'pranav', radius: 0, face: -1, requires: 'v05_pranav_called', hideIf: 'v05_left_pranav' });
+  b.at(100, 17, { type: 'npc', id: 'krishnaa_v5', speaker: 'krishnaa', radius: 0, face: -1, requires: 'v05_pranav_called', hideIf: 'v05_left_pranav' });
+  b.at(92, 17, { type: 'trigger', id: 'pranav', script: V(5), label: 'pranav', requires: 'v05_pranav_called', unless: 'v05_left_pranav', height: 6 });
+  b.at(144, 17, { type: 'trigger', id: 'to_cafe', script: V(5), label: 'to_cafe', requires: 'v05_left_pranav', unless: 'v05_at_cafe', height: 6 });
   // Venture 4: asking around near the IT department.
   const ask = (x: number, id: string, speaker: string, label: string, face: 1 | -1 = -1) =>
     b.at(x, 17, { type: 'npc', id, speaker, radius: 0, talk: true, face, script: V(4), label, requires: 'v04_investigate', hideIf: 'v04_done' });
@@ -207,5 +214,168 @@ function snowDream(): RoomDef {
   });
 }
 
-export const P01_ROOMS: RoomDef[] = [hostelRoom(), hostelRoad(), cutRoad(), mitRoad(), snowDream()];
+/** Cheese N Freeze (V5): yellow lights, plastic flowers. Police at the front; out through the back. */
+function cheeseFreeze(): RoomDef {
+  const b = new RoomBuilder(44, 18);
+  b.rect(0, 0, 2, 18).rect(42, 0, 2, 18);
+  b.ground(2, 40, 15);
+  b.ground(11, 3, 14);                   // the counter
+  b.at(24, 14, { type: 'spawn', id: 'table' });
+  b.at(4, 14, { type: 'prop', visual: 'door' });
+  b.at(39, 14, { type: 'prop', visual: 'door' });
+  b.at(21, 14, { type: 'hide', id: 'table_a', visual: 'desk' });
+  b.at(16, 14, { type: 'hide', id: 'shelf_b', visual: 'shelf' });
+  b.at(28, 14, { type: 'prop', visual: 'desk' });
+  b.at(33, 14, { type: 'prop', visual: 'chair' });
+  b.at(24, 14, { type: 'section', id: 'cafe_start' });
+  b.at(33, 14, { type: 'guard', id: 'cafe_police', rig: 'police', patrol: 6, range: 7, facing: -1, speed: 55, requires: 'v05_police_in', hideIf: 'v05_escaped' });
+  b.at(4, 14, { type: 'trigger', id: 'back_door', script: V(5), label: 'back_door', requires: 'v05_police_in', unless: 'v05_escaped', height: 5 });
+  return finish(b, {
+    id: 'cheese_freeze', name: loc('Cheese N Freeze', 'Cheese N Freeze'), area: 'mit',
+    backdrop: 'gen:cheese_freeze', palette: 'gen:cheese_freeze', music: 'stealth', ambient: 0xe8c890,
+    grade: INDOOR, weather: [], interior: true, terrain: 'tile',
+    scenery: { trees: 'none', density: 1, ridge: false, icicles: false },
+    mapPos: { x: 22, y: 0, w: 3, h: 2 },
+  });
+}
+
+/** Radha Nagar market (V6): the crowd, an alley between buildings, the market street, the bridge. */
+function radhaNagar(): RoomDef {
+  const b = new RoomBuilder(150, 22);
+  b.ground(0, 150, 18);
+  // The alley: rubbish, crates and a low wall to climb.
+  b.ground(44, 2, 17).ground(47, 3, 16).ground(52, 2, 17).ground(56, 4, 15);
+  b.rect(62, 13, 5, 1, '=');
+  b.ground(64, 3, 16);
+  // Market street stalls with awnings to stand on.
+  b.rect(86, 13, 5, 1, '=');
+  b.rect(104, 13, 5, 1, '=');
+  // The bridge ramp.
+  b.ground(124, 4, 17).ground(128, 12, 16).ground(140, 4, 17);
+  b.at(3, 17, { type: 'spawn', id: 'start' });
+  b.at(8, 17, { type: 'sign', text: loc('Radha Nagar', 'Radha Nagar') });
+  for (const [x, rig] of [[14, 'guy'], [18, 'girl'], [22, 'vendor'], [27, 'guy'], [31, 'girl']] as const) {
+    b.at(x, 17, { type: 'npc', id: `rn_crowd_${x}`, speaker: 'guy', rig, radius: 0 });
+  }
+  b.at(20, 17, { type: 'prop', visual: 'stall' });
+  b.at(34, 17, { type: 'prop', visual: 'stall', flip: true });
+  b.at(10, 17, { type: 'trigger', id: 'phones', script: V(6), label: 'phones', unless: 'v06_phones', height: 6 });
+  b.at(38, 17, { type: 'section', id: 'alley' });
+  b.at(38, 17, { type: 'trigger', id: 'followed', script: V(6), label: 'followed', requires: 'v06_phones', unless: 'v06_alley', height: 6 });
+  b.at(44, 16, { type: 'prop', visual: 'bin' });
+  b.at(52, 16, { type: 'prop', visual: 'crate' });
+  // The market street: stalls to hide behind, a scarf stall, two plain-clothes policemen.
+  b.at(72, 17, { type: 'section', id: 'market' });
+  b.at(72, 17, { type: 'trigger', id: 'market', script: V(6), label: 'market', requires: 'v06_alley', unless: 'v06_market', height: 8 });
+  b.at(76, 17, { type: 'use', id: 'scarf_stall', items: [], script: V(6), label: 'disguise', prompt: loc('Grab a scarf', 'Scarf edu'), requires: 'v06_market', unless: 'disguised' });
+  b.at(76, 17, { type: 'prop', visual: 'stall' });
+  b.at(88, 17, { type: 'hide', id: 'stall_a', visual: 'stall' });
+  b.at(97, 17, { type: 'hide', id: 'bin_a', visual: 'bin' });
+  b.at(106, 17, { type: 'hide', id: 'stall_b', visual: 'stall' });
+  b.at(94, 17, { type: 'guard', id: 'mufti_a', rig: 'mufti', patrol: 4, range: 8, facing: -1, speed: 60, requires: 'v06_market', hideIf: 'v06_run' });
+  b.at(112, 17, { type: 'guard', id: 'mufti_b', rig: 'mufti', patrol: 3, range: 8, facing: -1, speed: 50, requires: 'v06_market', hideIf: 'v06_run' });
+  b.at(116, 17, { type: 'npc', id: 'vendor_v6', speaker: 'vendor', radius: 0, face: -1 });
+  b.at(118, 17, { type: 'trigger', id: 'vendor', script: V(6), label: 'vendor', requires: 'v06_market', unless: 'v06_run', height: 8 });
+  b.at(118, 17, { type: 'section', id: 'run' });
+  b.at(114, 17, { type: 'chaser', id: 'cop3', rig: 'mufti', speed: 380, delay: 0.8, requires: 'v06_run', unless: 'v06_hidden' });
+  b.at(134, 15, { type: 'sign', text: loc('Bridge', 'Palam') });
+  b.at(146, 17, { type: 'prop', visual: 'bin' });
+  b.at(147, 17, { type: 'trigger', id: 'bins', script: V(6), label: 'bins', requires: 'v06_run', unless: 'v06_hidden', height: 8 });
+  for (const x of [26, 62, 82, 100, 122]) b.at(x, 17, { type: 'prop', visual: 'lamp' });
+  return finish(b, {
+    id: 'radha_nagar', name: loc('Radha Nagar', 'Radha Nagar'), area: 'mit',
+    backdrop: 'gen:market_evening', palette: 'gen:market_evening', music: 'stealth', ambient: 0xe0a070,
+    grade: { brightness: 1.05, saturation: 1.1, contrast: 0.06, tint: 0xffa860, tintAmount: 0.06 }, weather: ['dust'], terrain: 'asphalt',
+    scenery: { trees: 'palm', density: 0.6, ridge: false, icicles: false },
+    mapPos: { x: 22, y: 2, w: 7, h: 2 },
+  });
+}
+
+/** Outside the MIT back gate in the rain (V6): the gate, the auto, the slippery road away from it. */
+function backGate(): RoomDef {
+  const b = new RoomBuilder(120, 22);
+  b.ground(0, 120, 18);
+  b.ground(62, 6, 17);
+  b.rect(92, 14, 5, 1, '=');
+  b.at(48, 17, { type: 'spawn', id: 'start' });
+  b.at(24, 17, { type: 'prop', visual: 'gate' });
+  b.at(20, 17, { type: 'sign', text: loc('MIT back gate', 'MIT back gate') });
+  b.at(29, 17, { type: 'npc', id: 'gate_police', speaker: 'police', radius: 0, face: 1, hideIf: 'v06_rain_run' });
+  b.at(32, 17, { type: 'npc', id: 'gate_security', speaker: 'security', radius: 0, face: -1, hideIf: 'v06_rain_run' });
+  b.at(38, 17, { type: 'hide', id: 'auto', visual: 'auto' });
+  b.at(96, 17, { type: 'npc', id: 'dharshna_walk', speaker: 'dharshna', radius: 0, face: -1, walkTo: 46, walkSpeed: 90, walkFlag: 'v06_dharshna_near', hideIf: 'v06_nithish_fell' });
+  b.at(42, 17, { type: 'trigger', id: 'back_gate', script: V(6), label: 'back_gate', unless: 'v06_rain_run', height: 6 });
+  b.at(42, 17, { type: 'section', id: 'rain_start' });
+  b.at(30, 17, { type: 'chaser', id: 'rajesh_chase', rig: 'rajesh', speed: 330, delay: 1.2, requires: 'v06_rain_run', unless: 'v06_nithish_fell' });
+  b.at(82, 17, { type: 'trigger', id: 'fall', script: V(6), label: 'fall', requires: 'v06_rain_run', unless: 'v06_nithish_fell', height: 8 });
+  b.at(116, 17, { type: 'trigger', id: 'escaped', script: V(6), label: 'escaped', requires: 'v06_nithish_fell', unless: 'v06_done', height: 8 });
+  for (const x of [8, 52, 74, 104]) b.at(x, 17, { type: 'prop', visual: 'lamp' });
+  return finish(b, {
+    id: 'back_gate', name: loc('MIT back gate', 'MIT back gate'), area: 'mit',
+    backdrop: 'gen:rain_night', palette: 'gen:rain_night', music: 'chase', ambient: 0x6a7a98,
+    grade: { brightness: 0.95, saturation: 0.9, contrast: 0.08, tint: 0x8aa8d8, tintAmount: 0.08 }, weather: ['rain', 'mist'], terrain: 'asphalt',
+    scenery: { trees: 'neem', density: 0.8, ridge: false, icicles: false },
+    mapPos: { x: 29, y: 2, w: 5, h: 2 },
+  });
+}
+
+/** Dhanasree's house (V7-V9): the hall and TV, the kitchen, her mother's locked room. */
+function dhanaHouse(): RoomDef {
+  const b = new RoomBuilder(50, 18);
+  b.rect(0, 0, 2, 18).rect(48, 0, 2, 18);
+  b.ground(2, 46, 15);
+  b.rect(19, 10, 4, 1, '=');             // loft shelf above the kitchen
+  b.rect(30, 3, 1, 9);                   // wall between the hall and her mother's room (a doorway below)
+  b.at(4, 14, { type: 'spawn', id: 'door' });
+  b.at(12, 14, { type: 'spawn', id: 'hall' });
+  b.at(38, 14, { type: 'spawn', id: 'mother_room' });
+  b.at(3, 14, { type: 'prop', visual: 'door' });
+  b.at(9, 14, { type: 'prop', visual: 'bench' });
+  b.at(14, 14, { type: 'prop', visual: 'tv' });
+  b.at(14, 14, { type: 'use', id: 'tv', items: [], script: V(7), label: 'tv', prompt: loc('Switch on the TV', 'TV podu'), requires: 'v07_washed', unless: 'v07_tv' });
+  b.at(21, 14, { type: 'prop', visual: 'desk' });
+  b.at(21, 14, { type: 'use', id: 'kitchen', items: [], script: V(7), label: 'kitchen', prompt: loc('Wash your hands', 'Kai kazhuvu'), requires: 'v07_house', unless: 'v07_washed' });
+  b.at(20, 9, { type: 'pickup', id: 'p01_family_photo', script: V(7), label: 'family_photo', visual: 'fragment' });
+  b.at(26, 14, { type: 'prop', visual: 'shelf' });
+  b.at(31, 14, { type: 'prop', visual: 'door' });
+  b.at(36, 14, { type: 'rest', id: 'mother_bed', visual: 'bed' });
+  b.at(41, 14, { type: 'prop', visual: 'mirror', hideIf: 'v08_house' });
+  b.at(45, 14, { type: 'prop', visual: 'shelf' });
+  b.at(45, 14, { type: 'use', id: 'gun_shelf', items: [], script: V(9), label: 'shelf', prompt: loc('Open the shelf', 'Shelf-a thira'), requires: 'v09_house', unless: 'v09_gun' });
+  return finish(b, {
+    id: 'dhana_house', name: loc('Dhanasree\'s house', 'Dhanasree veedu'), area: 'mit',
+    backdrop: 'gen:house_night', palette: 'gen:house_night', music: 'campus_night', ambient: 0xd8b888,
+    grade: INDOOR, weather: ['dust'], interior: true, terrain: 'wood',
+    scenery: { trees: 'none', density: 1, ridge: false, icicles: false },
+    mapPos: { x: 0, y: 5, w: 4, h: 2 },
+    variants: [{ flag: 'house_day', backdrop: 'gen:house_day', music: 'mystery', ambient: 0xe8d8c0 }],
+  });
+}
+
+/** Ragul's daydream (V8): Dhanasree's hallway as an anime set, soldiers with glowing blue eyes. */
+function daydream(): RoomDef {
+  const b = new RoomBuilder(80, 18);
+  b.rect(0, 0, 2, 18).rect(78, 0, 2, 18);
+  b.ground(2, 76, 15);
+  b.ground(34, 4, 14).ground(38, 4, 13).ground(42, 4, 12);   // the stairs
+  b.ground(46, 32, 12);
+  b.rect(24, 10, 4, 1, '=');
+  b.at(5, 14, { type: 'spawn', id: 'start' });
+  b.at(4, 14, { type: 'npc', id: 'dream_dhana', speaker: 'dhanasree', radius: 0, face: 1, hideIf: 'v08_dream_done' });
+  b.at(8, 14, { type: 'trigger', id: 'dream_start', script: V(8), label: 'dream_start', unless: 'v08_dream_started', height: 6 });
+  b.at(20, 14, { type: 'enemy', id: 'dream_pair', enemy: 'dream_soldier', battle: 'dream_hallway', patrol: 3 });
+  b.at(52, 11, { type: 'enemy', id: 'dream_trio', enemy: 'dream_soldier', battle: 'dream_stairs', patrol: 3 });
+  b.at(70, 11, { type: 'npc', id: 'captain', speaker: 'captain', rig: 'captain', radius: 0, face: -1, hideIf: 'v08_dream_done' });
+  b.at(64, 11, { type: 'trigger', id: 'captain_fight', script: V(8), label: 'captain', unless: 'v08_dream_done', height: 6 });
+  b.at(26, 9, { type: 'pickup', id: 'p01_hero_pose', script: V(8), label: 'hero_pose', visual: 'fragment' });
+  return finish(b, {
+    id: 'daydream', name: loc('Superhero Ragul', 'Superhero Ragul'), area: 'mit',
+    backdrop: 'gen:daydream', palette: 'gen:daydream', music: 'daydream', ambient: 0xd8a8ff,
+    grade: { brightness: 1.1, saturation: 1.35, contrast: 0.1, tint: 0xff7ad8, tintAmount: 0.1 }, weather: ['motes'], interior: true, terrain: 'wood',
+    scenery: { trees: 'none', density: 1, ridge: false, icicles: false },
+    mapPos: { x: 4, y: 5, w: 4, h: 2 },
+  });
+}
+
+export const P01_ROOMS: RoomDef[] = [hostelRoom(), hostelRoad(), cutRoad(), mitRoad(), snowDream(), cheeseFreeze(), radhaNagar(), backGate(), dhanaHouse(), daydream()];
 export const P01_AREA = { name: loc('MIT Chromepet', 'MIT Chromepet'), rooms: P01_ROOMS.map((r) => r.id) };

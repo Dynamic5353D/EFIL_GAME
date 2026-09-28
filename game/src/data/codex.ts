@@ -101,4 +101,28 @@ export const CODEX: Record<string, CodexEntry> = {
       'A straight road with a wall on one side and college buildings on the other. Students use it to cut across the campus, or to avoid someone on the main road.',
       'Oru pakkam suvar, innoru pakkam college katti-dangal irukura oru nerana road. Campus-a kuruka thaanda, illa main road-la yaaraiyaavadhu thavirkka, students idha use pannuvaanga.'),
   },
+  p01_family_photo: {
+    id: 'p01_family_photo',
+    title: loc('A photo, face down', 'Kavuththa photo'),
+    art: 'gen:house_night',
+    text: loc(
+      'Dhanasree\'s mother, young, in a white-and-blue beaded bracelet, holding a small girl. The frame had been turned to face the shelf.',
+      'Dhanasree-voda amma, ilamaiyil, vella-neela mani bracelet pottu, oru chinna ponna thookitu. Frame shelf pakkam thiruppi vechirundhuchu.'),
+  },
+  p01_bracelet: {
+    id: 'p01_bracelet',
+    title: loc('The white-and-blue bracelet', 'Vella-neela bracelet'),
+    art: 'gen:house_night',
+    text: loc(
+      'Beaded, white and blue, kept on the shelf in her mother\'s locked room. "My mother bought it for me. It\'s my favourite." Dhanasree checked it before anything else when the mirror broke.',
+      'Vella-neela mani, poottina amma room shelf-la vechirukkura. "Idhu yen amma vaangi kuduthadhu. It\'s my favorite." Kannaadi odanjappo Dhanasree ellaathukkum munnaadi adha dhaan paathaa.'),
+  },
+  p01_superhero: {
+    id: 'p01_superhero',
+    title: loc('Superhero Ragul', 'Superhero Ragul'),
+    art: 'gen:daydream',
+    text: loc(
+      'In his head he is fast, brave and funny under pressure, and the girl says "Ragul, you\'re amazing". In the room, a mirror lies in pieces on the floor.',
+      'Avan thalaikkulla avan vegamaanavan, dhairiyasaali, nerukkadila kooda comedy, andha ponnu "Ragul, kalakkura" solraa. Room-la, oru kannaadi thundu thundaa tharaila.'),
+  },
 };
