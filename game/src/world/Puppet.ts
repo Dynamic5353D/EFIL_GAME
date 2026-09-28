@@ -32,6 +32,7 @@ export class Puppet {
   eyes: Phaser.GameObjects.Image[] = [];
   private eyeDefs: { x: number; y: number; color: number }[];
   private flashT = 0;
+  private flashFilter: Phaser.Filters.ColorMatrix | null = null;
   lean = 0;
 
   constructor(private scene: Phaser.Scene, slug: string, x: number, y: number, private o: PuppetOpts) {
@@ -108,8 +109,13 @@ export class Puppet {
       v[i * 4 + 1] = p.y;
     }
     this.flashT = Math.max(0, this.flashT - dt);
-    if (this.flashT > 0) this.mesh.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
-    else this.mesh.clearTint();
+    // Mesh2D has no tint, so the hit flash is a colour-matrix filter, created on the first hit.
+    if (this.flashT > 0 && !this.flashFilter) {
+      this.mesh.enableFilters();
+      this.flashFilter = this.mesh.filters!.internal.addColorMatrix();
+      this.flashFilter.colorMatrix.brightness(2.6);
+    }
+    this.flashFilter?.setActive(this.flashT > 0);
     this.eyeDefs.forEach((e, i) => {
       this.deform((e.x - 0.5) * this.w, -this.h + e.y * this.h, p);
       const img = this.eyes[i]!;

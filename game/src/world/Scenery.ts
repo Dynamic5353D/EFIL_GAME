@@ -21,8 +21,7 @@ function layerSize(roomW: number, roomH: number, sx: number, sy: number) {
 }
 
 function addCanvasTexture(scene: Phaser.Scene, key: string, c: HTMLCanvasElement) {
-  if (scene.textures.exists(key)) scene.textures.remove(key);
-  scene.textures.addCanvas(key, c);
+  if (!scene.textures.exists(key)) scene.textures.addCanvas(key, c);
 }
 
 export class Scenery {
@@ -79,7 +78,7 @@ export class Scenery {
     if (r.scenery.ridge) this.ridge(roomW, roomH, noise, mixRgb(this.fogColor, sh, 0.35), 0.28, DEPTH.ridge, 0.85);
     this.trees(roomW, roomH, noise, 0.45, DEPTH.treesFar, mixRgb(this.fogColor, dom, 0.25), 0.55, 0.6);
     this.fogBand(roomW, roomH, 0.5, DEPTH.fogFar, 0.35);
-    this.trees(roomW, roomH, noise, 0.72, DEPTH.treesNear, mixRgb(mixRgb(dom, sh, 0.55), hi, 0.12), 0.85, 0.85);
+    this.trees(roomW, roomH, noise, 0.72, DEPTH.treesNear, mixRgb(mixRgb(dom, sh, 0.45), hi, 0.2), 0.85, 0.85);
     this.fogBand(roomW, roomH, 0.85, DEPTH.fog, 0.22);
     this.foreground(roomW, roomH, noise, scaleRgb(sh, 0.35));
   }
@@ -87,6 +86,11 @@ export class Scenery {
   private ridge(roomW: number, roomH: number, noise: Noise, col: RGB, sx: number, depth: number, alpha: number) {
     const s = this.scene;
     const size = layerSize(roomW, roomH, sx, sx * 0.6);
+    const key = `ridge:${this.room.id}`;
+    if (s.textures.exists(key)) {
+      this.objects.push(s.add.image(0, 0, key).setOrigin(0).setScrollFactor(sx, sx * 0.6).setDepth(depth).setAlpha(alpha));
+      return;
+    }
     const { c, g } = makeCanvas(size.w, size.h);
     const base = size.h * 0.62;
     g.beginPath();
@@ -107,75 +111,99 @@ export class Scenery {
     this.objects.push(s.add.image(0, 0, `ridge:${this.room.id}`).setOrigin(0).setScrollFactor(sx, sx * 0.6).setDepth(depth).setAlpha(alpha));
   }
 
+  /** A soft round puff tinted `col`, stamped many times to build frost and foliage. */
+  private puff(col: RGB, soft: number): HTMLCanvasElement {
+    const { c, g } = makeCanvas(64, 64);
+    const gr = g.createRadialGradient(28, 26, 2, 32, 32, 32);
+    gr.addColorStop(0, rgbCss(mixRgb(col, [255, 255, 255], 0.35)));
+    gr.addColorStop(soft, rgbCss(col, 0.85));
+    gr.addColorStop(1, rgbCss(col, 0));
+    g.fillStyle = gr;
+    g.fillRect(0, 0, 64, 64);
+    return c;
+  }
+
   private trees(roomW: number, roomH: number, noise: Noise, sx: number, depth: number, col: RGB, scale: number, alpha: number) {
     const s = this.scene;
-    const sy = sx * 0.8;
-    const size = layerSize(roomW, roomH, sx, sy);
-    const { c, g } = makeCanvas(size.w, size.h);
-    const style = this.room.scenery.trees;
-    const groundY = size.h - VH * 0.12 * scale;
-    const spacing = (style === 'arch' ? 150 : 210) * scale / this.room.scenery.density;
-    const hiCol = mixRgb(col, [245, 250, 255], style === 'pluffine' ? 0.7 : 0.25);
-    for (let x = -60, i = 0; x < size.w + 60; x += spacing * (0.6 + noise.value(i * 1.7, 2.2) * 0.8), i++) {
-      const h = (style === 'arch' ? 560 : 380) * scale * (0.7 + noise.value(i * 3.1, 5.5) * 0.6);
-      const lean = (noise.value(i * 2.3, 8.1) - 0.5) * 0.25 + (style === 'arch' ? (i % 2 ? 0.28 : -0.28) : 0);
-      const trunkW = (style === 'arch' ? 16 : 12) * scale;
-      // Trunk as a tapered curve.
-      g.fillStyle = rgbCss(scaleRgb(col, 0.7));
-      g.beginPath();
-      const tx = x + Math.sin(lean) * h;
-      g.moveTo(x - trunkW, groundY);
-      g.quadraticCurveTo(x + (tx - x) * 0.3, groundY - h * 0.6, tx, groundY - h);
-      g.quadraticCurveTo(x + (tx - x) * 0.3 + trunkW * 0.3, groundY - h * 0.6, x + trunkW, groundY);
-      g.closePath();
-      g.fill();
-      if (style === 'pluffine') {
-        // Fluffy frosted canopy: clusters of soft circles, lit from above.
-        for (let k = 0; k < 9; k++) {
-          const a = noise.value(i * 5 + k, 1.3) * Math.PI * 2;
-          const rr = (40 + noise.value(k * 2.2, i * 1.1) * 50) * scale;
-          const cx = tx + Math.cos(a) * rr * 0.9, cy = groundY - h + Math.sin(a) * rr * 0.5 + rr * 0.2;
-          const gr = g.createRadialGradient(cx - rr * 0.3, cy - rr * 0.4, rr * 0.1, cx, cy, rr);
-          gr.addColorStop(0, rgbCss(hiCol));
-          gr.addColorStop(1, rgbCss(mixRgb(hiCol, col, 0.6)));
-          g.fillStyle = gr;
-          g.beginPath(); g.arc(cx, cy, rr, 0, Math.PI * 2); g.fill();
-        }
-      } else if (style === 'arch') {
-        // Branches reaching over the path, with small glowing beads.
-        g.strokeStyle = rgbCss(scaleRgb(col, 0.8));
-        g.lineCap = 'round';
-        for (let k = 0; k < 6; k++) {
-          const by = groundY - h * (0.45 + k * 0.09);
-          const bx = x + (tx - x) * (0.45 + k * 0.09);
-          const len = (90 + noise.value(i + k, 4.4) * 120) * scale;
-          const dir = (k + i) % 2 ? 1 : -1;
-          g.lineWidth = Math.max(1, (6 - k) * scale);
-          g.beginPath(); g.moveTo(bx, by); g.quadraticCurveTo(bx + dir * len * 0.5, by - len * 0.5, bx + dir * len, by - len * 0.2); g.stroke();
-          g.fillStyle = 'rgba(220,245,255,0.8)';
-          for (let q = 0; q < 3; q++) {
-            const t = 0.4 + q * 0.25;
-            g.beginPath(); g.arc(bx + dir * len * t, by - len * 0.35 * t + 8 * scale, 2.2 * scale, 0, Math.PI * 2); g.fill();
-          }
-        }
-      } else {
-        g.strokeStyle = rgbCss(scaleRgb(col, 0.7));
-        for (let k = 0; k < 5; k++) {
-          const by = groundY - h * (0.5 + k * 0.1);
-          g.lineWidth = 3 * scale;
-          g.beginPath(); g.moveTo(x + (tx - x) * (0.5 + k * 0.1), by); g.lineTo(x + (tx - x) * 0.6 + (k % 2 ? 60 : -60) * scale, by - 50 * scale); g.stroke();
-        }
-      }
-    }
-    // Snow bank along the bottom.
-    g.fillStyle = rgbCss(mixRgb(col, [240, 248, 255], 0.3));
-    g.beginPath();
-    g.moveTo(0, size.h);
-    for (let x = 0; x <= size.w; x += 10) g.lineTo(x, groundY - noise.fbm(x / 120, depth, 3) * 40 * scale);
-    g.lineTo(size.w, size.h);
-    g.fill();
     const key = `trees:${this.room.id}:${depth}`;
-    addCanvasTexture(s, key, c);
+    const sy = sx * 0.8;
+    if (!s.textures.exists(key)) {
+      const size = layerSize(roomW, roomH, sx, sy);
+      const { c, g } = makeCanvas(size.w, size.h);
+      const style = this.room.scenery.trees;
+      const groundY = size.h - VH * 0.12 * scale;
+      const spacing = (style === 'arch' ? 150 : 230) * scale / this.room.scenery.density;
+      const bark = scaleRgb(col, style === 'pluffine' ? 0.45 : 0.7);
+      const frost = mixRgb(col, [245, 250, 255], style === 'pluffine' ? 0.72 : 0.3);
+      const frostShade = mixRgb(frost, col, 0.45);
+      const puffLit = this.puff(frost, 0.45), puffShade = this.puff(frostShade, 0.5);
+      const bead = this.puff([220, 245, 255], 0.2);
+      let rnd = 0;
+      const r01 = () => noise.value(rnd++ * 0.731, depth * 0.37 + 9.1);
+      g.lineCap = 'round';
+      // Recursive branch: tapered stroke, children spread upward, frost puffs along the outer limbs.
+      const branch = (x: number, y: number, ang: number, len: number, w: number, level: number, maxLevel: number) => {
+        const bend = (r01() - 0.5) * 0.5;
+        const x1 = x + Math.cos(ang) * len, y1 = y + Math.sin(ang) * len;
+        const cx = x + Math.cos(ang + bend) * len * 0.5, cy = y + Math.sin(ang + bend) * len * 0.5;
+        g.strokeStyle = rgbCss(bark);
+        g.lineWidth = Math.max(0.8, w);
+        g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(cx, cy, x1, y1); g.stroke();
+        if (style === 'pluffine' && level >= maxLevel - 2) {
+          const n = Math.ceil(len / (5 * scale));
+          for (let i = 0; i < n; i++) {
+            const t = i / n;
+            const px = (1 - t) * (1 - t) * x + 2 * (1 - t) * t * cx + t * t * x1;
+            const py = (1 - t) * (1 - t) * y + 2 * (1 - t) * t * cy + t * t * y1;
+            const r = (5 + r01() * 11) * scale * (level === maxLevel ? 1.1 : 0.85);
+            g.globalAlpha = 0.55 + r01() * 0.45;
+            g.drawImage(r01() > 0.35 ? puffLit : puffShade, px - r + (r01() - 0.5) * 10 * scale, py - r - r01() * 8 * scale, r * 2, r * 2);
+          }
+          g.globalAlpha = 1;
+        }
+        if (style === 'arch' && level === maxLevel && r01() < 0.45) {
+          // The Winter Path's small glowing beads hang from the outermost twigs.
+          const t = 0.4 + r01() * 0.6, rr = (1.5 + r01() * 2) * scale;
+          g.drawImage(bead, x + (x1 - x) * t - rr * 1.5, y + (y1 - y) * t - rr * 1.5 + 5 * scale, rr * 3, rr * 3);
+        }
+        if (level >= maxLevel) return;
+        const kids = level === 0 ? 3 : r01() > 0.55 ? 3 : 2;
+        for (let k = 0; k < kids; k++) {
+          const spread = (k - (kids - 1) / 2) * (style === 'arch' ? 0.7 : 0.5) + (r01() - 0.5) * 0.6;
+          const up = style === 'arch' ? 0 : (-Math.PI / 2 - ang) * 0.25;
+          branch(x1, y1, ang + spread + up, len * (0.58 + r01() * 0.25), w * 0.62, level + 1, maxLevel);
+        }
+      };
+      const maxLevel = style === 'arch' ? (scale > 0.7 ? 4 : 3) : scale > 0.7 ? 5 : 4;
+      for (let x = -60, i = 0; x < size.w + 60; x += spacing * (0.6 + noise.value(i * 1.7, 2.2) * 0.8), i++) {
+        const h = (style === 'arch' ? 560 : 420) * scale * (0.7 + noise.value(i * 3.1, 5.5) * 0.6);
+        const lean = (noise.value(i * 2.3, 8.1) - 0.5) * 0.18 + (style === 'arch' ? (i % 2 ? 0.3 : -0.3) : 0);
+        const trunkW = (style === 'arch' ? 14 : 11) * scale * (0.8 + noise.value(i, 3.3) * 0.5);
+        const trunkLen = h * (style === 'pluffine' ? 0.45 : 0.4);
+        const tx = x + Math.sin(lean) * trunkLen, ty = groundY - trunkLen;
+        g.fillStyle = rgbCss(bark);
+        g.beginPath();
+        g.moveTo(x - trunkW, groundY);
+        g.quadraticCurveTo(x + (tx - x) * 0.4 - trunkW * 0.6, groundY - trunkLen * 0.5, tx - trunkW * 0.45, ty);
+        g.lineTo(tx + trunkW * 0.45, ty);
+        g.quadraticCurveTo(x + (tx - x) * 0.4 + trunkW * 0.6, groundY - trunkLen * 0.5, x + trunkW, groundY);
+        g.closePath();
+        g.fill();
+        // Snow caught on the lit side of the trunk.
+        g.strokeStyle = rgbCss(frost, 0.6);
+        g.lineWidth = Math.max(1, trunkW * 0.25);
+        g.beginPath(); g.moveTo(x - trunkW * 0.8, groundY); g.quadraticCurveTo(x + (tx - x) * 0.4 - trunkW * 0.5, groundY - trunkLen * 0.5, tx - trunkW * 0.4, ty); g.stroke();
+        branch(tx, ty, -Math.PI / 2 + lean * 1.5, h * 0.3, trunkW * 0.8, 0, maxLevel);
+      }
+      // Snow bank along the bottom.
+      g.fillStyle = rgbCss(mixRgb(col, [240, 248, 255], 0.3));
+      g.beginPath();
+      g.moveTo(0, size.h);
+      for (let x = 0; x <= size.w; x += 10) g.lineTo(x, groundY - noise.fbm(x / 120, depth, 3) * 40 * scale);
+      g.lineTo(size.w, size.h);
+      g.fill();
+      s.textures.addCanvas(key, c);
+    }
     this.objects.push(s.add.image(0, 0, key).setOrigin(0).setScrollFactor(sx, sy).setDepth(depth).setAlpha(alpha));
   }
 
@@ -201,6 +229,11 @@ export class Scenery {
     const sx = 1.3;
     const w = VW + Math.max(0, roomW - VW) * sx + 200;
     const h = 220;
+    const key = `fg:${this.room.id}`;
+    if (s.textures.exists(key)) {
+      this.objects.push(s.add.image(0, roomH - h + 30, key).setOrigin(0).setScrollFactor(sx, 1).setDepth(DEPTH.foreground));
+      return;
+    }
     const { c, g } = makeCanvas(w, h);
     g.fillStyle = rgbCss(col, 0.96);
     g.beginPath();
@@ -221,7 +254,6 @@ export class Scenery {
       g.lineWidth = 2.5;
       for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(x + 15, base - 50 - k * 28); g.lineTo(x + 15 + (k % 2 ? 40 : -35), base - 80 - k * 28); g.stroke(); }
     }
-    const key = `fg:${this.room.id}`;
     addCanvasTexture(s, key, c);
     this.objects.push(s.add.image(0, roomH - h + 30, key).setOrigin(0).setScrollFactor(sx, 1).setDepth(DEPTH.foreground));
   }

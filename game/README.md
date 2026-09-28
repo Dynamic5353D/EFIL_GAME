@@ -14,6 +14,12 @@ bun run lint:story   # story script linter
 bun run build        # production build in dist/
 ```
 
+## Dev shortcuts
+
+With the dev server running, `http://localhost:5173/?room=winter_path&flags=slice_intro_done&party=dhanasree`
+starts a fresh game (slot 3) in that room with those flags, party members and items (`&items=acanus_feather`).
+Add `&fast` to run battles at 6× speed. The game object is `window.game` and the save state is `window.__efil_state()`.
+
 ## Asset pipeline
 
 The source art in `../images/` and the novel in `../Story/` are read-only.

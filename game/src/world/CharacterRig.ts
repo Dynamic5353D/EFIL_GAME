@@ -159,7 +159,7 @@ export class CharacterRig {
       const ox = Math.cos(ang) * rr, oy = Math.sin(ang) * rr;
       g.fillCircle(A.x, A.y, rr);
       g.fillCircle(B.x, B.y, rr * 0.92);
-      g.fillPoints([{ x: A.x + ox, y: A.y + oy }, { x: B.x + ox * 0.92, y: B.y + oy * 0.92 }, { x: B.x - ox * 0.92, y: B.y - oy * 0.92 }, { x: A.x - ox, y: A.y - oy }], true);
+      g.fillPoints([{ x: A.x + ox, y: A.y + oy }, { x: B.x + ox * 0.92, y: B.y + oy * 0.92 }, { x: B.x - ox * 0.92, y: B.y - oy * 0.92 }, { x: A.x - ox, y: A.y - oy }] as Phaser.Math.Vector2[], true);
     };
     const torso = (dx: number, dy: number) => {
       const lean = P.lean;
@@ -168,7 +168,7 @@ export class CharacterRig {
         pt(hip.x - 6 * nx, hip.y - 6 * ny), pt(hip.x + 6 * nx, hip.y + 6 * ny),
         pt(chest.x + 8.5 * nx, chest.y + 8.5 * ny), pt(chest.x - 7.5 * nx, chest.y - 7.5 * ny),
       ].map((p) => ({ x: p.x + dx, y: p.y + dy }));
-      g.fillPoints(pts, true);
+      g.fillPoints(pts as Phaser.Math.Vector2[], true);
       const c = pt(chest.x, chest.y);
       g.fillEllipse(c.x + dx, c.y + dy + 2 * this.scale, 17 * this.scale * this.w, 11 * this.scale);
     };

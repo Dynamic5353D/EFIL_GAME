@@ -58,7 +58,7 @@ export class HudScene extends Phaser.Scene {
     }
     const shardY = 26;
     this.g.fillStyle(0x86d8ff, 1);
-    this.g.fillPoints([{ x: W - 110, y: shardY }, { x: W - 102, y: shardY + 10 }, { x: W - 110, y: shardY + 24 }, { x: W - 118, y: shardY + 10 }], true);
+    this.g.fillPoints([{ x: W - 110, y: shardY }, { x: W - 102, y: shardY + 10 }, { x: W - 110, y: shardY + 24 }, { x: W - 118, y: shardY + 10 }] as Phaser.Math.Vector2[], true);
     this.texts.push(addText(this, W - 94, shardY + 2, String(st.riShards), { size: 20, bold: true }));
   }
 

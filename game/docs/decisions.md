@@ -8,3 +8,8 @@ One line per decision that changes or refines `plan.md`.
 - 2026-09-28 · **Cut-out methods per image:** rembg `isnet-general-use` by default; `u2net` for Kanagaraj and the Large Liquid Shadow (cleaner); luminance keys for the Vale (dark silhouette on fog) and the Frozen Phoenix (glow on blue, drawn with additive blend). The Vale's eyes are added in code in burning blue, as the text describes (the art has orange eyes).
 - 2026-09-28 · **Codex art:** every non-environment image also gets `assets/art/<slug>.webp` (≤1280 px) for the Memory Fragment viewer; environments use `assets/bg/`.
 - 2026-09-28 · **Fonts:** Cormorant Garamond (titles, Venture cards) and Alegreya Sans (UI, dialogue), bundled from `@fontsource` (OFL) so the game works offline.
+- 2026-09-28 · **Saving happens at Red Rosoar trees only** (plus three slots on the title screen). There is no save-anywhere. Losing a battle reloads the last rest; with no save yet, the party is healed and the room restarts.
+- 2026-09-28 · **Mesh2D has no tint in Phaser 4**, so the puppets' hit flash is a ColorMatrix filter that is created on the first hit and toggled after that.
+- 2026-09-28 · **Painted room layers (scenery, terrain) are cached as textures for the session**, because textures outlive scene restarts. Revisiting a room is instant.
+- 2026-09-28 · **Frost trees are recursive branches with stamped frost puffs**, drawn from one pre-rendered sprite, so they match the Pluffine Forest and Winter Path art (the first version read as grey balloons).
+- 2026-09-28 · **Dev-only URL jump** (`?room=…&flags=…&party=…&items=…&fast`) goes straight to a room with the given state. It is the first step toward the plan's chapter-select debug jump.

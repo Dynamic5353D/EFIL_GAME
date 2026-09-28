@@ -251,6 +251,25 @@ function feather(scene: Phaser.Scene) {
   addCanvas(scene, 'icon:gen:feather', c);
 }
 
+function fragment(scene: Phaser.Scene) {
+  const { c, g } = canvas(256, 256);
+  const gr = g.createRadialGradient(128, 128, 4, 128, 128, 120);
+  gr.addColorStop(0, 'rgba(255,255,255,1)');
+  gr.addColorStop(0.18, 'rgba(210,235,255,0.95)');
+  gr.addColorStop(0.45, 'rgba(140,190,255,0.35)');
+  gr.addColorStop(1, 'rgba(120,160,255,0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = 'rgba(255,255,255,0.8)';
+  g.lineWidth = 2;
+  for (let i = 0; i < 4; i++) {
+    g.beginPath();
+    g.ellipse(128, 128, 70 - i * 12, 18 + i * 4, i * 0.8, 0, Math.PI * 2);
+    g.stroke();
+  }
+  addCanvas(scene, 'icon:gen:fragment', c);
+}
+
 export function generateTextures(scene: Phaser.Scene): void {
   for (const id of Object.keys(CHARACTERS) as MemberId[]) {
     if (!hasOverride(`portraits/${id}.webp`)) addCanvas(scene, `portrait:gen:${id}`, drawPortrait(id));
@@ -262,6 +281,7 @@ export function generateTextures(scene: Phaser.Scene): void {
   shard(scene);
   rosoarFruit(scene);
   feather(scene);
+  fragment(scene);
   const { c, g } = canvas(4, 4);
   g.fillStyle = '#fff';
   g.fillRect(0, 0, 4, 4);

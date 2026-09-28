@@ -36,7 +36,7 @@ export interface StoryStage {
 }
 
 export class Director implements StoryHost {
-  private title: Loc | null = null;
+  private cardTitle: Loc | null = null;
   private time = '';
   private cancelled = false;
 
@@ -60,7 +60,7 @@ export class Director implements StoryHost {
   cancel() { this.cancelled = true; }
 
   say(speaker: string, mood: string | undefined, text: Loc) { return this.dialogue.say(speaker, mood, text); }
-  async title(text: Loc) { this.title = text; }
+  async title(text: Loc) { this.cardTitle = text; }
   async warn(text: Loc) {
     if (settings.get('contentWarnings')) await this.dialogue.notice('Content note', tr(text));
   }
@@ -78,9 +78,11 @@ export class Director implements StoryHost {
       case 'time': this.time = a; break;
       case 'card': {
         this.dialogue.hide();
-        await new Promise<void>((res) => this.stage.scene.scene.launch('ChapterCard', {
-          purpose: st.venture.purpose, venture: st.venture.venture, title: this.title, time: this.time, done: res,
-        }));
+        await new Promise<void>((res) => {
+          const plugin = this.stage.scene.scene;
+          plugin.launch('ChapterCard', { purpose: st.venture.purpose, venture: st.venture.venture, title: this.cardTitle, time: this.time, done: res });
+          plugin.bringToTop('ChapterCard');
+        });
         break;
       }
       case 'music': audio.music(a as MusicId); break;

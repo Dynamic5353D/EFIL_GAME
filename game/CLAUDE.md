@@ -41,7 +41,9 @@ A 2D side-scrolling story RPG (16+), adapted from the user's novel and art.
 - [x] **M0 (setup):** Phaser 4.2.1 + Vite 8 + TS 7 scaffold, git repo, asset pipeline run (66 images), story extracted, launch config. See `docs/decisions.md`.
   - Run scripts through `bun run <script>`; the `:` in the path breaks `node_modules/.bin` on PATH, so scripts call binaries by path.
   - `tools/.venv` is a symlink to `~/.local/share/efil-game/venv`.
-- [ ] M1: engine vertical slice
+- [x] **M1 (engine vertical slice):** built, **awaiting the user's review**. Two Glacia test rooms (Frozen Shore, Winter Path) built from the user's art, with parallax, painted terrain, lighting, weather, colour grade and the platforming feel. Also: Rosoar-tree rest and save, three save slots, Vale encounters leading into turn-based battles (timeline, Death Touch/Doom, Vale ink and re-forming, cubes, handgun, Loop Sense, Rewind, results), dialogue with the EN/Tanglish toggle and choices, the chapter card, the pause menu (party and keepsakes, items, Memory Fragments, map), settings with key rebinding, and credits with the Tele-MANAS note. The script is `src/story/slice/glacia_slice.story`.
+  - Dev jump (dev server only): `?room=winter_path&flags=a,b&party=dhanasree&items=acanus_feather` starts in slot 3 in that room. Add `&fast` to run battles at 6× speed.
+  - A room's painted layers are drawn on the CPU on first visit and then cached for the session. That took about 3.5 s in headless Chromium, which renders in software; it has not been timed on real hardware.
 - [ ] M2: Act I (Purpose 1)
 - [ ] M3–M11: Acts II–X
 - [ ] M12: polish

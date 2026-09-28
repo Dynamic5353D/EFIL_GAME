@@ -182,7 +182,7 @@ export class DialogueScene extends Phaser.Scene {
     this.langChip.setText(`${ta ? 'Tanglish' : 'English'}  ·  ${input.label('language')} to switch`);
   }
 
-  update(time: number, delta: number) {
+  override update(time: number, delta: number) {
     if (this.menu) { this.menu.update(time); return; }
     if (input.pressed('language')) {
       settings.set('language', settings.get('language') === 'en' ? 'ta' : 'en');
