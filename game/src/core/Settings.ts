@@ -35,6 +35,8 @@ export interface SettingsData {
   screenShake: boolean;
   contentWarnings: boolean;
   profanityFilter: boolean;
+  /** First-time tips and battle tutorials. */
+  showTips: boolean;
   bindings: Record<Action, string[]>;
 }
 
@@ -48,6 +50,7 @@ export const DEFAULT_SETTINGS: SettingsData = {
   screenShake: true,
   contentWarnings: true,
   profanityFilter: false,
+  showTips: true,
   bindings: DEFAULT_BINDINGS,
 };
 
@@ -78,6 +81,7 @@ export function sanitizeSettings(raw: unknown): SettingsData {
     screenShake: typeof r.screenShake === 'boolean' ? r.screenShake : d.screenShake,
     contentWarnings: typeof r.contentWarnings === 'boolean' ? r.contentWarnings : d.contentWarnings,
     profanityFilter: typeof r.profanityFilter === 'boolean' ? r.profanityFilter : d.profanityFilter,
+    showTips: typeof r.showTips === 'boolean' ? r.showTips : d.showTips,
     bindings,
   };
 }

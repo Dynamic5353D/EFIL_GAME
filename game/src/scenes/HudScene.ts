@@ -5,7 +5,9 @@ import { tr, type Loc } from '../core/Localization';
 import { session } from '../core/Session';
 import { settings } from '../core/Settings';
 import { CHARACTERS } from '../data/characters';
-import { addText, bar, C, W } from '../ui/theme';
+import { TIPS } from '../data/tips';
+import { tipBody } from '../core/Tips';
+import { addText, bar, C, drawGlowPanel, glow, W } from '../ui/theme';
 
 /** Exploration HUD: party health, Soul Hunger, RI shards, ammo, toasts and area banners. */
 export class HudScene extends Phaser.Scene {
@@ -13,6 +15,8 @@ export class HudScene extends Phaser.Scene {
   private texts: Phaser.GameObjects.GameObject[] = [];
   private toasts: Phaser.GameObjects.Container[] = [];
   private offs: (() => void)[] = [];
+  private tipQueue: string[] = [];
+  private tipCard: Phaser.GameObjects.Container | null = null;
 
   constructor() { super({ key: 'Hud' }); }
 
@@ -21,6 +25,7 @@ export class HudScene extends Phaser.Scene {
     this.refresh();
     this.offs.push(bus.on('hud', () => this.refresh()));
     this.offs.push(bus.on('toast', ({ text, icon }) => this.toast(text, icon)));
+    this.offs.push(bus.on('tip', ({ id }) => { this.tipQueue.push(id); if (!this.tipCard) this.nextTip(); }));
     this.events.once('shutdown', () => this.offs.forEach((o) => o()));
   }
 
@@ -89,11 +94,34 @@ export class HudScene extends Phaser.Scene {
     });
   }
 
+  /** First-time tip card, top centre. Tips queue up and each stays long enough to read. */
+  private nextTip() {
+    const id = this.tipQueue.shift();
+    const t = id ? TIPS[id] : undefined;
+    if (!t) { this.tipCard = null; return; }
+    const w = 660, x = W / 2 - w / 2, y = 96;
+    const title = glow(addText(this, x + 22, y + 14, `${tr(t.title)}`, { size: 22, display: true, bold: true, color: C.warm }), C.warm, 8);
+    const body = addText(this, x + 22, y + 46, tipBody(t), { size: 19, color: '#f2f6ff', wordWrap: { width: w - 44 }, lineSpacing: 3 });
+    const h = body.height + 64;
+    const g = this.add.graphics();
+    drawGlowPanel(g, x, y, w, h, C.warmInt, 0.93, 12);
+    const tag = addText(this, x + w - 18, y + 16, 'TIP', { size: 13, color: C.warm, letterSpacing: 3, bold: true }).setOrigin(1, 0);
+    const c = this.add.container(0, 0, [g, title, body, tag]).setAlpha(0);
+    this.tipCard = c;
+    const calm = settings.get('reducedMotion');
+    c.y = calm ? 0 : -12;
+    this.tweens.add({ targets: c, alpha: 1, y: 0, duration: calm ? 1 : 350, ease: 'Cubic.Out' });
+    const readMs = Math.max(6500, 2500 + body.text.length * 55);
+    this.time.delayedCall(readMs, () => {
+      this.tweens.add({ targets: c, alpha: 0, duration: 400, onComplete: () => { c.destroy(); this.nextTip(); } });
+    });
+  }
+
   /** Big area title, Hollow Knight style. */
   banner(name: Loc, sub?: string) {
-    const t = addText(this, W / 2, 200, tr(name), { size: 50, display: true, bold: true }).setOrigin(0.5).setAlpha(0);
-    const s = addText(this, W / 2, 250, sub ?? '', { size: 18, color: C.textDim, letterSpacing: 4 }).setOrigin(0.5).setAlpha(0);
-    const l = this.add.rectangle(W / 2, 232, 0, 1, 0x9cc9ff, 0.5);
+    const t = addText(this, W / 2, 290, tr(name), { size: 50, display: true, bold: true }).setOrigin(0.5).setAlpha(0);
+    const s = addText(this, W / 2, 340, sub ?? '', { size: 18, color: C.textDim, letterSpacing: 4 }).setOrigin(0.5).setAlpha(0);
+    const l = this.add.rectangle(W / 2, 322, 0, 1, 0x9cc9ff, 0.5);
     this.tweens.add({ targets: [t, s], alpha: 1, duration: 900, hold: 1800, yoyo: true, onComplete: () => { t.destroy(); s.destroy(); } });
     this.tweens.add({ targets: l, width: 360, duration: 900, hold: 1800, yoyo: true, onComplete: () => l.destroy() });
   }

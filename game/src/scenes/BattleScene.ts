@@ -15,6 +15,7 @@ import { addItem, grantXp, memberStats } from '../core/GameState';
 import { input } from '../core/Input';
 import { ensureTextures, spec } from '../core/Loader';
 import { tr } from '../core/Localization';
+import { takeTip, tipBody } from '../core/Tips';
 import { session } from '../core/Session';
 import { settings } from '../core/Settings';
 import { CHARACTERS, type MemberId } from '../data/characters';
@@ -22,12 +23,12 @@ import { BATTLES, ENEMIES } from '../data/enemies';
 import { ITEMS } from '../data/items';
 import type { MusicId, SfxId } from '../data/media';
 import { MenuList, type MenuItem } from '../ui/MenuList';
-import { addText, bar, C, drawPanel, H, W } from '../ui/theme';
+import { addText, bar, C, drawGlowPanel, glow, H, W } from '../ui/theme';
 import { CharacterRig } from '../world/CharacterRig';
 import { hexRgb, makeCanvas, mixRgb, rgbCss, scaleRgb } from '../world/Paint';
 import { Puppet } from '../world/Puppet';
 import type { RoomDef } from '../world/RoomDef';
-import { applyGrade } from '../world/RoomView';
+import { addGrade } from '../world/RoomView';
 import { assets } from '../core/Assets';
 
 export interface BattleData {
@@ -50,7 +51,8 @@ interface View {
   y: number;
   /** Visual height, for placing popups and markers. */
   h: number;
-  chips: Phaser.GameObjects.Text;
+  /** Nameplate above the head: name, HP bar, statuses (or the ink countdown). */
+  plate: Phaser.GameObjects.Container;
   intent: Phaser.GameObjects.Text;
   shadow: Phaser.GameObjects.Ellipse;
   ring: Phaser.GameObjects.Ellipse;
@@ -62,7 +64,7 @@ const ENEMY_SLOTS = [{ x: 900, y: 500 }, { x: 1110, y: 488 }, { x: 1010, y: 432 
 const RIG_SCALE = 2.05;
 
 const STATUS_LABEL: Record<StatusId, [string, string]> = {
-  doom: ['DOOM', '#c58bff'], regen: ['REGEN', '#7fb0ff'], ink: ['INK', '#8899aa'], shadow: ['SHADOW', '#a0a0ff'],
+  doom: ['DOOM', '#d7a8ff'], regen: ['REGEN', '#9cc8ff'], ink: ['INK', '#c9b8ff'], shadow: ['SHADOW', '#b8b8ff'],
   armored: ['ARMOUR', '#cfe3ff'], blind: ['BLIND', '#fff3a0'], fear: ['FEAR', '#ff9a9a'], foresight: ['FORESIGHT', '#8dffbd'],
   guard: ['GUARD', '#9fd8ff'], starving: ['STARVING', '#ff6a8a'],
 };
@@ -87,6 +89,7 @@ export class BattleScene extends Phaser.Scene {
   private targeting: { list: Unit[]; index: number; resolve: (id: string | null) => void } | null = null;
   private clock = 0;
   private calm = false;
+  private goal!: Phaser.GameObjects.Container;
 
   constructor() { super({ key: 'Battle' }); }
 
@@ -129,8 +132,10 @@ export class BattleScene extends Phaser.Scene {
     far.setScale(Math.max(W / far.width, H / far.height) * 1.05);
     const bg = this.add.image(W / 2, H * 0.42, texKey.bg(d.backdrop)).setAlpha(0.85);
     bg.setScale(Math.max(W / bg.width, (H * 0.9) / bg.height) * 1.05);
+    // The room's grade goes on the painted backdrop only, so fighters and UI stay crisp.
+    for (const img of [far, bg]) addGrade(img.enableFilters().filters!.internal, d.grade);
     if (!this.calm) this.tweens.add({ targets: bg, x: W / 2 - 20, duration: 16000, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-    this.add.rectangle(0, 0, W, H, 0x04070d, 0.28).setOrigin(0);
+    this.add.rectangle(0, 0, W, H, 0x04070d, 0.18).setOrigin(0);
 
     // Painted floor: palette gradient with a snowy lip, so units stand on something.
     const key = `battlefloor:${d.palette}`;
@@ -155,7 +160,16 @@ export class BattleScene extends Phaser.Scene {
       x: { min: -60, max: W + 60 }, y: -20, lifespan: 7000, speedY: { min: 40, max: 90 }, speedX: { min: -30, max: 10 },
       scale: { min: 0.15, max: 0.4 }, alpha: { start: 0.8, end: 0.2 }, frequency: this.calm ? 500 : 160,
     }).setDepth(900);
-    applyGrade(this.cameras.main, d.grade);
+    if (!this.textures.exists('fx:vignette')) {
+      const { c, g } = makeCanvas(640, 360);
+      const gr = g.createRadialGradient(320, 170, 120, 320, 180, 400);
+      gr.addColorStop(0, 'rgba(3,5,10,0)');
+      gr.addColorStop(1, 'rgba(3,5,10,0.8)');
+      g.fillStyle = gr;
+      g.fillRect(0, 0, 640, 360);
+      this.textures.addCanvas('fx:vignette', c);
+    }
+    this.add.image(0, 0, 'fx:vignette').setOrigin(0).setDisplaySize(W, H).setDepth(700);
 
     // Units.
     let pi = 0, ei = 0;
@@ -166,8 +180,8 @@ export class BattleScene extends Phaser.Scene {
       const ring = this.add.ellipse(slot.x, slot.y + 4, u.side === 'party' ? 110 : 190, 26).setStrokeStyle(2, C.accentInt, 0.9).setDepth(depth - 1).setVisible(false);
       const v: View = {
         id: u.id, side: u.side, homeX: slot.x, homeY: slot.y, x: slot.x, y: slot.y, h: 180, shadow, ring, gone: false,
-        chips: addText(this, slot.x, slot.y + 16, '', { size: 13, bold: true, align: 'center' }).setOrigin(0.5, 0).setDepth(800),
-        intent: addText(this, slot.x, 0, '', { size: 15, color: C.good, backgroundColor: '#0b1220cc', padding: { x: 6, y: 3 } }).setOrigin(0.5, 1).setDepth(800).setVisible(false),
+        plate: this.add.container(slot.x, 0).setDepth(800),
+        intent: glow(addText(this, slot.x, 0, '', { size: 16, bold: true, color: C.good, backgroundColor: '#0b1220e0', padding: { x: 8, y: 4 } }), C.good, 6).setOrigin(0.5, 1).setDepth(801).setVisible(false),
       };
       if (u.side === 'party') {
         const rig = new CharacterRig(this, u.kind as MemberId, depth);
@@ -185,7 +199,8 @@ export class BattleScene extends Phaser.Scene {
         v.puppet = p;
         v.h = def.sprite.height * 0.95;
       }
-      v.intent.setY(slot.y - v.h - 10);
+      v.plate.setY(slot.y - v.h - (u.side === 'party' ? 46 : 72));
+      v.intent.setY(slot.y + 38);
       this.views.set(u.id, v);
     }
 
@@ -193,12 +208,13 @@ export class BattleScene extends Phaser.Scene {
     this.ui = this.add.container(0, 0).setDepth(1000);
     this.statusG = this.add.graphics();
     this.ui.add(this.statusG);
-    this.timeline = this.add.container(W / 2, 44);
+    this.timeline = this.add.container(W / 2, 54);
     this.ui.add(this.timeline);
-    this.banner = addText(this, W / 2, 104, '', { size: 24, display: true, bold: true, backgroundColor: '#070b14b0', padding: { x: 16, y: 6 } }).setOrigin(0.5).setAlpha(0);
-    this.info = addText(this, 372, 556, '', { size: 18, color: C.textDim, wordWrap: { width: 860 } }).setVisible(false);
+    this.banner = glow(addText(this, W / 2, 118, '', { size: 26, display: true, bold: true, color: '#ffffff', backgroundColor: '#070b14e8', padding: { x: 18, y: 7 } }), C.accent, 12).setOrigin(0.5).setAlpha(0);
+    this.info = addText(this, 372, 556, '', { size: 18, color: '#dfe8f7', wordWrap: { width: 860 } }).setVisible(false);
+    this.goal = this.add.container(0, 0);
     this.cursor = this.add.triangle(0, 0, 0, 0, 22, 0, 11, 16, C.warmInt).setVisible(false);
-    this.ui.add([this.banner, this.info, this.cursor]);
+    this.ui.add([this.goal, this.banner, this.info, this.cursor]);
     this.refreshStatus();
     this.refreshTimeline();
   }
@@ -210,6 +226,11 @@ export class BattleScene extends Phaser.Scene {
     await this.say(def.intro ? tr(def.intro) : 'Battle!', 1400);
     if (ini === 'party') await this.say('You strike first!', 900);
     if (ini === 'enemy') await this.say('Caught off guard!', 900);
+    await this.tutorial('battle');
+    // Ragul alone has no light, fire or shatter: teach Death Touch + Soul Absorb before the ink loop starts.
+    const party = this.st.units.filter((u) => u.side === 'party');
+    const canFinish = party.some((u) => u.skills.some((id) => ['light', 'fire', 'shatter', 'water'].includes(SKILLS[id]?.element ?? '')));
+    if (!canFinish && this.st.units.some((u) => u.side === 'enemy' && u.tags.includes('vale'))) await this.tutorial('vale_ragul');
     const st = this.st;
     let guard = 0;
     while (!st.outcome && guard++ < 5000) {
@@ -241,6 +262,7 @@ export class BattleScene extends Phaser.Scene {
     this.highlight(u.id);
     const v = this.views.get(u.id);
     v?.rig?.setState('battle');
+    if (u.kind === 'dhanasree') await this.tutorial('cubes');
     for (;;) {
       const top = await this.pick<string>(this.commandItems(u), `${tr(u.name)}`);
       if (!top) continue;
@@ -302,8 +324,8 @@ export class BattleScene extends Phaser.Scene {
       const x = 40, y = 556, w = 310;
       const rows = Math.min(6, items.length);
       this.menuPanel = this.add.graphics().setDepth(1000);
-      drawPanel(this.menuPanel, x, y - 44, w, rows * 38 + 58, 0.92, 12);
-      const head = addText(this, x + 18, y - 34, title, { size: 17, color: C.accent, bold: true }).setDepth(1001);
+      drawGlowPanel(this.menuPanel, x, y - 44, w, rows * 38 + 58, C.accentInt, 0.94, 12);
+      const head = glow(addText(this, x + 18, y - 34, title, { size: 18, color: C.accent, bold: true }), C.accent, 8).setDepth(1001);
       const wrapped = items.map((it) => ({
         ...it,
         onFocus: () => this.showInfo(it.hint?.() ?? ''),
@@ -385,7 +407,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private popup(v: View, text: string, color: string, size = 30) {
-    const t = addText(this, v.x + (Math.random() - 0.5) * 30, v.homeY - v.h * 0.6, text, { size, bold: true, color, stroke: '#05070d', strokeThickness: 5 })
+    const t = glow(addText(this, v.x + (Math.random() - 0.5) * 30, v.homeY - v.h * 0.6, text, { size, bold: true, color, stroke: '#05070d', strokeThickness: 5 }), color, 12)
       .setOrigin(0.5).setDepth(950);
     this.tweens.add({ targets: t, y: t.y - 60, alpha: { from: 1, to: 0 }, duration: 1100, ease: 'Cubic.Out', onComplete: () => t.destroy() });
   }
@@ -492,6 +514,8 @@ export class BattleScene extends Phaser.Scene {
         }
         this.refreshStatus();
         await this.wait(160);
+        if (e.on && e.status === 'doom') await this.tutorial('doom');
+        if (e.on && e.status === 'shadow') await this.tutorial('shadow');
         return;
       }
       case 'ink': {
@@ -503,6 +527,8 @@ export class BattleScene extends Phaser.Scene {
         this.tweens.add({ targets: v.puppet.mesh, scaleY: 0.12, duration: 380, ease: 'Cubic.In' });
         v.puppet.eyes.forEach((eye) => eye.setVisible(false));
         await this.say(`${tr(unit(st, e.target)!.name)} bursts into ink. It is not dead.`, 1100);
+        this.refreshStatus();
+        await this.tutorial('vale_ink');
         return;
       }
       case 'reform': {
@@ -511,7 +537,9 @@ export class BattleScene extends Phaser.Scene {
         audio.sfx('reform');
         v.puppet.eyes.forEach((eye) => eye.setVisible(true));
         await this.tween({ targets: v.puppet.mesh, scaleY: 1, alpha: 1, duration: 520, ease: 'Back.Out' });
-        await this.say(`${tr(unit(st, e.target)!.name)} knits itself back together.`, 1000);
+        this.refreshStatus();
+        await this.say(`${tr(unit(st, e.target)!.name)} knits itself back together.`, 1100);
+        await this.say('Finish it with light, fire, a shattering blow, or Death Touch then Soul Absorb.', 1600);
         return;
       }
       case 'destroy': {
@@ -524,7 +552,7 @@ export class BattleScene extends Phaser.Scene {
         this.particles(c.x, c.y, col, 40, 300, 0.25);
         if (e.how === 'absorb') this.soulStream(v);
         v.shadow.setVisible(false);
-        v.chips.setVisible(false);
+        v.plate.setVisible(false);
         v.intent.setVisible(false);
         if (v.puppet) {
           const p = v.puppet;
@@ -655,7 +683,7 @@ export class BattleScene extends Phaser.Scene {
       const dead = u.dead;
       v.gone = u.side === 'enemy' && dead;
       v.shadow.setVisible(!v.gone);
-      v.chips.setVisible(!v.gone);
+      v.plate.setVisible(!v.gone);
       if (v.puppet) {
         const ink = has(u, 'ink') || has(u, 'shadow');
         v.puppet.setVisible(!v.gone);
@@ -681,54 +709,111 @@ export class BattleScene extends Phaser.Scene {
     g.clear();
     this.statusTexts.forEach((t) => t.destroy());
     this.statusTexts = [];
-    const x0 = 372, y0 = this.info.visible ? 596 : 566, w = 868;
+    const keep = <T extends Phaser.GameObjects.GameObject>(o: T) => { this.ui.add(o); this.statusTexts.push(o); return o; };
+    const x0 = 372, y0 = this.info.visible ? 598 : 568, w = 868;
     const party = this.st.units.filter((u) => u.side === 'party');
-    drawPanel(g, x0 - 12, 546, w + 24, 160, 0.9, 12);
+    drawGlowPanel(g, x0 - 12, 546, w + 24, 160, C.accentInt, 0.93, 12);
     const rowH = Math.min(36, (700 - y0) / Math.max(1, party.length));
     party.forEach((u, i) => {
       const y = y0 + i * rowH;
       const c = CHARACTERS[u.kind as MemberId];
+      const vein = '#' + c.vein.toString(16).padStart(6, '0');
       const active = this.st.active === u.id;
-      const name = addText(this, x0, y, tr(u.name), { size: 19, bold: true, color: u.dead ? C.textFaint : active ? '#ffffff' : C.textDim });
-      this.ui.add(name);
-      this.statusTexts.push(name);
-      bar(g, x0 + 130, y + 8, 200, 10, u.hp / u.stats.maxHp, u.hp / u.stats.maxHp < 0.3 ? C.hpLow : C.hp);
-      const hp = addText(this, x0 + 340, y + 1, `${u.hp} / ${u.stats.maxHp}`, { size: 16, color: C.textDim });
-      this.ui.add(hp);
-      this.statusTexts.push(hp);
-      let rx = x0 + 460;
-      const res = (label: string, frac: number, col: number, text: string) => {
-        const t = addText(this, rx, y + 2, label, { size: 13, color: C.textFaint });
-        bar(g, rx + t.width + 6, y + 9, 90, 7, frac, col);
-        const v = addText(this, rx + t.width + 102, y + 1, text, { size: 14, color: C.textDim });
-        this.ui.add([t, v]);
-        this.statusTexts.push(t, v);
+      if (active) g.fillStyle(c.vein, 0.12).fillRoundedRect(x0 - 8, y - 5, w + 16, rowH - 2, 6);
+      const name = keep(addText(this, x0, y, tr(u.name), { size: 20, bold: true, color: u.dead ? '#6f7f96' : active ? vein : '#eef4ff' }));
+      if (active) glow(name, vein, 10);
+      const frac = u.hp / u.stats.maxHp;
+      const col = frac < 0.3 ? C.hpLow : C.hp;
+      g.lineStyle(6, col, 0.12).strokeRoundedRect(x0 + 128, y + 6, 204, 14, 7);
+      bar(g, x0 + 130, y + 8, 200, 10, frac, col);
+      keep(addText(this, x0 + 342, y + 1, u.dead ? 'down' : `${u.hp} / ${u.stats.maxHp}`, { size: 17, bold: true, color: u.dead ? '#ff9a9a' : '#e6eefa' }));
+      let rx = x0 + 470;
+      const res = (label: string, frac: number, color: number, text: string) => {
+        const t = keep(addText(this, rx, y + 2, label, { size: 14, color: '#b9c7dd' }));
+        g.lineStyle(5, color, 0.12).strokeRoundedRect(rx + t.width + 4, y + 7, 94, 11, 5);
+        bar(g, rx + t.width + 6, y + 9, 90, 7, frac, color);
+        keep(addText(this, rx + t.width + 102, y + 1, text, { size: 15, bold: true, color: '#e6eefa' }));
         rx += t.width + 150;
       };
-      if (u.kind === 'ragul') res('Hunger', this.st.soulHunger / 100, this.st.soulHunger >= 70 ? 0xff5a7a : 0x9a7cff, String(this.st.soulHunger));
+      if (u.kind === 'ragul') res('Hunger', this.st.soulHunger / 100, this.st.soulHunger >= 70 ? 0xff5a7a : 0xa98cff, String(this.st.soulHunger));
       if (u.res.ce !== undefined) res('CE', u.res.ce / (u.res.ceMax ?? 6), 0x6dffa8, `${u.res.ce}`);
       if (u.res.ammo !== undefined) {
-        const t = addText(this, rx, y + 2, 'Ammo', { size: 13, color: C.textFaint });
+        const t = keep(addText(this, rx, y + 2, 'Ammo', { size: 14, color: '#b9c7dd' }));
         for (let k = 0; k < 6; k++) g.fillStyle(k < u.res.ammo ? 0xffd98a : 0x2a3348, 1).fillRect(rx + t.width + 8 + k * 9, y + 7, 6, 11);
-        this.ui.add(t);
-        this.statusTexts.push(t);
         rx += t.width + 70;
       }
       if (u.res.heat !== undefined) res('Heat', u.res.heat / 100, 0xff8a3a, String(u.res.heat));
     });
-    // Status chips under every unit.
     for (const u of this.st.units) {
       const v = this.views.get(u.id);
-      if (!v) continue;
-      v.chips.setText(u.statuses.filter((s) => s.id !== 'guard' || u.side === 'party').map((s) => {
-        const [label] = STATUS_LABEL[s.id];
-        return s.turns > 0 ? `${label} ${s.turns}` : label;
-      }).join('  '));
-      if (u.side === 'enemy' && !u.dead) {
-        const hpText = has(u, 'ink') ? 'ink' : `${u.hp}/${u.stats.maxHp}`;
-        v.chips.setText(`${tr(u.name)}  ${hpText}\n${v.chips.text}`);
-      }
+      if (v) this.drawPlate(u, v);
     }
+    this.drawGoal();
+  }
+
+  /** Nameplate above a fighter: name (foes), HP bar or ink countdown, and status chips. */
+  private drawPlate(u: Unit, v: View) {
+    v.plate.removeAll(true);
+    const enemy = u.side === 'enemy';
+    if (enemy && u.dead) { v.plate.setVisible(false); return; }
+    v.plate.setVisible(true);
+    const w = enemy ? 180 : 150;
+    const g = this.add.graphics();
+    v.plate.add(g);
+    let y = 0;
+    if (enemy) {
+      v.plate.add(glow(addText(this, 0, 0, tr(u.name), { size: 17, bold: true, color: '#ffe2e2' }), '#ff5a5a', 8).setOrigin(0.5, 0));
+      y = 24;
+    }
+    const ink = u.statuses.find((s) => s.id === 'ink');
+    if (ink) {
+      const n = Math.max(0, ink.turns);
+      v.plate.add(glow(addText(this, 0, y, `INK  ·  re-forms in ${n} turn${n === 1 ? '' : 's'}`, { size: 15, bold: true, color: '#e0d4ff' }), '#9a7cff', 10).setOrigin(0.5, 0));
+      y += 24;
+    } else if (!u.dead) {
+      const frac = u.hp / u.stats.maxHp;
+      const col = enemy ? 0xff6a6a : frac < 0.3 ? C.hpLow : C.hp;
+      g.lineStyle(7, col, 0.15).strokeRoundedRect(-w / 2 - 2, y - 2, w + 4, 14, 7);
+      bar(g, -w / 2, y, w, 10, frac, col);
+      g.lineStyle(1, col, 0.85).strokeRoundedRect(-w / 2 - 0.5, y - 0.5, w + 1, 11, 5.5);
+      v.plate.add(addText(this, 0, y + 12, `${u.hp} / ${u.stats.maxHp}`, { size: 14, bold: true, color: '#f4f8ff', stroke: '#05070d', strokeThickness: 3 }).setOrigin(0.5, 0));
+      y += 32;
+    }
+    const sts = u.statuses.filter((s) => s.id !== 'ink' && (s.id !== 'guard' || !enemy));
+    if (!sts.length) return;
+    const texts = sts.map((s) => {
+      const [label, color] = STATUS_LABEL[s.id];
+      const text = s.id === 'shadow' ? 'SHADOW · only light' : s.turns > 0 ? `${label} ${s.turns}` : label;
+      return glow(addText(this, 0, y, text, { size: 13, bold: true, color, stroke: '#05070d', strokeThickness: 3 }), color, 6);
+    });
+    const total = texts.reduce((a, t) => a + t.width, 0) + (texts.length - 1) * 10;
+    let x = -total / 2;
+    for (const t of texts) { t.setX(x); x += t.width + 10; v.plate.add(t); }
+  }
+
+  /** Goal card, top left: how to win, how Vales die, and what is left. */
+  private drawGoal() {
+    this.goal.removeAll(true);
+    const foes = this.st.units.filter((u) => u.side === 'enemy');
+    const ink = foes.filter((u) => !u.dead && has(u, 'ink')).length;
+    const gone = foes.filter((u) => u.dead).length;
+    const standing = foes.length - ink - gone;
+    const x = 20, y = 14, w = 312;
+    const title = glow(addText(this, x + 16, y + 12, 'GOAL', { size: 14, bold: true, color: C.warm, letterSpacing: 3 }), C.warm, 8);
+    const lines: [string, string][] = [['Destroy every foe for good.', '#eef4ff']];
+    if (foes.some((u) => u.tags.includes('vale'))) {
+      lines.push(['Vales re-form from ink. Finish them with light, fire, a shattering blow, or Death Touch then Soul Absorb.', '#c9d6ea']);
+    }
+    lines.push([`${standing} standing  ·  ${ink} as ink  ·  ${gone} gone`, '#ffd0d0']);
+    let ty = y + 36;
+    const texts = lines.map(([t, color]) => {
+      const o = addText(this, x + 16, ty, t, { size: 15, color, wordWrap: { width: w - 32 }, lineSpacing: 2 });
+      ty += o.height + 6;
+      return o;
+    });
+    const g = this.add.graphics();
+    drawGlowPanel(g, x, y, w, ty - y + 6, C.warmInt, 0.9, 10);
+    this.goal.add([g, title, ...texts]);
   }
 
   private refreshTimeline() {
@@ -737,7 +822,7 @@ export class BattleScene extends Phaser.Scene {
     const order = previewTimeline(this.st, 9);
     const gap = 58;
     const x0 = -((order.length - 1) * gap) / 2;
-    const lbl = addText(this, x0 - 60, 0, 'NEXT', { size: 13, color: C.textFaint, letterSpacing: 3 }).setOrigin(1, 0.5);
+    const lbl = glow(addText(this, x0 - 24, -44, 'TURN ORDER', { size: 13, bold: true, color: '#cfe6ff', letterSpacing: 3 }), C.accent, 6);
     this.timeline.add(lbl);
     order.forEach((id, i) => {
       const u = unit(this.st, id);
@@ -746,15 +831,16 @@ export class BattleScene extends Phaser.Scene {
       const r = i === 0 ? 24 : 19;
       const g = this.add.graphics();
       const col = u.side === 'party' ? CHARACTERS[u.kind as MemberId].vein : 0xff6a6a;
-      g.fillStyle(0x0b1220, 0.92).fillCircle(x, 0, r);
-      g.lineStyle(i === 0 ? 3 : 2, col, i === 0 ? 1 : 0.7).strokeCircle(x, 0, r);
+      g.lineStyle(i === 0 ? 14 : 8, col, i === 0 ? 0.22 : 0.12).strokeCircle(x, 0, r + 3);
+      g.fillStyle(0x0b1220, 0.95).fillCircle(x, 0, r);
+      g.lineStyle(i === 0 ? 3 : 2, col, i === 0 ? 1 : 0.85).strokeCircle(x, 0, r);
       this.timeline.add(g);
       if (u.side === 'party' && this.textures.exists(`portrait:gen:${u.kind}`)) {
         const img = this.add.image(x, 0, `portrait:gen:${u.kind}`).setDisplaySize(r * 1.7, r * 1.7);
         this.timeline.add(img);
       } else {
         const letter = u.name.en.replace(/^Ice-crusted /, '').slice(0, 1) + (u.name.en.match(/ ([A-Z])$/)?.[1] ?? '');
-        this.timeline.add(addText(this, x, 0, letter, { size: i === 0 ? 20 : 16, bold: true, color: '#ffb0b0' }).setOrigin(0.5));
+        this.timeline.add(glow(addText(this, x, 0, letter, { size: i === 0 ? 20 : 16, bold: true, color: '#ffd0d0' }), '#ff5a5a', 6).setOrigin(0.5));
       }
     });
   }
@@ -804,26 +890,60 @@ export class BattleScene extends Phaser.Scene {
       if (r.soulsAbsorbed) lines.push(`Ragul took ${r.soulsAbsorbed} soul${r.soulsAbsorbed > 1 ? 's' : ''}. The hunger quiets, for now.`);
       else if (st.soulHunger >= 70 && st.party.includes('ragul')) lines.push('Ragul\'s hunger gnaws at him.');
       for (const v of this.views.values()) if (v.side === 'party' && !unit(this.st, v.id)?.dead) v.rig?.setState('idle');
-      await this.results('Victory', lines, C.warm);
+      await this.results('Victory', lines, C.warm, C.warmInt);
+      if (st.party.includes('ragul')) await this.tutorial('hunger');
     } else if (r.outcome === 'fled') {
-      await this.results('You got away', ['The party slips away into the snow.'], C.textDim);
+      await this.results('You got away', ['The party slips away into the snow.'], '#cfe6ff', C.accentInt);
     } else {
       audio.music('none');
-      await this.results('The party has fallen', ['...'], C.danger);
+      await this.results('The party has fallen', ['You wake at your last rest.'], C.danger, C.dangerInt);
     }
     bus.emit('hud', undefined);
     this.data_.onDone(r.outcome);
   }
 
-  private results(title: string, lines: string[], color: string): Promise<void> {
+  /** First-time battle tutorial: pauses the battle until the player dismisses it (data/tips.ts). */
+  private tutorial(id: string): Promise<void> {
+    const t = takeTip(id);
+    if (!t) return Promise.resolve();
+    return new Promise((resolve) => {
+      const w = 660, x = W / 2 - w / 2;
+      const shade = this.add.rectangle(0, 0, W, H, 0x02040a, 0.55).setOrigin(0);
+      const title = glow(addText(this, x + 28, 0, tr(t.title), { size: 30, display: true, bold: true, color: C.warm }), C.warm, 12);
+      const body = addText(this, x + 28, 0, tipBody(t), { size: 21, color: '#f2f6ff', wordWrap: { width: w - 56 }, lineSpacing: 5 });
+      const h = body.height + 132;
+      const y = H / 2 - h / 2 - 40;
+      title.setY(y + 22);
+      body.setY(y + 72);
+      const tag = addText(this, x + w - 24, y + 28, 'TUTORIAL', { size: 13, bold: true, color: C.warm, letterSpacing: 3 }).setOrigin(1, 0);
+      const hint = addText(this, W / 2, y + h - 30, `${input.label('confirm')}  Got it`, { size: 17, bold: true, color: '#cfe6ff' }).setOrigin(0.5);
+      const g = this.add.graphics();
+      drawGlowPanel(g, x, y, w, h, C.warmInt, 0.96, 14);
+      const c = this.add.container(0, 0, [shade, g, title, body, tag, hint]).setDepth(1300);
+      audio.sfx('ui_ok', 0.8);
+      input.consume();
+      const t0 = this.time.now;
+      const check = () => {
+        if (this.time.now - t0 > 500 && (input.pressed('confirm') || input.pressed('interact') || input.pressed('cancel'))) {
+          input.consume();
+          this.events.off('update', check);
+          c.destroy();
+          resolve();
+        }
+      };
+      this.events.on('update', check);
+    });
+  }
+
+  private results(title: string, lines: string[], color: string, colorInt: number): Promise<void> {
     return new Promise((resolve) => {
       const g = this.add.graphics().setDepth(1100);
       g.fillStyle(0x000000, 0.45).fillRect(0, 0, W, H);
       const h = 150 + lines.length * 30;
-      drawPanel(g, W / 2 - 330, H / 2 - h / 2, 660, h, 0.95, 14);
-      addText(this, W / 2, H / 2 - h / 2 + 24, title, { size: 40, display: true, bold: true, color }).setOrigin(0.5, 0).setDepth(1101);
-      lines.forEach((l, i) => addText(this, W / 2, H / 2 - h / 2 + 88 + i * 30, l, { size: 20 }).setOrigin(0.5, 0).setDepth(1101));
-      addText(this, W / 2, H / 2 + h / 2 - 30, `${input.label('confirm')}  Continue`, { size: 15, color: C.textFaint }).setOrigin(0.5).setDepth(1101);
+      drawGlowPanel(g, W / 2 - 330, H / 2 - h / 2, 660, h, colorInt, 0.96, 14);
+      glow(addText(this, W / 2, H / 2 - h / 2 + 24, title, { size: 42, display: true, bold: true, color }), color, 14).setOrigin(0.5, 0).setDepth(1101);
+      lines.forEach((l, i) => addText(this, W / 2, H / 2 - h / 2 + 88 + i * 30, l, { size: 20, color: '#eef4ff' }).setOrigin(0.5, 0).setDepth(1101));
+      addText(this, W / 2, H / 2 + h / 2 - 30, `${input.label('confirm')}  Continue`, { size: 16, color: '#b9c7dd' }).setOrigin(0.5).setDepth(1101);
       input.consume();
       const t0 = this.time.now;
       const check = () => {
@@ -855,7 +975,7 @@ export class BattleScene extends Phaser.Scene {
       }
       v.shadow.setX(v.x);
       v.ring.setX(v.x);
-      v.chips.setX(v.x);
+      v.plate.setX(v.x);
       v.intent.setX(v.x);
     }
     if (this.targeting) {

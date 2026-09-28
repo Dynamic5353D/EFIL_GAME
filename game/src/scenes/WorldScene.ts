@@ -10,6 +10,7 @@ import { input } from '../core/Input';
 import { ensureTextures, spec } from '../core/Loader';
 import { loc, tr } from '../core/Localization';
 import { session } from '../core/Session';
+import { showTip, tipSeen } from '../core/Tips';
 import { settings } from '../core/Settings';
 import { AREAS, ROOMS } from '../data/rooms';
 import { ENEMIES } from '../data/enemies';
@@ -71,6 +72,8 @@ export class WorldScene extends Phaser.Scene {
   private hintCooldown = 0;
   private lookX = 0;
   private lostInStory = false;
+  /** Seconds the player has had control (tips wait for a moment of calm). */
+  private controlT = 0;
   /** False while a room is loading; the previous room's objects are gone by then. */
   private ready = false;
   private storyRunning = false;
@@ -275,6 +278,7 @@ export class WorldScene extends Phaser.Scene {
           if (st.abilities.includes(d.ability) || this.busy || this.hintCooldown > 0) return;
           if (Math.abs(this.player.x - p.x) < TILE * 2 && Math.abs(this.player.y - p.y) < TILE * 2) {
             this.hintCooldown = 8;
+            showTip('gate');
             this.floatText(p.x, p.y - 120, tr(d.hint), C.textDim);
           }
         };
@@ -295,6 +299,12 @@ export class WorldScene extends Phaser.Scene {
         L.destroy = () => pup.destroy();
         break;
       }
+      case 'tip': {
+        L.update = () => {
+          if (!this.busy && Math.abs(this.player.x - p.x) < d.radius * TILE && Math.abs(this.player.y - p.y) < d.radius * TILE) showTip(d.tip);
+        };
+        break;
+      }
       case 'spawn':
         return;
     }
@@ -310,6 +320,7 @@ export class WorldScene extends Phaser.Scene {
     this.burst(obj.x, obj.y, d.visual === 'shard' ? 0x9fe0ff : 0xffffff, d.visual === 'shard' ? 8 : 18);
     this.tweens.add({ targets: L.objs, alpha: 0, scale: '*=1.6', duration: 260, onComplete: () => L.objs.forEach((o) => o.destroy()) });
     if (d.shards) {
+      showTip('shards');
       st.riShards += d.shards;
       audio.sfx('shard', 0.9 + Math.random() * 0.2);
     }
@@ -396,6 +407,7 @@ export class WorldScene extends Phaser.Scene {
     this.player.locked = true;
     input.consume();
     this.storyRunning = true;
+    showTip('language');
     try {
       await this.director.run(script, label);
     } catch (err) {
@@ -616,6 +628,9 @@ export class WorldScene extends Phaser.Scene {
     if ((hitSpike || this.player.y > this.room.rows * TILE + 60) && !this.leaving) this.hazard();
 
     // Interaction prompt.
+    this.controlT = this.busy || this.leaving ? 0 : this.controlT + dt;
+    if (this.controlT > 1.2) this.checkTips();
+
     this.promptTarget = null;
     if (!this.busy) {
       let best = 90;
@@ -627,6 +642,7 @@ export class WorldScene extends Phaser.Scene {
     }
     const pt = this.promptTarget;
     if (pt) {
+      if (pt.def.type === 'tree') showTip('tree');
       this.promptText.setText(`${input.label('interact')}  ${pt.prompt!()}`).setPosition(pt.placed.x, pt.placed.y - 150).setVisible(true);
       if (input.pressed('interact') && this.player.onGround) { input.consume('interact', 'up'); pt.interact!(); }
     } else this.promptText.setVisible(false);
@@ -641,6 +657,19 @@ export class WorldScene extends Phaser.Scene {
       this.scene.launch('Menu', { onClose: () => { this.scene.resume(); this.scene.setVisible(true, 'Hud'); this.syncAbilities(); bus.emit('hud', undefined); } });
       this.scene.bringToTop('Menu');
     }
+  }
+
+  /** First-time tips that depend on where the player is or what they have (data/tips.ts). */
+  private checkTips() {
+    const st = session.state;
+    const px = this.player.x, py = this.player.y;
+    if (!tipSeen('move')) showTip('move');
+    if (!tipSeen('spikes') && this.phys.spikes.some((r) => px > r.x - TILE * 6 && px < r.x + r.w + TILE * 6 && Math.abs(py - (r.y + r.h)) < TILE * 5)) showTip('spikes');
+    if (!tipSeen('enemy') && this.enemies.some((e) => !e.live.gone && Math.abs(e.puppet.x - px) < 560 && Math.abs(e.puppet.y - py) < 260)) showTip('enemy');
+    if (!tipSeen('double_jump') && st.abilities.includes('double_jump')) showTip('double_jump');
+    if (!tipSeen('party') && st.party.length > 1) showTip('party');
+    if (!tipSeen('fragment') && st.codex.length > 0) showTip('fragment');
+    if (!tipSeen('menu') && st.location.checkpoint) showTip('menu');
   }
 
   private hazardT = 0;

@@ -18,6 +18,7 @@ import { MenuScene } from './scenes/MenuScene';
 import { SettingsScene } from './scenes/SettingsScene';
 import { TitleScene } from './scenes/TitleScene';
 import { WorldScene } from './scenes/WorldScene';
+import { MOVE } from './world/movement';
 
 input.attach();
 window.addEventListener('pointerdown', () => audio.unlock());
@@ -28,7 +29,7 @@ const game = new Phaser.Game({
   parent: 'game',
   backgroundColor: '#05070d',
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 1280, height: 720 },
-  physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 2150 }, debug: false } },
+  physics: { default: 'arcade', arcade: { gravity: { x: 0, y: MOVE.gravity }, debug: false } },
   input: { gamepad: false },
   scene: [BootScene, TitleScene, WorldScene, BattleScene, HudScene, DialogueScene, ChapterCardScene, MenuScene, SettingsScene, CreditsScene],
 });

@@ -20,6 +20,7 @@ export interface GameEvents extends Record<string, unknown> {
   settings: { key: string };
   language: { lang: 'en' | 'ta' };
   toast: { text: string; icon?: string };
+  tip: { id: string };
   hud: undefined;
 }
 

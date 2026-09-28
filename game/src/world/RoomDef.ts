@@ -7,13 +7,15 @@ export type EntityDef =
   | { type: 'spawn'; id: string }
   | { type: 'tree'; id: string }
   | { type: 'enemy'; id: string; enemy: string; battle: string; patrol: number }
-  | { type: 'pickup'; id: string; item?: string; shards?: number; script?: string; label?: string; visual: 'shard' | 'item' | 'fragment' | 'feather' }
+  | { type: 'pickup'; id: string; item?: string; shards?: number; script?: string; label?: string; visual: 'shard' | 'item' | 'fragment' | 'feather'; needs?: string }
   | { type: 'npc'; id: string; speaker: string; script: string; label: string; radius: number; hideIf?: string; requires?: string }
   | { type: 'trigger'; id: string; script: string; label: string; unless?: string; requires?: string; height: number }
   | { type: 'exit'; id: string; to: string; entry: string; height: number }
   | { type: 'crystal'; color: number }
-  | { type: 'chest'; id: string; item: string }
-  | { type: 'gate'; ability: string; hint: Loc; height: number };
+  | { type: 'chest'; id: string; item: string; needs?: string }
+  | { type: 'gate'; ability: string; hint: Loc; height: number }
+  /** Shows a first-time tip (data/tips.ts) when the player comes within `radius` tiles. */
+  | { type: 'tip'; tip: string; radius: number };
 
 export interface PlacedEntity { def: EntityDef; x: number; y: number; tx: number; ty: number }
 

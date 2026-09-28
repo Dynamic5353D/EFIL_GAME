@@ -3,27 +3,10 @@ import { audio } from '../core/AudioSynth';
 import { input } from '../core/Input';
 import type { MemberId } from '../data/characters';
 import { CharacterRig } from './CharacterRig';
+import { MOVE } from './movement';
 import { DEPTH } from './Scenery';
 
-/** Movement tuning (px, seconds). */
-export const MOVE = {
-  run: 290,
-  sprint: 410,
-  accelGround: 2600,
-  accelAir: 1700,
-  decelGround: 3000,
-  gravity: 2150,
-  fallMult: 1.35,
-  maxFall: 960,
-  jump: 860,
-  doubleJump: 760,
-  jumpCut: 0.45,
-  coyote: 0.1,
-  buffer: 0.12,
-  dashSpeed: 640,
-  dashTime: 0.16,
-  dashCooldown: 0.35,
-};
+export { MOVE };
 
 export class Player {
   readonly body: Phaser.Physics.Arcade.Image;

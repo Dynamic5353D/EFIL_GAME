@@ -29,22 +29,22 @@ export class SettingsScene extends Phaser.Scene {
     this.capturing = null;
     this.add.rectangle(0, 0, W, H, 0x03050a, 0.78).setOrigin(0);
     const g = this.add.graphics();
-    drawPanel(g, W / 2 - 400, 70, 800, 590, 0.95, 14);
-    this.title = addText(this, W / 2, 92, 'Settings', { size: 36, display: true, bold: true }).setOrigin(0.5, 0);
-    this.hint = addText(this, W / 2, 628, '', { size: 16, color: C.textDim, align: 'center', wordWrap: { width: 740 } }).setOrigin(0.5);
+    drawPanel(g, W / 2 - 400, 50, 800, 640, 0.95, 14);
+    this.title = addText(this, W / 2, 68, 'Settings', { size: 36, display: true, bold: true }).setOrigin(0.5, 0);
+    this.hint = addText(this, W / 2, 660, '', { size: 16, color: C.textDim, align: 'center', wordWrap: { width: 740 } }).setOrigin(0.5);
     this.showMain();
     input.consume();
   }
 
   private setMenu(items: MenuItem[], onCancel: () => void, rows = 11) {
     this.menu?.destroy();
-    this.menu = new MenuList(this, W / 2 - 360, 150, items.map((it) => ({ ...it, onFocus: () => this.hint.setText(it.hint?.() ?? '') })), {
+    this.menu = new MenuList(this, W / 2 - 360, 122, items.map((it) => ({ ...it, onFocus: () => this.hint.setText(it.hint?.() ?? '') })), {
       width: 720, lineHeight: 41, size: 22, rows, onCancel,
     });
     this.hint.setText(items[0]?.hint?.() ?? '');
   }
 
-  private toggle(key: 'reducedMotion' | 'screenShake' | 'contentWarnings' | 'profanityFilter', label: string, hint: string): MenuItem {
+  private toggle(key: 'reducedMotion' | 'screenShake' | 'contentWarnings' | 'profanityFilter' | 'showTips', label: string, hint: string): MenuItem {
     const flip = () => settings.set(key, !settings.get(key));
     return { label: () => label, value: () => (settings.get(key) ? 'On' : 'Off'), onLeft: flip, onRight: flip, hint: () => hint };
   }
@@ -75,9 +75,10 @@ export class SettingsScene extends Phaser.Scene {
       this.toggle('screenShake', 'Screen shake', 'Camera shake on hits and impacts.'),
       this.toggle('contentWarnings', 'Content notes', 'Short notes before chapters with difficult themes.'),
       this.toggle('profanityFilter', 'Profanity filter', 'Masks strong language in dialogue (English and Tanglish).'),
+      this.toggle('showTips', 'Tips', 'Short tips the first time you meet something new. Seen tips stay in the menu\'s Guide.'),
       { label: () => 'Controls', onSelect: () => this.showControls(), hint: () => 'Rebind keyboard keys. Gamepads use a standard layout.' },
       { label: () => 'Back', onSelect: () => this.close() },
-    ], () => this.close());
+    ], () => this.close(), 12);
   }
 
   private showControls() {

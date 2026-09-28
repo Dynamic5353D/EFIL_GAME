@@ -32,14 +32,20 @@ export function tintMatrix(tint: number, amount: number): number[] {
   return m;
 }
 
-export function applyGrade(cam: Phaser.Cameras.Scene2D.Camera, grade: RoomDef['grade'], vignette = true) {
-  cam.filters.internal.clear();
-  cam.filters.external.clear();
-  const cm = cam.filters.internal.addColorMatrix();
+/** Adds the room's colour grade (brightness, saturation, contrast, tint) to a filter list. */
+export function addGrade(list: Phaser.GameObjects.Components.FilterList, grade: RoomDef['grade']) {
+  const cm = list.addColorMatrix();
   cm.colorMatrix.brightness(grade.brightness);
   cm.colorMatrix.saturate(grade.saturation - 1, true);
   cm.colorMatrix.contrast(grade.contrast, true);
   if (grade.tint !== undefined && grade.tintAmount) cm.colorMatrix.multiply(tintMatrix(grade.tint, grade.tintAmount), true);
+  return cm;
+}
+
+export function applyGrade(cam: Phaser.Cameras.Scene2D.Camera, grade: RoomDef['grade'], vignette = true) {
+  cam.filters.internal.clear();
+  cam.filters.external.clear();
+  const cm = addGrade(cam.filters.internal, grade);
   if (vignette) cam.filters.external.addVignette(0.5, 0.5, 0.8, 0.45);
   return cm;
 }

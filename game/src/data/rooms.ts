@@ -25,7 +25,7 @@ function frozenShore(): RoomDef {
   b.at(109, 23, { type: 'exit', id: 'to_path', to: 'winter_path', entry: 'west', height: 6 });
   b.at(60, 23, { type: 'tree', id: 'shore_tree' });
   b.at(90, 23, { type: 'enemy', id: 'shore_vale', enemy: 'vale', battle: 'vale_lone', patrol: 7 });
-  b.at(49, 16, { type: 'pickup', id: 'shore_dream', script: SLICE, label: 'dream', visual: 'fragment' });
+  b.at(49, 16, { type: 'pickup', id: 'shore_dream', script: SLICE, label: 'dream', visual: 'fragment', needs: 'double_jump' });
   for (const [x, y] of [[10, 24], [12, 24], [14, 24], [44, 21], [46, 21], [73, 18], [74, 18], [93, 23], [96, 23], [22, 22]] as const) {
     b.at(x, y, { type: 'pickup', id: `shore_shard_${x}_${y}`, shards: 3, visual: 'shard' });
   }
@@ -58,8 +58,9 @@ function winterPath(): RoomDef {
   b.rect(94, 0, 2, 26);              // right wall
   b.rect(76, 18, 4, 1, '=');
   b.rect(81, 13, 7, 1, '#');         // high ledge with the chest (needs the Acanus leap)
-  b.rect(30, 14, 5, 1, '=');         // branches
-  b.rect(52, 15, 4, 1, '=');
+  b.rect(30, 17, 5, 1, '=');         // low branch (4 tiles up)
+  b.rect(46, 18, 4, 1, '=');         // stepping branch
+  b.rect(52, 15, 4, 1, '=');         // high branch, 3 above the stepping one
 
   b.at(3, 21, { type: 'spawn', id: 'west' });
   b.at(0, 21, { type: 'exit', id: 'to_shore', to: 'frozen_shore', entry: 'east', height: 6 });
@@ -67,8 +68,9 @@ function winterPath(): RoomDef {
   b.at(46, 21, { type: 'trigger', id: 'pack', script: SLICE, label: 'pack', unless: 'slice_vale_pack_defeated', requires: 'slice_met_dhanasree', height: 8 });
   b.at(55, 21, { type: 'tree', id: 'path_tree' });
   b.at(70, 18, { type: 'pickup', id: 'feather', script: SLICE, label: 'feather', visual: 'feather' });
-  b.at(84, 12, { type: 'chest', id: 'path_chest', item: 'pluffine_wrap' });
-  for (const [x, y] of [[12, 21], [14, 21], [31, 13], [33, 13], [53, 14], [64, 18], [66, 18], [90, 21]] as const) {
+  b.at(84, 12, { type: 'chest', id: 'path_chest', item: 'pluffine_wrap', needs: 'double_jump' });
+  b.at(79, 17, { type: 'gate', ability: 'double_jump', hint: loc('A chest sits on the ledge above, just out of reach.', 'Mela oru petti irukku, konjam ettala.'), height: 1 });
+  for (const [x, y] of [[12, 21], [14, 21], [31, 16], [33, 16], [47, 17], [53, 14], [64, 18], [66, 18], [90, 21]] as const) {
     b.at(x, y, { type: 'pickup', id: `path_shard_${x}_${y}`, shards: 3, visual: 'shard' });
   }
   for (const [x, y] of [[36, 20], [78, 21], [92, 21]] as const) b.at(x, y, { type: 'crystal', color: 0x8fe0ff });

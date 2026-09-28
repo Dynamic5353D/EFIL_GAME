@@ -7,6 +7,7 @@ import { input } from '../core/Input';
 import { ensureTextures, spec } from '../core/Loader';
 import { tr } from '../core/Localization';
 import { formatPlaytime, session } from '../core/Session';
+import { seenTips, tipBody } from '../core/Tips';
 import { ABILITIES } from '../data/abilities';
 import { CHARACTERS, xpToNext, type MemberId } from '../data/characters';
 import { CODEX } from '../data/codex';
@@ -17,7 +18,7 @@ import { addText, bar, C, drawPanel, H, W } from '../ui/theme';
 import type { OverlayData } from './SettingsScene';
 
 const PX = 350, PY = 96, PW = 880, PH = 580;
-type Section = 'party' | 'items' | 'codex' | 'map' | 'settings' | 'title' | 'resume';
+type Section = 'party' | 'items' | 'codex' | 'map' | 'guide' | 'settings' | 'title' | 'resume';
 
 export class MenuScene extends Phaser.Scene {
   private left!: MenuList;
@@ -47,9 +48,9 @@ export class MenuScene extends Phaser.Scene {
       label: () => label, onFocus: () => this.show(id), onSelect: () => this.enter(id),
     });
     this.left = new MenuList(this, 50, PY + 20, [
-      sec('party', 'Party'), sec('items', 'Items'), sec('codex', 'Memory Fragments'), sec('map', 'Map'),
+      sec('party', 'Party'), sec('items', 'Items'), sec('codex', 'Memory Fragments'), sec('map', 'Map'), sec('guide', 'Guide'),
       sec('settings', 'Settings'), sec('title', 'Quit to title'), sec('resume', 'Resume'),
-    ], { width: 260, lineHeight: 50, size: 24, display: true, onCancel: () => this.close() });
+    ], { width: 260, lineHeight: 48, size: 24, display: true, onCancel: () => this.close() });
     this.show('party');
     input.consume();
   }
@@ -80,6 +81,7 @@ export class MenuScene extends Phaser.Scene {
       case 'items': return this.drawItems(false);
       case 'codex': return this.drawCodex(false);
       case 'map': return this.drawMap();
+      case 'guide': return this.drawGuide(false);
       case 'settings': this.text(PX + 30, PY + 30, 'Language, text speed, volume, accessibility and controls.', { color: C.textDim }); return;
       case 'title': this.text(PX + 30, PY + 30, 'Return to the title screen.\nAnything since you last rested at a Red Rosoar tree is lost.', { color: C.textDim, lineSpacing: 6 }); return;
       case 'resume': this.text(PX + 30, PY + 30, 'Back to the game.', { color: C.textDim }); return;
@@ -91,6 +93,7 @@ export class MenuScene extends Phaser.Scene {
       case 'party': return this.chooseMember();
       case 'items': return this.drawItems(true);
       case 'codex': return this.drawCodex(true);
+      case 'guide': return this.drawGuide(true);
       case 'settings':
         this.left.active = false;
         this.scene.launch('Settings', { onClose: () => { this.left.active = true; input.consume(); } });
@@ -266,6 +269,22 @@ export class MenuScene extends Phaser.Scene {
     const items: MenuItem[] = ids.map((id) => ({ label: () => tr(CODEX[id]!.title), onFocus: () => focus(id) }));
     focus(ids[0]!);
     const list = new MenuList(this, PX + 16, PY + 60, items, { width: 400, lineHeight: 42, size: 21, rows: 11, onCancel: () => { this.left.active = true; this.show('codex'); } });
+    list.active = active;
+    this.content.add(list.container);
+    if (active) { this.left.active = false; this.sub = list; input.consume(); }
+  }
+
+  // ------------------------------------------------------------------ guide
+  private drawGuide(active: boolean) {
+    this.text(PX + 24, PY + 16, 'Guide', { size: 24, display: true, bold: true, color: C.accent });
+    const tips = seenTips();
+    if (!tips.length) { this.text(PX + 24, PY + 70, 'Tips you come across are kept here.', { color: C.textDim }); return; }
+    const body = this.text(PX + 450, PY + 70, '', { size: 19, wordWrap: { width: 400 }, lineSpacing: 5 });
+    const head = this.text(PX + 450, PY + 30, '', { size: 22, display: true, bold: true, color: C.warm });
+    const focus = (i: number) => { const t = tips[i]!; head.setText(tr(t.title)); body.setText(tipBody(t)); };
+    const items: MenuItem[] = tips.map((t, i) => ({ label: () => `${tr(t.title)}${t.kind === 'battle' ? '  ·  battle' : ''}`, onFocus: () => focus(i) }));
+    focus(0);
+    const list = new MenuList(this, PX + 16, PY + 60, items, { width: 410, lineHeight: 40, size: 20, rows: 12, onCancel: () => { this.left.active = true; this.show('guide'); } });
     list.active = active;
     this.content.add(list.container);
     if (active) { this.left.active = false; this.sub = list; input.consume(); }
