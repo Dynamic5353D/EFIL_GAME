@@ -101,8 +101,8 @@ NARRATOR: A single feather, longer than your arm, rests on the snow. It is still
   ta: Un kaiya vida neelamaana oru irage pani mela kedakkudhu. Innum soodaa irukku.
 @give acanus_feather
 @set slice_feather_taken
-NARRATOR: Holding it, the air feels like something you could push against. Press jump again in mid-air.
-  ta: Idha pidichaa, kaaththa kooda thalla mudiyum pola irukku. Kaathula irukumbodhu thirumba jump azhuthu.
+NARRATOR: Holding it, the air feels soft enough to rest on. Hold jump while falling to glide.
+  ta: Idha pidichaa, kaaththu mela saanjukalam pola irukku. Keela vizhumbodhu jump-a pidichaa mithakkalam.
 @end
 
 @label dream

@@ -5,7 +5,7 @@
  * in the character's colour, and a scarf trails with simple verlet physics.
  */
 import Phaser from 'phaser';
-import { CHARACTERS, type MemberId } from '../data/characters';
+import { rigStyle, type Hair, type RigStyle } from '../data/rigs';
 
 export type RigState = 'idle' | 'run' | 'jump' | 'fall' | 'dash' | 'hurt' | 'attack' | 'interact' | 'battle' | 'cast' | 'ko';
 
@@ -50,21 +50,25 @@ export class CharacterRig {
   private readonly rim: number;
   private readonly vein: number;
   private readonly cloth: number;
-  private readonly hair: string;
+  private readonly hair: Hair;
   private readonly glasses: boolean;
   private readonly h: number;
   private readonly w: number;
+  private readonly style: RigStyle;
 
-  constructor(scene: Phaser.Scene, id: MemberId, depth: number) {
-    const c = CHARACTERS[id];
+  /** `who` is a party member id, an NPC rig id (data/rigs.ts) or a full style. */
+  constructor(scene: Phaser.Scene, who: string | RigStyle, depth: number) {
+    const c = typeof who === 'string' ? rigStyle(who) : who;
+    this.style = c;
     this.body = c.body;
     this.vein = c.vein;
-    this.rim = mixColor(c.vein, 0xffffff, 0.6);
+    // Protagonists are rim-lit in their vein colour; everyone else in a pale version of their clothes.
+    this.rim = c.veins ? mixColor(c.vein, 0xffffff, 0.6) : mixColor(c.cloth, 0xdfe8f5, 0.62);
     this.cloth = c.cloth;
-    this.hair = c.build.hair;
-    this.glasses = !!c.build.glasses;
-    this.h = c.build.height;
-    this.w = c.build.width;
+    this.hair = c.hair;
+    this.glasses = !!c.glasses;
+    this.h = c.height;
+    this.w = c.width;
     this.g = scene.add.graphics().setDepth(depth);
     this.glow = scene.add.graphics().setDepth(depth + 1).setBlendMode(Phaser.BlendModes.ADD);
   }
@@ -187,8 +191,18 @@ export class CharacterRig {
       } else if (this.hair === 'long') {
         g.fillCircle(hx, hy - 1 * this.scale, 8.8 * this.scale);
         g.fillRect(hx - f * 9 * this.scale - (f < 0 ? 0 : 0), hy - 2 * this.scale, 9 * this.scale * f, 20 * this.scale);
-      } else {
+      } else if (this.hair === 'bun') {
+        g.fillCircle(hx, hy - 1 * this.scale, 8.5 * this.scale);
+        g.fillCircle(hx - f * 7 * this.scale, hy - 6 * this.scale, 4.5 * this.scale);
+      } else if (this.hair !== 'bald') {
         g.fillCircle(hx, hy - 2 * this.scale, 8.2 * this.scale);
+      }
+      if (this.style.cap !== undefined) {
+        const cc = this.style.cap;
+        g.fillStyle(cc, 1);
+        g.fillEllipse(hx + f * 1 * this.scale, hy - 5 * this.scale, 19 * this.scale, 8 * this.scale);
+        g.fillRect(hx - 8 * this.scale, hy - 10 * this.scale, 16 * this.scale, 5 * this.scale);
+        g.fillEllipse(hx + f * 8 * this.scale, hy - 4 * this.scale, 10 * this.scale, 3 * this.scale);
       }
     };
 
@@ -236,16 +250,31 @@ export class CharacterRig {
     };
     drawAll(this.rim, mixColor(this.rim, 0x000000, 0.4), rimDx, rimDy, 0.9);
     drawAll(body, back, 0, 0, 1);
+    // Non-protagonists wear their clothes: a tinted torso so uniforms and shirts read at a glance.
+    if (!this.style.veins) {
+      g.fillStyle(mixColor(this.style.cloth, body, 0.3), 1);
+      torso(0, 0);
+    }
 
-    // Scarf over the body.
-    g.lineStyle(4.2 * this.scale, this.cloth, 1);
+    // Scarf over the body (protagonists); everyone else gets a collar band in their clothing colour.
+    if (!this.style.scarf) {
+      const c = pt(chest.x, chest.y);
+      g.fillStyle(this.cloth, 1);
+      g.fillEllipse(c.x, c.y + 3 * this.scale, 15 * this.scale * this.w, 9 * this.scale);
+      g.fillStyle(mixColor(this.cloth, 0xffffff, 0.3), 0.8);
+      g.fillEllipse(c.x - f * 3 * this.scale, c.y + 1 * this.scale, 6 * this.scale, 3 * this.scale);
+    }
+    if (this.style.scarf) g.lineStyle(4.2 * this.scale, this.cloth, 1);
+    else g.lineStyle(0, 0, 0);
     g.beginPath();
     this.scarf.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)));
-    g.strokePath();
-    g.lineStyle(1.2 * this.scale, mixColor(this.cloth, 0xffffff, 0.35), 0.8);
-    g.beginPath();
-    this.scarf.forEach((p, i) => (i ? g.lineTo(p.x, p.y - 1.5) : g.moveTo(p.x, p.y - 1.5)));
-    g.strokePath();
+    if (this.style.scarf) {
+      g.strokePath();
+      g.lineStyle(1.2 * this.scale, mixColor(this.cloth, 0xffffff, 0.35), 0.8);
+      g.beginPath();
+      this.scarf.forEach((p, i) => (i ? g.lineTo(p.x, p.y - 1.5) : g.moveTo(p.x, p.y - 1.5)));
+      g.strokePath();
+    }
 
     // Glasses glint / eyes.
     const hc = pt(headC.x, headC.y);
@@ -254,8 +283,15 @@ export class CharacterRig {
       g.lineStyle(1.1 * this.scale, this.rim, 0.9);
       g.strokeRect(eyeX - 2.5 * this.scale, eyeY - 1.8 * this.scale, 5 * this.scale, 3.4 * this.scale);
     }
-    gl.fillStyle(this.vein, 0.95);
-    gl.fillRect(eyeX - 1.6 * this.scale, eyeY - 0.5 * this.scale, 3.2 * this.scale, 1.2 * this.scale);
+    if (this.style.veins || this.style.glowEyes) {
+      gl.fillStyle(this.vein, 0.95);
+      gl.fillRect(eyeX - 1.6 * this.scale, eyeY - 0.5 * this.scale, 3.2 * this.scale, 1.2 * this.scale);
+      if (this.style.glowEyes) { gl.fillStyle(this.vein, 0.35); gl.fillCircle(eyeX, eyeY, 4 * this.scale); }
+    } else {
+      g.fillStyle(0xe8eef8, 0.55);
+      g.fillRect(eyeX - 1.2 * this.scale, eyeY - 0.4 * this.scale, 2.4 * this.scale, 1 * this.scale);
+    }
+    if (!this.style.veins) return;
 
     // Veins: glowing lines along the forearms and neck, plus a soft halo.
     const vein = (a: { x: number; y: number }, b: { x: number; y: number }) => {

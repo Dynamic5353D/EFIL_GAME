@@ -12,6 +12,7 @@ import { loc, tr } from '../core/Localization';
 import { session } from '../core/Session';
 import { showTip, tipSeen } from '../core/Tips';
 import { settings } from '../core/Settings';
+import { BASE_ABILITIES } from '../data/abilities';
 import { AREAS, ROOMS } from '../data/rooms';
 import { ENEMIES } from '../data/enemies';
 import { ITEMS } from '../data/items';
@@ -562,7 +563,7 @@ export class WorldScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ party
   syncAbilities() {
-    if (this.player) this.player.abilities = new Set(session.state.abilities);
+    if (this.player) this.player.abilities = new Set([...BASE_ABILITIES, ...session.state.abilities]);
   }
 
   private buildFollowers() {
@@ -666,7 +667,7 @@ export class WorldScene extends Phaser.Scene {
     if (!tipSeen('move')) showTip('move');
     if (!tipSeen('spikes') && this.phys.spikes.some((r) => px > r.x - TILE * 6 && px < r.x + r.w + TILE * 6 && Math.abs(py - (r.y + r.h)) < TILE * 5)) showTip('spikes');
     if (!tipSeen('enemy') && this.enemies.some((e) => !e.live.gone && Math.abs(e.puppet.x - px) < 560 && Math.abs(e.puppet.y - py) < 260)) showTip('enemy');
-    if (!tipSeen('double_jump') && st.abilities.includes('double_jump')) showTip('double_jump');
+    if (!tipSeen('glide') && st.abilities.includes('glide')) showTip('glide');
     if (!tipSeen('party') && st.party.length > 1) showTip('party');
     if (!tipSeen('fragment') && st.codex.length > 0) showTip('fragment');
     if (!tipSeen('menu') && st.location.checkpoint) showTip('menu');

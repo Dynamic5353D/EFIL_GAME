@@ -17,8 +17,8 @@ const T = (id: string, kind: TipDef['kind'], title: Loc, body: Loc): TipDef => (
 export const TIPS: Record<string, TipDef> = {
   // ---------------------------------------------------------------- exploring
   move: T('move', 'world', loc('Moving', 'Nadakka'), loc(
-    '{left} {right} to move, {jump} to jump. Hold {jump} to jump higher. Hold {dash} to sprint.',
-    '{left} {right} nadakka, {jump} kudhikka. {jump}-a pidichaa uyarama kudhikkalam. {dash} pidichaa vegama odalam.')),
+    '{left} {right} to move, {jump} to jump. Hold {jump} to jump higher, and press it again in mid-air to double jump. Hold {dash} to sprint.',
+    '{left} {right} nadakka, {jump} kudhikka. {jump}-a pidichaa uyarama kudhikkalam, kaathula thirumba azhuthaa rendu kudhippu. {dash} pidichaa vegama odalam.')),
   spikes: T('spikes', 'world', loc('Ice spikes', 'Pani mullu'), loc(
     'Spikes hurt and send you back to solid ground. Take a run-up and jump across.',
     'Mullu kuthum, thirumba nilaththukku anuppidum. Konjam odi vandhu thaandi kudhi.')),
@@ -34,9 +34,9 @@ export const TIPS: Record<string, TipDef> = {
   gate: T('gate', 'world', loc('Out of reach', 'Ettala'), loc(
     'Some places need an ability you don\'t have yet. Remember them and come back later.',
     'Sila idangalukku ippo illadha oru sakthi venum. Nyabagam vechikko, aprom vaa.')),
-  double_jump: T('double_jump', 'world', loc('Acanus leap', 'Acanus kudhippu'), loc(
-    'Press {jump} again in mid-air to jump a second time. High ledges you couldn\'t reach before are open now.',
-    'Kaathula irukumbodhu {jump} thirumba azhuthu, innoru dhadava kudhikkalam. Munnadi ettadha uyarama idangal ippo ettum.')),
+  glide: T('glide', 'world', loc('Acanus glide', 'Acanus mithappu'), loc(
+    'Hold {jump} while falling to glide. You drift down slowly and cover long gaps.',
+    'Keela vizhumbodhu {jump}-a pidichaa mella mithandhu varalaam, periya idaiveliyum thaandalam.')),
   party: T('party', 'world', loc('Party', 'Kootam'), loc(
     'Dhanasree follows you now and fights beside Ragul in battle.',
     'Dhanasree ippo un pinnaadi varra, battle-la Ragul kooda sandai poduva.')),

@@ -29,6 +29,7 @@ export class Player {
   safe = { x: 0, y: 0 };
   private safeT = 0;
   dropThrough = 0;
+  gliding = false;
   onAttack: ((hitbox: Phaser.Geom.Rectangle) => void) | null = null;
   private dust: Phaser.GameObjects.Particles.ParticleEmitter;
 
@@ -146,6 +147,9 @@ export class Player {
       }
       if (input.released('jump') && b.velocity.y < 0 && this.jumping) b.setVelocityY(b.velocity.y * MOVE.jumpCut);
       b.setGravityY(b.velocity.y > 0 ? MOVE.gravity * (MOVE.fallMult - 1) : 0);
+      // Acanus glide: holding jump while falling caps the fall speed.
+      this.gliding = ctl && !ground && can('glide') && input.isDown('jump') && b.velocity.y > MOVE.glideFall;
+      if (this.gliding) b.setVelocityY(MOVE.glideFall);
     }
 
     // Attack: a quick swipe in front. Hitting an enemy starts a battle with the first move.

@@ -53,7 +53,7 @@ export function newGame(): GameState {
     members: { ragul: newMember('ragul', 2) },
     inventory: { red_rosoar: 2 },
     riShards: 0,
-    abilities: ['sprint'],
+    abilities: ['sprint', 'double_jump'],
     flags: {},
     relationships: {},
     codex: [],

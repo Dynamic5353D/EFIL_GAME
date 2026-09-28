@@ -36,10 +36,10 @@ export const ITEMS: Record<string, ItemDef> = {
     id: 'acanus_feather',
     kind: 'key',
     name: loc('Acanus down feather', 'Acanus irage'),
-    desc: loc('A feather shed by a giant white bird. Holding it, you can push off the air once more mid-jump.',
-      'Periya vella paravaiyoda irage. Idha vechitu, jump pannumbodhu kaathula innoru dhadava thallalam.'),
+    desc: loc('A feather shed by a giant white bird. Holding it, you drift instead of falling: hold jump in mid-air to glide.',
+      'Periya vella paravaiyoda irage. Idha vechitu keela vizhaama mithakkalam: kaathula jump-a pidi.'),
     icon: 'gen:feather',
-    grantsAbility: 'double_jump',
+    grantsAbility: 'glide',
   },
   pluffine_wool: {
     id: 'pluffine_wool',

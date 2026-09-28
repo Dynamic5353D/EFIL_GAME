@@ -5,6 +5,8 @@
 import Phaser from 'phaser';
 import { hasOverride } from '../core/Assets';
 import { CHARACTERS, type MemberId } from '../data/characters';
+import { rigStyle, type RigStyle } from '../data/rigs';
+import { SPEAKERS } from '../data/speakers';
 
 const css = (n: number, a = 1) => `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 const mix = (a: number, b: number, t: number) => {
@@ -25,8 +27,9 @@ function addCanvas(scene: Phaser.Scene, key: string, c: HTMLCanvasElement) {
 }
 
 /** Head-and-shoulders silhouette, rim-lit from the upper left, with glowing veins in the character colour. */
-function drawPortrait(id: MemberId, size = 384): HTMLCanvasElement {
-  const ch = CHARACTERS[id];
+function drawPortrait(style: RigStyle, size = 384): HTMLCanvasElement {
+  const glowCol = style.veins || style.glowEyes ? style.vein : mix(style.cloth, 0xc8d6ea, 0.4);
+  const ch = { vein: glowCol, body: style.body, cloth: style.cloth, build: { width: style.width, hair: style.hair, glasses: style.glasses } };
   const { c, g } = canvas(size, size);
   const s = size / 384;
   g.scale(s, s);
@@ -87,6 +90,21 @@ function drawPortrait(id: MemberId, size = 384): HTMLCanvasElement {
         g.bezierCurveTo(200 + dx, 104 + dy, 150 + dx, 120 + dy, 136 + dx, 180 + dy);
         g.bezierCurveTo(130 + dx, 230 + dy, 128 + dx, 270 + dy, 112 + dx, 300 + dy);
         break;
+      case 'bun':
+        g.moveTo(120 + dx, 150 + dy);
+        g.bezierCurveTo(116 + dx, 66 + dy, 276 + dx, 60 + dy, 270 + dx, 150 + dy);
+        g.bezierCurveTo(240 + dx, 110 + dy, 156 + dx, 110 + dy, 120 + dx, 150 + dy);
+        g.moveTo(236 + dx, 70 + dy);
+        g.arc(226 + dx, 58 + dy, 26, 0, Math.PI * 2);
+        break;
+      case 'bald':
+        g.moveTo(126 + dx, 150 + dy);
+        g.bezierCurveTo(124 + dx, 132 + dy, 132 + dx, 122 + dy, 140 + dx, 118 + dy);
+        g.lineTo(136 + dx, 150 + dy);
+        g.moveTo(262 + dx, 150 + dy);
+        g.bezierCurveTo(264 + dx, 132 + dy, 256 + dx, 122 + dy, 248 + dx, 118 + dy);
+        g.lineTo(252 + dx, 150 + dy);
+        break;
       default:
         g.moveTo(120 + dx, 146 + dy);
         g.bezierCurveTo(116 + dx, 62 + dy, 276 + dx, 58 + dy, 270 + dx, 146 + dy);
@@ -118,8 +136,18 @@ function drawPortrait(id: MemberId, size = 384): HTMLCanvasElement {
   g.restore();
   g.fillStyle = css(mix(ch.body, 0x000000, 0.3));
   hair(0, 0); g.fill();
-  // Veins: glowing lines down the neck.
+  // Police cap.
+  if (style.cap !== undefined) {
+    g.fillStyle = css(style.cap);
+    g.beginPath(); g.ellipse(196, 96, 96, 34, 0, Math.PI, 0); g.fill();
+    g.fillRect(100, 92, 192, 20);
+    g.beginPath(); g.ellipse(250, 112, 60, 12, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = css(mix(style.cap, 0xffd98a, 0.5));
+    g.beginPath(); g.arc(196, 88, 9, 0, Math.PI * 2); g.fill();
+  }
+  // Veins: glowing lines down the neck (the protagonists only).
   g.save();
+  if (!style.veins) g.globalAlpha = 0;
   g.strokeStyle = css(ch.vein, 0.9);
   g.shadowColor = css(ch.vein, 1);
   g.shadowBlur = 12;
@@ -139,8 +167,9 @@ function drawPortrait(id: MemberId, size = 384): HTMLCanvasElement {
     g.fillRect(154, 159, 10, 3);
     g.fillRect(206, 159, 10, 3);
   }
-  g.fillStyle = css(ch.vein, 0.9);
-  g.shadowBlur = 16;
+  g.globalAlpha = 1;
+  g.fillStyle = css(style.veins || style.glowEyes ? ch.vein : 0xe8eef8, style.veins || style.glowEyes ? 0.9 : 0.5);
+  g.shadowBlur = style.veins || style.glowEyes ? 16 : 0;
   g.fillRect(158, 166, 20, 3);
   g.fillRect(210, 166, 20, 3);
   g.restore();
@@ -272,7 +301,15 @@ function fragment(scene: Phaser.Scene) {
 
 export function generateTextures(scene: Phaser.Scene): void {
   for (const id of Object.keys(CHARACTERS) as MemberId[]) {
-    if (!hasOverride(`portraits/${id}.webp`)) addCanvas(scene, `portrait:gen:${id}`, drawPortrait(id));
+    if (!hasOverride(`portraits/${id}.webp`)) addCanvas(scene, `portrait:gen:${id}`, drawPortrait(rigStyle(id)));
+  }
+  // Speakers without art get a silhouette portrait from their rig style.
+  for (const sp of Object.values(SPEAKERS)) {
+    const p = sp.portrait;
+    if (!p?.startsWith('gen:')) continue;
+    const id = p.slice(4);
+    if (id in CHARACTERS || scene.textures.exists(`portrait:${p}`)) continue;
+    addCanvas(scene, `portrait:${p}`, drawPortrait(rigStyle(id), 256));
   }
   dot(scene, 'fx:dot', 16, false);
   dot(scene, 'fx:soft', 64, true);

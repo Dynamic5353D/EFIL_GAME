@@ -10,6 +10,7 @@
  * column, cross at the higher of the two rows, drop in the target column. One-way platforms ('=')
  * never block movement. It is deliberately a little conservative (no sprint, no dash).
  */
+import { BASE_ABILITIES } from '../data/abilities';
 import { MOVE, jumpHeight } from './movement';
 import { TILE, type EntityDef, type RoomDef } from './RoomDef';
 
@@ -144,7 +145,7 @@ export interface ReachReport {
 const label = (d: EntityDef, x: number, y: number) => `${d.type}${'id' in d ? ` ${d.id}` : ''} @${x},${y}`;
 
 /** Checks a room with the base abilities and with each ability its entities declare as `needs`. */
-export function checkRoom(room: RoomDef, base: string[] = ['sprint']): ReachReport {
+export function checkRoom(room: RoomDef, base: string[] = BASE_ABILITIES): ReachReport {
   const m = new ReachMap(room);
   const spawns = room.entities.filter((e) => e.def.type === 'spawn' || e.def.type === 'exit').map((e) => ({ x: e.tx, y: e.ty }));
   const baseSet = new Set(base);

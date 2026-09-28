@@ -25,7 +25,7 @@ function frozenShore(): RoomDef {
   b.at(109, 23, { type: 'exit', id: 'to_path', to: 'winter_path', entry: 'west', height: 6 });
   b.at(60, 23, { type: 'tree', id: 'shore_tree' });
   b.at(90, 23, { type: 'enemy', id: 'shore_vale', enemy: 'vale', battle: 'vale_lone', patrol: 7 });
-  b.at(49, 16, { type: 'pickup', id: 'shore_dream', script: SLICE, label: 'dream', visual: 'fragment', needs: 'double_jump' });
+  b.at(49, 16, { type: 'pickup', id: 'shore_dream', script: SLICE, label: 'dream', visual: 'fragment' });
   for (const [x, y] of [[10, 24], [12, 24], [14, 24], [44, 21], [46, 21], [73, 18], [74, 18], [93, 23], [96, 23], [22, 22]] as const) {
     b.at(x, y, { type: 'pickup', id: `shore_shard_${x}_${y}`, shards: 3, visual: 'shard' });
   }
@@ -33,7 +33,6 @@ function frozenShore(): RoomDef {
   for (const [x, y, c] of [[38, 22, 0x7fe8ff], [52, 25, 0x9f8cff], [78, 22, 0x7fe8ff], [104, 23, 0x9fd8ff], [17, 24, 0x9f8cff]] as const) {
     b.at(x, y, { type: 'crystal', color: c });
   }
-  b.at(49, 25, { type: 'gate', ability: 'double_jump', hint: loc('Something glows up there, too high to reach.', 'Mela edho minnudhu, ettavillai.'), height: 1 });
 
   return {
     id: 'frozen_shore', name: loc('Frozen Shore', 'Urainja Karai'), area: 'glacia_test',
@@ -68,8 +67,7 @@ function winterPath(): RoomDef {
   b.at(46, 21, { type: 'trigger', id: 'pack', script: SLICE, label: 'pack', unless: 'slice_vale_pack_defeated', requires: 'slice_met_dhanasree', height: 8 });
   b.at(55, 21, { type: 'tree', id: 'path_tree' });
   b.at(70, 18, { type: 'pickup', id: 'feather', script: SLICE, label: 'feather', visual: 'feather' });
-  b.at(84, 12, { type: 'chest', id: 'path_chest', item: 'pluffine_wrap', needs: 'double_jump' });
-  b.at(79, 17, { type: 'gate', ability: 'double_jump', hint: loc('A chest sits on the ledge above, just out of reach.', 'Mela oru petti irukku, konjam ettala.'), height: 1 });
+  b.at(84, 12, { type: 'chest', id: 'path_chest', item: 'pluffine_wrap' });
   for (const [x, y] of [[12, 21], [14, 21], [31, 16], [33, 16], [47, 17], [53, 14], [64, 18], [66, 18], [90, 21]] as const) {
     b.at(x, y, { type: 'pickup', id: `path_shard_${x}_${y}`, shards: 3, visual: 'shard' });
   }
