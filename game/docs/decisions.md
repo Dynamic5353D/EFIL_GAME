@@ -13,3 +13,6 @@ One line per decision that changes or refines `plan.md`.
 - 2026-09-28 · **Painted room layers (scenery, terrain) are cached as textures for the session**, because textures outlive scene restarts. Revisiting a room is instant.
 - 2026-09-28 · **Frost trees are recursive branches with stamped frost puffs**, drawn from one pre-rendered sprite, so they match the Pluffine Forest and Winter Path art (the first version read as grey balloons).
 - 2026-09-28 · **Dev-only URL jump** (`?room=…&flags=…&party=…&items=…&fast`) goes straight to a room with the given state. It is the first step toward the plan's chapter-select debug jump.
+- 2026-09-28 · **Jump tuning after the first playtest:** jump 900 and double jump 780 px/s. A held jump clears 4 tiles; 5 or more needs the Acanus leap. `tests/reach.test.ts` checks every room with the same numbers (reachable destinations, real gates marked `needs`, no dead ends), so every new room must pass it.
+- 2026-09-28 · **First-time tips and battle tutorials** (`data/tips.ts`, EN + Tanglish) show once per save and stay readable in the pause menu's Guide. They can be turned off in Settings.
+- 2026-09-28 · **Battle readability:** the room's colour grade applies to the battle backdrop only, never to fighters or UI. Every fighter has a nameplate, and a goal card states the win condition and how Vales die.

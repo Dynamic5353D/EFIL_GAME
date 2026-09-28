@@ -321,8 +321,8 @@ export class BattleScene extends Phaser.Scene {
   private pick<T extends string>(items: MenuItem[], title: string, back = false): Promise<T | null> {
     return new Promise((resolve) => {
       this.closeMenu();
-      const x = 40, y = 556, w = 310;
       const rows = Math.min(6, items.length);
+      const x = 40, w = 310, y = 704 - rows * 38; // anchored to the bottom edge
       this.menuPanel = this.add.graphics().setDepth(1000);
       drawGlowPanel(this.menuPanel, x, y - 44, w, rows * 38 + 58, C.accentInt, 0.94, 12);
       const head = glow(addText(this, x + 18, y - 34, title, { size: 18, color: C.accent, bold: true }), C.accent, 8).setDepth(1001);
