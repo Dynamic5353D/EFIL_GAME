@@ -1,0 +1,51 @@
+import { loc, type Loc } from '../core/Localization';
+import type { Stats } from './characters';
+
+export type ItemKind = 'consumable' | 'keepsake' | 'key' | 'material';
+
+export interface ItemDef {
+  id: string;
+  kind: ItemKind;
+  name: Loc;
+  desc: Loc;
+  /** Icon: a manifest slug (items/<slug>.webp) or a generated texture key starting with "gen:". */
+  icon: string;
+  heal?: number;           // fraction of max HP
+  mods?: Partial<Stats>;   // keepsake bonuses
+  grantsAbility?: string;
+}
+
+export const ITEMS: Record<string, ItemDef> = {
+  red_rosoar: {
+    id: 'red_rosoar',
+    kind: 'consumable',
+    name: loc('Red Rosoar fruit', 'Red Rosoar pazham'),
+    desc: loc('Small, sweet and filling. Restores 45% HP.', 'Chinna pazham, aana vairu full aagidum. 45% HP varum.'),
+    icon: 'gen:red_rosoar',
+    heal: 0.45,
+  },
+  pluffine_wrap: {
+    id: 'pluffine_wrap',
+    kind: 'keepsake',
+    name: loc('Pluffine wool wrap', 'Pluffine wool wrap'),
+    desc: loc('Warm cloth spun from Pluffine wool. +12 max HP, +1 defence.', 'Pluffine wool-la senja soodana thuni. +12 max HP, +1 defence.'),
+    icon: 'pluffine_wool',
+    mods: { maxHp: 12, def: 1 },
+  },
+  acanus_feather: {
+    id: 'acanus_feather',
+    kind: 'key',
+    name: loc('Acanus down feather', 'Acanus irage'),
+    desc: loc('A feather shed by a giant white bird. Holding it, you can push off the air once more mid-jump.',
+      'Periya vella paravaiyoda irage. Idha vechitu, jump pannumbodhu kaathula innoru dhadava thallalam.'),
+    icon: 'gen:feather',
+    grantsAbility: 'double_jump',
+  },
+  pluffine_wool: {
+    id: 'pluffine_wool',
+    kind: 'material',
+    name: loc('Pluffine wool'),
+    desc: loc('Soft, warm wool. Anushri can craft with it.', 'Mettha wool. Anushri idha vechu edhavadhu senju tharuva.'),
+    icon: 'pluffine_wool',
+  },
+};

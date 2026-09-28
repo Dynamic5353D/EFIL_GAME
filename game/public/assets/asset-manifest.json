@@ -1,0 +1,1575 @@
+{
+ "version": 4,
+ "generated": "2026-09-28T20:20:37",
+ "source_dir": "../images (read-only)",
+ "licensing": "Several images carry third-party watermarks, signatures or generator marks (see 'credit'). They are fine for a private build but must be replaced or licensed before any public release. Watermarks are never removed.",
+ "images": {
+  "cascades": {
+   "name": "Cascades",
+   "names": [
+    "Cascades underworld"
+   ],
+   "kind": "env",
+   "source": "Cascades.png",
+   "size": [
+    736,
+    1287
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/cascades.webp",
+    "far": "assets/bg/cascades_far.webp",
+    "art": "assets/bg/cascades.webp"
+   },
+   "palette": "cascades"
+  },
+  "crimson_pluffine_forest": {
+   "name": "Crimson Pluffine Forest",
+   "names": [],
+   "kind": "env",
+   "source": "Crimson_Pluffine forest.jpg",
+   "size": [
+    736,
+    1327
+   ],
+   "acts": [
+    4
+   ],
+   "files": {
+    "bg": "assets/bg/crimson_pluffine_forest.webp",
+    "far": "assets/bg/crimson_pluffine_forest_far.webp",
+    "art": "assets/bg/crimson_pluffine_forest.webp"
+   },
+   "palette": "crimson_pluffine_forest"
+  },
+  "elliptical_valley": {
+   "name": "Elliptical Valley",
+   "names": [
+    "Red Lily",
+    "Red Town - Lily"
+   ],
+   "kind": "env",
+   "source": "Elliptical Valley.png",
+   "size": [
+    236,
+    413
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/elliptical_valley.webp",
+    "far": "assets/bg/elliptical_valley_far.webp",
+    "art": "assets/bg/elliptical_valley.webp"
+   },
+   "note": "very low resolution (236x413)",
+   "palette": "elliptical_valley"
+  },
+  "frozen_pond": {
+   "name": "Frozen Pond",
+   "names": [
+    "Rocky Fields"
+   ],
+   "kind": "env",
+   "source": "Frozen Pond.jpg",
+   "size": [
+    1200,
+    1200
+   ],
+   "acts": [
+    2,
+    4
+   ],
+   "files": {
+    "bg": "assets/bg/frozen_pond.webp",
+    "far": "assets/bg/frozen_pond_far.webp",
+    "art": "assets/bg/frozen_pond.webp"
+   },
+   "palette": "frozen_pond"
+  },
+  "frozen_waterfall": {
+   "name": "Frozen Waterfall",
+   "names": [],
+   "kind": "env",
+   "source": "Frozen Waterfall.png",
+   "size": [
+    236,
+    408
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/frozen_waterfall.webp",
+    "far": "assets/bg/frozen_waterfall_far.webp",
+    "art": "assets/bg/frozen_waterfall.webp"
+   },
+   "note": "very low resolution (236x408)",
+   "palette": "frozen_waterfall"
+  },
+  "ice_cavern": {
+   "name": "Ice Cavern",
+   "names": [],
+   "kind": "env",
+   "source": "Ice Cavern.png",
+   "size": [
+    512,
+    384
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/ice_cavern.webp",
+    "far": "assets/bg/ice_cavern_far.webp",
+    "art": "assets/bg/ice_cavern.webp"
+   },
+   "palette": "ice_cavern"
+  },
+  "lone_white_tree": {
+   "name": "Lone White Tree",
+   "names": [],
+   "kind": "env",
+   "source": "Lone White Tree.jpg",
+   "size": [
+    425,
+    611
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/lone_white_tree.webp",
+    "far": "assets/bg/lone_white_tree_far.webp",
+    "art": "assets/bg/lone_white_tree.webp"
+   },
+   "palette": "lone_white_tree"
+  },
+  "majestic_cave_interior": {
+   "name": "Majestic Cave (interior)",
+   "names": [
+    "Kaviya's cave"
+   ],
+   "kind": "env",
+   "source": "Majestic cave interior.jpg",
+   "size": [
+    500,
+    408
+   ],
+   "acts": [
+    3
+   ],
+   "files": {
+    "bg": "assets/bg/majestic_cave_interior.webp",
+    "far": "assets/bg/majestic_cave_interior_far.webp",
+    "art": "assets/bg/majestic_cave_interior.webp"
+   },
+   "palette": "majestic_cave_interior"
+  },
+  "majestic_cave": {
+   "name": "Majestic Cave",
+   "names": [],
+   "kind": "env",
+   "source": "Majestic cave.png",
+   "size": [
+    673,
+    1200
+   ],
+   "acts": [
+    3
+   ],
+   "files": {
+    "bg": "assets/bg/majestic_cave.webp",
+    "far": "assets/bg/majestic_cave_far.webp",
+    "art": "assets/bg/majestic_cave.webp"
+   },
+   "palette": "majestic_cave"
+  },
+  "majestic_hills_pink": {
+   "name": "Majestic Hills (pink trees)",
+   "names": [],
+   "kind": "env",
+   "source": "Majestic hills Pink Hue Trees.png",
+   "size": [
+    675,
+    1200
+   ],
+   "acts": [
+    3
+   ],
+   "files": {
+    "bg": "assets/bg/majestic_hills_pink.webp",
+    "far": "assets/bg/majestic_hills_pink_far.webp",
+    "art": "assets/bg/majestic_hills_pink.webp"
+   },
+   "palette": "majestic_hills_pink"
+  },
+  "majestic_hills": {
+   "name": "Majestic Hills",
+   "names": [
+    "The Summit"
+   ],
+   "kind": "env",
+   "source": "Majestic hills.jpg",
+   "size": [
+    578,
+    1280
+   ],
+   "acts": [
+    3,
+    5
+   ],
+   "files": {
+    "bg": "assets/bg/majestic_hills.webp",
+    "far": "assets/bg/majestic_hills_far.webp",
+    "art": "assets/bg/majestic_hills.webp"
+   },
+   "palette": "majestic_hills"
+  },
+  "pink_bubbled_flower": {
+   "name": "Pink-Glowing Bubbled Flower",
+   "names": [
+    "giant pink flower chamber"
+   ],
+   "kind": "env",
+   "source": "Pink-Glowing Bubbled Flower.jpg",
+   "size": [
+    626,
+    417
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/pink_bubbled_flower.webp",
+    "far": "assets/bg/pink_bubbled_flower_far.webp",
+    "art": "assets/bg/pink_bubbled_flower.webp"
+   },
+   "palette": "pink_bubbled_flower"
+  },
+  "pluffine_forest": {
+   "name": "Pluffine Forest",
+   "names": [],
+   "kind": "env",
+   "source": "Pluffine Forest.png",
+   "size": [
+    474,
+    818
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/pluffine_forest.webp",
+    "far": "assets/bg/pluffine_forest_far.webp",
+    "art": "assets/bg/pluffine_forest.webp"
+   },
+   "credit": "signature, bottom right",
+   "palette": "pluffine_forest"
+  },
+  "sanctuary_red_path": {
+   "name": "Sanctuary Red Path",
+   "names": [
+    "Neva Sanctuary"
+   ],
+   "kind": "env",
+   "source": "Sanctuary Red Path.png",
+   "size": [
+    236,
+    385
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/sanctuary_red_path.webp",
+    "far": "assets/bg/sanctuary_red_path_far.webp",
+    "art": "assets/bg/sanctuary_red_path.webp"
+   },
+   "note": "very low resolution (236x385)",
+   "palette": "sanctuary_red_path"
+  },
+  "winter_path": {
+   "name": "Winter Path",
+   "names": [],
+   "kind": "env",
+   "source": "Winter Path.png",
+   "size": [
+    564,
+    564
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "bg": "assets/bg/winter_path.webp",
+    "far": "assets/bg/winter_path_far.webp",
+    "art": "assets/bg/winter_path.webp"
+   },
+   "palette": "winter_path"
+  },
+  "yellow_tree_bank": {
+   "name": "Yellow Tree Bank",
+   "names": [],
+   "kind": "env",
+   "source": "Yellow Tree Bank.jpg",
+   "size": [
+    1199,
+    1774
+   ],
+   "acts": [
+    8
+   ],
+   "files": {
+    "bg": "assets/bg/yellow_tree_bank.webp",
+    "far": "assets/bg/yellow_tree_bank_far.webp",
+    "art": "assets/bg/yellow_tree_bank.webp"
+   },
+   "palette": "yellow_tree_bank"
+  },
+  "white_tree_pond": {
+   "name": "White tree by a frozen pool",
+   "names": [],
+   "kind": "env",
+   "source": "image10.png",
+   "size": [
+    418,
+    627
+   ],
+   "acts": [],
+   "files": {
+    "bg": "assets/bg/white_tree_pond.webp",
+    "far": "assets/bg/white_tree_pond_far.webp",
+    "art": "assets/bg/white_tree_pond.webp"
+   },
+   "note": "unnamed in the story (image10)",
+   "palette": "white_tree_pond"
+  },
+  "sea_cave": {
+   "name": "Sea cave",
+   "names": [
+    "Requalam sea cave"
+   ],
+   "kind": "env",
+   "source": "image13.png",
+   "size": [
+    736,
+    1308
+   ],
+   "acts": [
+    9
+   ],
+   "files": {
+    "bg": "assets/bg/sea_cave.webp",
+    "far": "assets/bg/sea_cave_far.webp",
+    "art": "assets/bg/sea_cave.webp"
+   },
+   "palette": "sea_cave"
+  },
+  "orb_forest": {
+   "name": "Night forest with a glowing orb",
+   "names": [],
+   "kind": "env",
+   "source": "image19.png",
+   "size": [
+    736,
+    557
+   ],
+   "acts": [],
+   "files": {
+    "bg": "assets/bg/orb_forest.webp",
+    "far": "assets/bg/orb_forest_far.webp",
+    "art": "assets/bg/orb_forest.webp"
+   },
+   "note": "unnamed in the story (image19)",
+   "palette": "orb_forest"
+  },
+  "bioluminescent_underworld": {
+   "name": "Bioluminescent underworld",
+   "names": [
+    "Requalam underworld",
+    "Archive Temple approach"
+   ],
+   "kind": "env",
+   "source": "image26.png",
+   "size": [
+    1792,
+    1024
+   ],
+   "acts": [
+    9
+   ],
+   "files": {
+    "bg": "assets/bg/bioluminescent_underworld.webp",
+    "far": "assets/bg/bioluminescent_underworld_far.webp",
+    "art": "assets/bg/bioluminescent_underworld.webp"
+   },
+   "palette": "bioluminescent_underworld"
+  },
+  "starlit_road": {
+   "name": "Starlit road",
+   "names": [],
+   "kind": "env",
+   "source": "image27.png",
+   "size": [
+    720,
+    1280
+   ],
+   "acts": [],
+   "files": {
+    "bg": "assets/bg/starlit_road.webp",
+    "far": "assets/bg/starlit_road_far.webp",
+    "art": "assets/bg/starlit_road.webp"
+   },
+   "note": "unnamed in the story (image27)",
+   "palette": "starlit_road"
+  },
+  "water_cliffs_canyon": {
+   "name": "Water Cliffs canyon",
+   "names": [
+    "Water Cliffs"
+   ],
+   "kind": "env",
+   "source": "water cliffs canyon.jpeg",
+   "size": [
+    531,
+    1024
+   ],
+   "acts": [
+    3
+   ],
+   "files": {
+    "bg": "assets/bg/water_cliffs_canyon.webp",
+    "far": "assets/bg/water_cliffs_canyon_far.webp",
+    "art": "assets/bg/water_cliffs_canyon.webp"
+   },
+   "palette": "water_cliffs_canyon"
+  },
+  "snow_crabs": {
+   "name": "Snow crab shore",
+   "names": [
+    "snow crabs"
+   ],
+   "kind": "env",
+   "source": "snow crabs.jpg",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [
+    4
+   ],
+   "files": {
+    "bg": "assets/bg/snow_crabs.webp",
+    "far": "assets/bg/snow_crabs_far.webp",
+    "art": "assets/bg/snow_crabs.webp"
+   },
+   "palette": "snow_crabs"
+  },
+  "armored_guy": {
+   "name": "Armored Guy",
+   "names": [],
+   "kind": "char",
+   "source": "Armored Guy.png",
+   "size": [
+    564,
+    1010
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/armored_guy.webp",
+    "cutout": "assets/cutouts/armored_guy.webp",
+    "portrait": "assets/portraits/armored_guy.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    490,
+    1010
+   ],
+   "palette": "armored_guy"
+  },
+  "kanagaraj": {
+   "name": "Kanagaraj",
+   "names": [],
+   "kind": "char",
+   "source": "Kanagaraj.png",
+   "size": [
+    673,
+    1200
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/kanagaraj.webp",
+    "cutout": "assets/cutouts/kanagaraj.webp",
+    "portrait": "assets/portraits/kanagaraj.webp"
+   },
+   "cut_method": "rembg:u2net",
+   "cutout_size": [
+    607,
+    1089
+   ],
+   "palette": "kanagaraj"
+  },
+  "majesty_kaviya": {
+   "name": "Majesty Kaviya",
+   "names": [],
+   "kind": "char",
+   "source": "Majesty Kaviya.png",
+   "size": [
+    1024,
+    1024
+   ],
+   "acts": [
+    3
+   ],
+   "files": {
+    "art": "assets/art/majesty_kaviya.webp",
+    "cutout": "assets/cutouts/majesty_kaviya.webp",
+    "portrait": "assets/portraits/majesty_kaviya.webp"
+   },
+   "credit": "AI-generator sparkle mark, bottom right",
+   "cutout_size": [
+    651,
+    556
+   ],
+   "palette": "majesty_kaviya"
+  },
+  "jeevitha": {
+   "name": "Jeevitha (white-dressed girl)",
+   "names": [
+    "White-dressed girl",
+    "Jeevitha"
+   ],
+   "kind": "char",
+   "source": "White-dressed girl - Purple Dress.jpg",
+   "size": [
+    600,
+    1200
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/jeevitha.webp",
+    "cutout": "assets/cutouts/jeevitha.webp",
+    "portrait": "assets/portraits/jeevitha.webp"
+   },
+   "note": "the purple dress is not described in the text",
+   "cut_method": "rembg",
+   "cutout_size": [
+    571,
+    1146
+   ],
+   "palette": "jeevitha"
+  },
+  "zitabye": {
+   "name": "Zitabye",
+   "names": [],
+   "kind": "char",
+   "source": "Zitabye.png",
+   "size": [
+    736,
+    1472
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/zitabye.webp",
+    "cutout": "assets/cutouts/zitabye.webp",
+    "portrait": "assets/portraits/zitabye.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    605,
+    1186
+   ],
+   "palette": "zitabye"
+  },
+  "gardener": {
+   "name": "The Gardener",
+   "names": [
+    "Gardie",
+    "Gardener's Clothes"
+   ],
+   "kind": "char",
+   "source": "Gardener's Clothes.jpg",
+   "size": [
+    1200,
+    1200
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/gardener.webp",
+    "cutout": "assets/cutouts/gardener.webp",
+    "portrait": "assets/portraits/gardener.webp"
+   },
+   "credit": "signature, bottom right",
+   "cut_method": "rembg",
+   "cutout_size": [
+    601,
+    1176
+   ],
+   "palette": "gardener"
+  },
+  "red_throne_woman": {
+   "name": "Woman on the red throne",
+   "names": [],
+   "kind": "char",
+   "source": "image3.png",
+   "size": [
+    736,
+    1313
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/red_throne_woman.webp",
+    "cutout": "assets/cutouts/red_throne_woman.webp",
+    "portrait": "assets/portraits/red_throne_woman.webp"
+   },
+   "credit": "small signature, bottom right",
+   "note": "unnamed in the story (image3)",
+   "cut_method": "rembg",
+   "cutout_size": [
+    718,
+    1210
+   ],
+   "palette": "red_throne_woman"
+  },
+  "white_armor": {
+   "name": "White armour",
+   "names": [],
+   "kind": "char",
+   "source": "image9.png",
+   "size": [
+    736,
+    1313
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/white_armor.webp",
+    "cutout": "assets/cutouts/white_armor.webp",
+    "portrait": "assets/portraits/white_armor.webp"
+   },
+   "note": "unnamed in the story (image9)",
+   "cut_method": "rembg",
+   "cutout_size": [
+    571,
+    1278
+   ],
+   "palette": "white_armor"
+  },
+  "black_coat_turnaround": {
+   "name": "Black-coat armour turnaround",
+   "names": [
+    "Sleek Black Armor"
+   ],
+   "kind": "char",
+   "source": "image20.png",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [
+    10
+   ],
+   "files": {
+    "art": "assets/art/black_coat_turnaround.webp",
+    "cutout": "assets/cutouts/black_coat_turnaround.webp",
+    "portrait": "assets/portraits/black_coat_turnaround.webp"
+   },
+   "note": "three-view turnaround sheet (image20)",
+   "cut_method": "rembg",
+   "cutout_size": [
+    734,
+    719
+   ],
+   "palette": "black_coat_turnaround"
+  },
+  "acanus": {
+   "name": "Acanus",
+   "names": [],
+   "kind": "creature",
+   "source": "Acanus.jpg",
+   "size": [
+    744,
+    1052
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/acanus.webp",
+    "cutout": "assets/cutouts/acanus.webp"
+   },
+   "credit": "@13033303, bottom right",
+   "cut_method": "rembg",
+   "cutout_size": [
+    517,
+    675
+   ],
+   "palette": "acanus"
+  },
+  "acanus_dup": {
+   "name": "Acanus (duplicate)",
+   "names": [],
+   "kind": "creature",
+   "source": "download.jpeg",
+   "size": [
+    736,
+    1041
+   ],
+   "acts": [],
+   "files": {},
+   "credit": "@13033303, bottom right",
+   "note": "same picture as Acanus.jpg",
+   "duplicate_of": "acanus"
+  },
+  "cone_hat": {
+   "name": "Cone-hat creature",
+   "names": [],
+   "kind": "creature",
+   "source": "Cone-hat Creature.png",
+   "size": [
+    512,
+    512
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/cone_hat.webp",
+    "cutout": "assets/cutouts/cone_hat.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    406,
+    380
+   ],
+   "palette": "cone_hat"
+  },
+  "deer": {
+   "name": "Deer mount",
+   "names": [
+    "Deer Mount"
+   ],
+   "kind": "creature",
+   "source": "Deer Mount.png",
+   "size": [
+    736,
+    1104
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/deer.webp",
+    "cutout": "assets/cutouts/deer.webp"
+   },
+   "credit": "(c)2023 Eran Fowler, erenfowler.com, bottom right",
+   "cut_method": "rembg",
+   "cutout_size": [
+    320,
+    523
+   ],
+   "palette": "deer"
+  },
+  "fluffy_yellow": {
+   "name": "Fluffy yellow creature",
+   "names": [],
+   "kind": "creature",
+   "source": "Fluffy Yellow Creature.png",
+   "size": [
+    736,
+    978
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/fluffy_yellow.webp",
+    "cutout": "assets/cutouts/fluffy_yellow.webp"
+   },
+   "credit": "artist text, both bottom corners",
+   "cut_method": "rembg",
+   "cutout_size": [
+    381,
+    454
+   ],
+   "palette": "fluffy_yellow"
+  },
+  "frozen_phoenix": {
+   "name": "Frozen Phoenix",
+   "names": [],
+   "kind": "creature",
+   "source": "Frozen Phoenix.jpg",
+   "size": [
+    1062,
+    1291
+   ],
+   "acts": [
+    2,
+    4
+   ],
+   "files": {
+    "art": "assets/art/frozen_phoenix.webp",
+    "cutout": "assets/cutouts/frozen_phoenix.webp"
+   },
+   "note": "luminance-keyed glow; draw with ADD/SCREEN blend",
+   "cut_method": "lightkey",
+   "cutout_size": [
+    1053,
+    1280
+   ],
+   "palette": "frozen_phoenix"
+  },
+  "ice_butterfly": {
+   "name": "Ice butterfly",
+   "names": [],
+   "kind": "creature",
+   "source": "Ice Butterfly.png",
+   "size": [
+    736,
+    964
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/ice_butterfly.webp",
+    "cutout": "assets/cutouts/ice_butterfly.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    553,
+    447
+   ],
+   "palette": "ice_butterfly"
+  },
+  "kin": {
+   "name": "Kin",
+   "names": [],
+   "kind": "creature",
+   "source": "Kin.png",
+   "size": [
+    564,
+    564
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/kin.webp",
+    "cutout": "assets/cutouts/kin.webp",
+    "portrait": "assets/portraits/kin.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    309,
+    354
+   ],
+   "palette": "kin"
+  },
+  "large_liquid_shadow": {
+   "name": "Large Liquid Shadow",
+   "names": [],
+   "kind": "creature",
+   "source": "Large Liquid Shadow.png",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/large_liquid_shadow.webp",
+    "cutout": "assets/cutouts/large_liquid_shadow.webp",
+    "portrait": "assets/portraits/large_liquid_shadow.webp"
+   },
+   "cut_method": "rembg:u2net",
+   "cutout_size": [
+    282,
+    661
+   ],
+   "palette": "large_liquid_shadow"
+  },
+  "rami": {
+   "name": "Rami",
+   "names": [],
+   "kind": "creature",
+   "source": "Rami.png",
+   "size": [
+    574,
+    1024
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/rami.webp",
+    "cutout": "assets/cutouts/rami.webp",
+    "portrait": "assets/portraits/rami.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    574,
+    1020
+   ],
+   "palette": "rami"
+  },
+  "vale": {
+   "name": "Vale",
+   "names": [
+    "Vales"
+   ],
+   "kind": "creature",
+   "source": "Vales.png",
+   "size": [
+    673,
+    1200
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/vale.webp",
+    "cutout": "assets/cutouts/vale.webp"
+   },
+   "credit": "(c) signature, bottom right",
+   "note": "luminance-keyed silhouette; eyes are added in-game (the text says burning blue)",
+   "cut_method": "darkkey",
+   "cutout_size": [
+    671,
+    1106
+   ],
+   "palette": "vale"
+  },
+  "white_tiger": {
+   "name": "White tiger",
+   "names": [],
+   "kind": "creature",
+   "source": "White Tiger.png",
+   "size": [
+    512,
+    512
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/white_tiger.webp",
+    "cutout": "assets/cutouts/white_tiger.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    503,
+    438
+   ],
+   "palette": "white_tiger"
+  },
+  "zitabye_crow": {
+   "name": "Zitabye's crow",
+   "names": [],
+   "kind": "creature",
+   "source": "ZItabye's crow.jpg",
+   "size": [
+    1024,
+    585
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/zitabye_crow.webp",
+    "cutout": "assets/cutouts/zitabye_crow.webp"
+   },
+   "credit": "AI-generator sparkle mark, bottom right",
+   "cut_method": "rembg",
+   "cutout_size": [
+    986,
+    473
+   ],
+   "palette": "zitabye_crow"
+  },
+  "black_rosoar": {
+   "name": "Black Rosoar",
+   "names": [],
+   "kind": "item",
+   "source": "Black Rosoar.jpg",
+   "size": [
+    1200,
+    1200
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/black_rosoar.webp",
+    "cutout": "assets/cutouts/black_rosoar.webp",
+    "icon": "assets/items/black_rosoar.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    973,
+    969
+   ],
+   "palette": "black_rosoar"
+  },
+  "golden_rosoar": {
+   "name": "Golden Rosoar",
+   "names": [],
+   "kind": "item",
+   "source": "Golden Rosoar.jpg",
+   "size": [
+    736,
+    1308
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/golden_rosoar.webp",
+    "cutout": "assets/cutouts/golden_rosoar.webp",
+    "icon": "assets/items/golden_rosoar.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    666,
+    671
+   ],
+   "palette": "golden_rosoar"
+  },
+  "green_rosoar": {
+   "name": "Green Rosoar",
+   "names": [],
+   "kind": "item",
+   "source": "green rosoar.jpg",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [
+    7
+   ],
+   "files": {
+    "art": "assets/art/green_rosoar.webp",
+    "cutout": "assets/cutouts/green_rosoar.webp",
+    "icon": "assets/items/green_rosoar.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    599,
+    645
+   ],
+   "palette": "green_rosoar"
+  },
+  "blue_flower": {
+   "name": "Blue Flower",
+   "names": [],
+   "kind": "item",
+   "source": "Blue Flower.png",
+   "size": [
+    720,
+    1280
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/blue_flower.webp",
+    "cutout": "assets/cutouts/blue_flower.webp",
+    "icon": "assets/items/blue_flower.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    620,
+    1227
+   ],
+   "palette": "blue_flower"
+  },
+  "dhanasree_bracelet": {
+   "name": "Dhanasree's bracelet",
+   "names": [],
+   "kind": "item",
+   "source": "Dhanasree's Bracelet.jpg",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [
+    1
+   ],
+   "files": {
+    "art": "assets/art/dhanasree_bracelet.webp",
+    "cutout": "assets/cutouts/dhanasree_bracelet.webp",
+    "icon": "assets/items/dhanasree_bracelet.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    634,
+    548
+   ],
+   "palette": "dhanasree_bracelet"
+  },
+  "dhanasree_staff": {
+   "name": "Dhanasree's staff",
+   "names": [
+    "Dhanasree's weapon"
+   ],
+   "kind": "item",
+   "source": "Dhanasree's weapon.png",
+   "size": [
+    512,
+    512
+   ],
+   "acts": [
+    3
+   ],
+   "files": {
+    "art": "assets/art/dhanasree_staff.webp",
+    "cutout": "assets/cutouts/dhanasree_staff.webp",
+    "icon": "assets/items/dhanasree_staff.webp"
+   },
+   "credit": "'ai' generator badge, bottom right",
+   "cut_method": "rembg",
+   "cutout_size": [
+    494,
+    442
+   ],
+   "palette": "dhanasree_staff"
+  },
+  "dharshna_locket": {
+   "name": "Dharshna's lotus locket",
+   "names": [],
+   "kind": "item",
+   "source": "Dharshna's locket.jpg",
+   "size": [
+    564,
+    515
+   ],
+   "acts": [
+    1
+   ],
+   "files": {
+    "art": "assets/art/dharshna_locket.webp",
+    "cutout": "assets/cutouts/dharshna_locket.webp",
+    "icon": "assets/items/dharshna_locket.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    270,
+    445
+   ],
+   "palette": "dharshna_locket"
+  },
+  "ice_blade": {
+   "name": "Ice Blade of Shreesha",
+   "names": [],
+   "kind": "item",
+   "source": "Ice Blade of Shreesha.jpg",
+   "size": [
+    1200,
+    469
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/ice_blade.webp",
+    "cutout": "assets/cutouts/ice_blade.webp",
+    "icon": "assets/items/ice_blade.webp"
+   },
+   "credit": "'SUBZERO-ICE DAGGER' signature, bottom right",
+   "cut_method": "rembg",
+   "cutout_size": [
+    1125,
+    291
+   ],
+   "palette": "ice_blade"
+  },
+  "jeevitha_cart": {
+   "name": "Jeevitha's cart",
+   "names": [],
+   "kind": "item",
+   "source": "Jeevitha's Cart.png",
+   "size": [
+    401,
+    234
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/jeevitha_cart.webp",
+    "cutout": "assets/cutouts/jeevitha_cart.webp",
+    "icon": "assets/items/jeevitha_cart.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    257,
+    166
+   ],
+   "palette": "jeevitha_cart"
+  },
+  "spherical_container": {
+   "name": "Spherical container",
+   "names": [],
+   "kind": "item",
+   "source": "Spherical Container.jpg",
+   "size": [
+    512,
+    512
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/spherical_container.webp",
+    "cutout": "assets/cutouts/spherical_container.webp",
+    "icon": "assets/items/spherical_container.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    428,
+    419
+   ],
+   "palette": "spherical_container"
+  },
+  "violet_ornament": {
+   "name": "Violet glass ornament",
+   "names": [
+    "Asmitha's device"
+   ],
+   "kind": "item",
+   "source": "Violet Glass Ornament.png",
+   "size": [
+    373,
+    512
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/violet_ornament.webp",
+    "cutout": "assets/cutouts/violet_ornament.webp",
+    "icon": "assets/items/violet_ornament.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    324,
+    310
+   ],
+   "palette": "violet_ornament"
+  },
+  "zitabye_axe": {
+   "name": "Zitabye's axe",
+   "names": [],
+   "kind": "item",
+   "source": "Zitabye Axe.jpg",
+   "size": [
+    736,
+    1308
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/zitabye_axe.webp",
+    "cutout": "assets/cutouts/zitabye_axe.webp",
+    "icon": "assets/items/zitabye_axe.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    389,
+    1108
+   ],
+   "palette": "zitabye_axe"
+  },
+  "pluffine_wool": {
+   "name": "Pluffine wool",
+   "names": [],
+   "kind": "texture",
+   "source": "Pluffine Wool.jpg",
+   "size": [
+    747,
+    1328
+   ],
+   "acts": [
+    2
+   ],
+   "files": {
+    "art": "assets/art/pluffine_wool.webp",
+    "icon": "assets/items/pluffine_wool.webp"
+   },
+   "palette": "pluffine_wool"
+  },
+  "pure_white_orb": {
+   "name": "Pure white orb",
+   "names": [],
+   "kind": "orb",
+   "source": "Pure white orb.jpg",
+   "size": [
+    500,
+    498
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/pure_white_orb.webp",
+    "cutout": "assets/cutouts/pure_white_orb.webp",
+    "icon": "assets/items/pure_white_orb.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    379,
+    383
+   ],
+   "palette": "pure_white_orb"
+  },
+  "riva_1": {
+   "name": "RIVA shard I",
+   "names": [],
+   "kind": "orb",
+   "source": "RIVA-1.jpg",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/riva_1.webp",
+    "cutout": "assets/cutouts/riva_1.webp",
+    "icon": "assets/items/riva_1.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    618,
+    610
+   ],
+   "palette": "riva_1"
+  },
+  "riva_2": {
+   "name": "RIVA shard II",
+   "names": [],
+   "kind": "orb",
+   "source": "RIVA-2.jpg",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/riva_2.webp",
+    "cutout": "assets/cutouts/riva_2.webp",
+    "icon": "assets/items/riva_2.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    646,
+    633
+   ],
+   "palette": "riva_2"
+  },
+  "riva_3": {
+   "name": "RIVA shard III",
+   "names": [],
+   "kind": "orb",
+   "source": "RIVA-3.jpg",
+   "size": [
+    736,
+    736
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/riva_3.webp",
+    "cutout": "assets/cutouts/riva_3.webp",
+    "icon": "assets/items/riva_3.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    592,
+    594
+   ],
+   "palette": "riva_3"
+  },
+  "riva_4": {
+   "name": "RIVA shard IV",
+   "names": [],
+   "kind": "orb",
+   "source": "RIVA-4.jpg",
+   "size": [
+    736,
+    981
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/riva_4.webp",
+    "cutout": "assets/cutouts/riva_4.webp",
+    "icon": "assets/items/riva_4.webp"
+   },
+   "credit": "small text, bottom left",
+   "cut_method": "rembg",
+   "cutout_size": [
+    590,
+    602
+   ],
+   "palette": "riva_4"
+  },
+  "riva_5": {
+   "name": "RIVA shard V",
+   "names": [],
+   "kind": "orb",
+   "source": "RIVA-5.jpg",
+   "size": [
+    735,
+    730
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/riva_5.webp",
+    "cutout": "assets/cutouts/riva_5.webp",
+    "icon": "assets/items/riva_5.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    572,
+    564
+   ],
+   "palette": "riva_5"
+  },
+  "riva_6": {
+   "name": "RIVA shard VI",
+   "names": [],
+   "kind": "orb",
+   "source": "RIVA-6.jpg",
+   "size": [
+    512,
+    512
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/riva_6.webp",
+    "cutout": "assets/cutouts/riva_6.webp",
+    "icon": "assets/items/riva_6.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    288,
+    295
+   ],
+   "palette": "riva_6"
+  },
+  "riva_7": {
+   "name": "RIVA shard VII",
+   "names": [],
+   "kind": "orb",
+   "source": "RIVA-7.jpg",
+   "size": [
+    512,
+    640
+   ],
+   "acts": [],
+   "files": {
+    "art": "assets/art/riva_7.webp",
+    "cutout": "assets/cutouts/riva_7.webp",
+    "icon": "assets/items/riva_7.webp"
+   },
+   "cut_method": "rembg",
+   "cutout_size": [
+    432,
+    444
+   ],
+   "palette": "riva_7"
+  }
+ },
+ "aliases": {
+  "acanus": "acanus",
+  "archive temple approach": "bioluminescent_underworld",
+  "armored guy": "armored_guy",
+  "asmitha's device": "violet_ornament",
+  "bioluminescent underworld": "bioluminescent_underworld",
+  "black rosoar": "black_rosoar",
+  "black-coat armour turnaround": "black_coat_turnaround",
+  "blue flower": "blue_flower",
+  "cascades": "cascades",
+  "cascades underworld": "cascades",
+  "cone-hat creature": "cone_hat",
+  "crimson pluffine forest": "crimson_pluffine_forest",
+  "deer mount": "deer",
+  "dhanasree's bracelet": "dhanasree_bracelet",
+  "dhanasree's staff": "dhanasree_staff",
+  "dhanasree's weapon": "dhanasree_staff",
+  "dharshna's lotus locket": "dharshna_locket",
+  "elliptical valley": "elliptical_valley",
+  "fluffy yellow creature": "fluffy_yellow",
+  "frozen phoenix": "frozen_phoenix",
+  "frozen pond": "frozen_pond",
+  "frozen waterfall": "frozen_waterfall",
+  "gardener's clothes": "gardener",
+  "gardie": "gardener",
+  "giant pink flower chamber": "pink_bubbled_flower",
+  "golden rosoar": "golden_rosoar",
+  "green rosoar": "green_rosoar",
+  "ice blade of shreesha": "ice_blade",
+  "ice butterfly": "ice_butterfly",
+  "ice cavern": "ice_cavern",
+  "jeevitha": "jeevitha",
+  "jeevitha (white-dressed girl)": "jeevitha",
+  "jeevitha's cart": "jeevitha_cart",
+  "kanagaraj": "kanagaraj",
+  "kaviya's cave": "majestic_cave_interior",
+  "kin": "kin",
+  "large liquid shadow": "large_liquid_shadow",
+  "lone white tree": "lone_white_tree",
+  "majestic cave": "majestic_cave",
+  "majestic cave (interior)": "majestic_cave_interior",
+  "majestic hills": "majestic_hills",
+  "majestic hills (pink trees)": "majestic_hills_pink",
+  "majesty kaviya": "majesty_kaviya",
+  "neva sanctuary": "sanctuary_red_path",
+  "night forest with a glowing orb": "orb_forest",
+  "pink-glowing bubbled flower": "pink_bubbled_flower",
+  "pluffine forest": "pluffine_forest",
+  "pluffine wool": "pluffine_wool",
+  "pure white orb": "pure_white_orb",
+  "rami": "rami",
+  "red lily": "elliptical_valley",
+  "red town - lily": "elliptical_valley",
+  "requalam sea cave": "sea_cave",
+  "requalam underworld": "bioluminescent_underworld",
+  "riva shard i": "riva_1",
+  "riva shard ii": "riva_2",
+  "riva shard iii": "riva_3",
+  "riva shard iv": "riva_4",
+  "riva shard v": "riva_5",
+  "riva shard vi": "riva_6",
+  "riva shard vii": "riva_7",
+  "rocky fields": "frozen_pond",
+  "sanctuary red path": "sanctuary_red_path",
+  "sea cave": "sea_cave",
+  "sleek black armor": "black_coat_turnaround",
+  "snow crab shore": "snow_crabs",
+  "snow crabs": "snow_crabs",
+  "spherical container": "spherical_container",
+  "starlit road": "starlit_road",
+  "the gardener": "gardener",
+  "the summit": "majestic_hills",
+  "vale": "vale",
+  "vales": "vale",
+  "violet glass ornament": "violet_ornament",
+  "water cliffs": "water_cliffs_canyon",
+  "water cliffs canyon": "water_cliffs_canyon",
+  "white armour": "white_armor",
+  "white tiger": "white_tiger",
+  "white tree by a frozen pool": "white_tree_pond",
+  "white-dressed girl": "jeevitha",
+  "winter path": "winter_path",
+  "woman on the red throne": "red_throne_woman",
+  "yellow tree bank": "yellow_tree_bank",
+  "zitabye": "zitabye",
+  "zitabye's axe": "zitabye_axe",
+  "zitabye's crow": "zitabye_crow"
+ }
+}

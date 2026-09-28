@@ -1,0 +1,8 @@
+node_modules/
+dist/
+tools/.venv
+tools/story_raw/
+tools/__pycache__/
+*.log
+.DS_Store
+tools/.asset-cache.json
