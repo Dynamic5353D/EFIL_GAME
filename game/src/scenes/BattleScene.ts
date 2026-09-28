@@ -14,6 +14,8 @@ import { bus } from '../core/EventBus';
 import { addItem, grantXp, memberStats } from '../core/GameState';
 import { input } from '../core/Input';
 import { ensureTextures, spec } from '../core/Loader';
+import { ensureEarthTextures } from '../world/EarthPainter';
+import { ensureGenSprites } from '../world/GenSprites';
 import { tr } from '../core/Localization';
 import { takeTip, tipBody } from '../core/Tips';
 import { session } from '../core/Session';
@@ -118,6 +120,8 @@ export class BattleScene extends Phaser.Scene {
     });
     audio.music((def.music as MusicId) ?? 'battle');
     const slugs = def.enemies.map((e) => ENEMIES[e]?.sprite.slug ?? 'vale');
+    ensureEarthTextures(this, data.backdrop);
+    ensureGenSprites(this, slugs);
     void ensureTextures(this, [spec('bg', data.backdrop), spec('far', data.backdrop), ...slugs.map((s) => spec('cut', s))]).then(() => {
       this.build();
       void this.run();
@@ -735,7 +739,7 @@ export class BattleScene extends Phaser.Scene {
         keep(addText(this, rx + t.width + 102, y + 1, text, { size: 15, bold: true, color: '#e6eefa' }));
         rx += t.width + 150;
       };
-      if (u.kind === 'ragul') res('Hunger', this.st.soulHunger / 100, this.st.soulHunger >= 70 ? 0xff5a7a : 0xa98cff, String(this.st.soulHunger));
+      if (u.kind === 'ragul' && !this.st.dream && session.state.flags.hunger_known) res('Hunger', this.st.soulHunger / 100, this.st.soulHunger >= 70 ? 0xff5a7a : 0xa98cff, String(this.st.soulHunger));
       if (u.res.ce !== undefined) res('CE', u.res.ce / (u.res.ceMax ?? 6), 0x6dffa8, `${u.res.ce}`);
       if (u.res.ammo !== undefined) {
         const t = keep(addText(this, rx, y + 2, 'Ammo', { size: 14, color: '#b9c7dd' }));
@@ -884,14 +888,15 @@ export class BattleScene extends Phaser.Scene {
       const ups = grantXp(st, r.xp);
       st.riShards += r.shards;
       for (const [id, n] of Object.entries(r.drops)) addItem(st, id, n);
-      lines.push(`${r.xp} XP    ·    ${r.shards} RI shards`);
+      if (!this.st.dream) lines.push(`${r.xp} XP    ·    ${r.shards} RI shards`);
+      else lines.push('In his head, at least, he wins.');
       for (const [id, n] of Object.entries(r.drops)) lines.push(`Found: ${tr(ITEMS[id]?.name ?? { en: id, ta: id })}${n > 1 ? ` ×${n}` : ''}`);
       for (const id of ups) lines.push(`${tr(CHARACTERS[id].name)} reached level ${st.members[id]!.level}!`);
       if (r.soulsAbsorbed) lines.push(`Ragul took ${r.soulsAbsorbed} soul${r.soulsAbsorbed > 1 ? 's' : ''}. The hunger quiets, for now.`);
-      else if (st.soulHunger >= 70 && st.party.includes('ragul')) lines.push('Ragul\'s hunger gnaws at him.');
+      else if (st.soulHunger >= 70 && st.party.includes('ragul') && st.flags.hunger_known) lines.push('Ragul\'s hunger gnaws at him.');
       for (const v of this.views.values()) if (v.side === 'party' && !unit(this.st, v.id)?.dead) v.rig?.setState('idle');
       await this.results('Victory', lines, C.warm, C.warmInt);
-      if (st.party.includes('ragul')) await this.tutorial('hunger');
+      if (st.party.includes('ragul') && st.flags.hunger_known) await this.tutorial('hunger');
     } else if (r.outcome === 'fled') {
       await this.results('You got away', ['The party slips away into the snow.'], '#cfe6ff', C.accentInt);
     } else {

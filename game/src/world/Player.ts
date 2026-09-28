@@ -33,7 +33,7 @@ export class Player {
   onAttack: ((hitbox: Phaser.Geom.Rectangle) => void) | null = null;
   private dust: Phaser.GameObjects.Particles.ParticleEmitter;
 
-  constructor(private scene: Phaser.Scene, x: number, y: number, member: MemberId) {
+  constructor(private scene: Phaser.Scene, x: number, y: number, member: MemberId | string) {
     this.body = scene.physics.add.image(x, y - 32, 'fx:px').setVisible(false);
     this.body.setSize(4, 4);
     const b = this.body.body as Phaser.Physics.Arcade.Body;
@@ -55,7 +55,7 @@ export class Player {
   get y() { return this.arcade.bottom; }
   get onGround() { return this.arcade.blocked.down || this.arcade.touching.down; }
 
-  setMember(id: MemberId) {
+  setMember(id: MemberId | string) {
     this.rig.destroy();
     (this as { rig: CharacterRig }).rig = new CharacterRig(this.scene, id, DEPTH.player);
   }

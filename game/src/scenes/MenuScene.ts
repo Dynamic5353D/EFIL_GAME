@@ -10,6 +10,7 @@ import { formatPlaytime, session } from '../core/Session';
 import { seenTips, tipBody } from '../core/Tips';
 import { ABILITIES } from '../data/abilities';
 import { CHARACTERS, xpToNext, type MemberId } from '../data/characters';
+import { CLUES } from '../data/clues';
 import { CODEX } from '../data/codex';
 import { ITEMS } from '../data/items';
 import { AREAS, ROOMS } from '../data/rooms';
@@ -18,7 +19,7 @@ import { addText, bar, C, drawPanel, H, W } from '../ui/theme';
 import type { OverlayData } from './SettingsScene';
 
 const PX = 350, PY = 96, PW = 880, PH = 580;
-type Section = 'party' | 'items' | 'codex' | 'map' | 'guide' | 'settings' | 'title' | 'resume';
+type Section = 'party' | 'items' | 'codex' | 'case' | 'map' | 'guide' | 'settings' | 'title' | 'resume';
 
 export class MenuScene extends Phaser.Scene {
   private left!: MenuList;
@@ -48,7 +49,7 @@ export class MenuScene extends Phaser.Scene {
       label: () => label, onFocus: () => this.show(id), onSelect: () => this.enter(id),
     });
     this.left = new MenuList(this, 50, PY + 20, [
-      sec('party', 'Party'), sec('items', 'Items'), sec('codex', 'Memory Fragments'), sec('map', 'Map'), sec('guide', 'Guide'),
+      sec('party', 'Party'), sec('items', 'Items'), sec('codex', 'Memory Fragments'), sec('case', 'Case Board'), sec('map', 'Map'), sec('guide', 'Guide'),
       sec('settings', 'Settings'), sec('title', 'Quit to title'), sec('resume', 'Resume'),
     ], { width: 260, lineHeight: 48, size: 24, display: true, onCancel: () => this.close() });
     this.show('party');
@@ -82,8 +83,9 @@ export class MenuScene extends Phaser.Scene {
       case 'codex': return this.drawCodex(false);
       case 'map': return this.drawMap();
       case 'guide': return this.drawGuide(false);
+      case 'case': return this.drawCase(false);
       case 'settings': this.text(PX + 30, PY + 30, 'Language, text speed, volume, accessibility and controls.', { color: C.textDim }); return;
-      case 'title': this.text(PX + 30, PY + 30, 'Return to the title screen.\nAnything since you last rested at a Red Rosoar tree is lost.', { color: C.textDim, lineSpacing: 6 }); return;
+      case 'title': this.text(PX + 30, PY + 30, 'Return to the title screen.\nAnything since you last rested or saved is lost.', { color: C.textDim, lineSpacing: 6 }); return;
       case 'resume': this.text(PX + 30, PY + 30, 'Back to the game.', { color: C.textDim }); return;
     }
   }
@@ -94,6 +96,7 @@ export class MenuScene extends Phaser.Scene {
       case 'items': return this.drawItems(true);
       case 'codex': return this.drawCodex(true);
       case 'guide': return this.drawGuide(true);
+      case 'case': return this.drawCase(true);
       case 'settings':
         this.left.active = false;
         this.scene.launch('Settings', { onClose: () => { this.left.active = true; input.consume(); } });
@@ -285,6 +288,37 @@ export class MenuScene extends Phaser.Scene {
     const items: MenuItem[] = tips.map((t, i) => ({ label: () => `${tr(t.title)}${t.kind === 'battle' ? '  ·  battle' : ''}`, onFocus: () => focus(i) }));
     focus(0);
     const list = new MenuList(this, PX + 16, PY + 60, items, { width: 410, lineHeight: 40, size: 20, rows: 12, onCancel: () => { this.left.active = true; this.show('guide'); } });
+    list.active = active;
+    this.content.add(list.container);
+    if (active) { this.left.active = false; this.sub = list; input.consume(); }
+  }
+
+  // ------------------------------------------------------------------ case board
+  /** Clues about the deaths, pinned like cards. After Venture 8 each card shows what really happened. */
+  private drawCase(active: boolean) {
+    const st = session.state;
+    this.text(PX + 24, PY + 16, 'Case Board', { size: 24, display: true, bold: true, color: C.accent });
+    const clues = st.clues.map((id) => CLUES[id]).filter((c): c is NonNullable<typeof c> => !!c);
+    if (!clues.length) { this.text(PX + 24, PY + 70, 'Nothing pinned yet. Clues about the deaths will gather here.', { color: C.textDim }); return; }
+    const truth = !!st.flags.truth_known;
+    const g = this.add.graphics();
+    this.content.add(g);
+    const head = this.text(PX + 450, PY + 34, '', { size: 22, display: true, bold: true, color: C.warm, wordWrap: { width: 400 } });
+    const body = this.text(PX + 450, PY + 80, '', { size: 19, wordWrap: { width: 400 }, lineSpacing: 5 });
+    const focus = (i: number) => {
+      const c = clues[i]!;
+      head.setText(tr(c.title));
+      body.setY(PY + 44 + head.height);
+      body.setText(truth && c.truth ? `${tr(c.body)}\n\n${tr(c.truth)}` : tr(c.body));
+      body.setColor(truth && c.truth ? '#ffd0d0' : C.text);
+      g.clear();
+      g.fillStyle(0x2a2016, 0.9).fillRoundedRect(PX + 436, PY + 22, 424, Math.min(PH - 44, body.height + head.height + 60), 8);
+      g.lineStyle(2, truth && c.truth ? C.dangerInt : C.warmInt, 0.6).strokeRoundedRect(PX + 436, PY + 22, 424, Math.min(PH - 44, body.height + head.height + 60), 8);
+      g.fillStyle(0xd84040, 1).fillCircle(PX + 648, PY + 22, 6);
+    };
+    const items: MenuItem[] = clues.map((c, i) => ({ label: () => tr(c.title), onFocus: () => focus(i) }));
+    focus(0);
+    const list = new MenuList(this, PX + 16, PY + 60, items, { width: 410, lineHeight: 40, size: 20, rows: 12, onCancel: () => { this.left.active = true; this.show('case'); } });
     list.active = active;
     this.content.add(list.container);
     if (active) { this.left.active = false; this.sub = list; input.consume(); }

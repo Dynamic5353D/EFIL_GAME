@@ -50,7 +50,7 @@ export class HudScene extends Phaser.Scene {
       this.texts.push(addText(this, x + 62, y + 2, tr(c.name), { size: 17, bold: true }));
       bar(this.g, x + 62, y + 26, 120, 8, m.hp / max, m.hp / max < 0.3 ? C.hpLow : C.hp);
       this.texts.push(addText(this, x + 186, y + 21, `${m.hp}`, { size: 14, color: C.textDim }));
-      if (id === 'ragul') {
+      if (id === 'ragul' && st.flags.hunger_known) {
         bar(this.g, x + 62, y + 40, 120, 5, st.soulHunger / 100, st.soulHunger >= 70 ? 0xff5a7a : 0x9a7cff);
         this.texts.push(addText(this, x + 186, y + 35, 'hunger', { size: 12, color: C.textFaint }));
       }
@@ -61,7 +61,13 @@ export class HudScene extends Phaser.Scene {
       }
       x += 250;
     }
+    if (st.objective) {
+      const t = addText(this, 30, 96, `◆  ${tr(st.objective)}`, { size: 18, color: '#f4ecd8', wordWrap: { width: 520 } });
+      glow(t, '#000000', 6);
+      this.texts.push(t);
+    }
     const shardY = 26;
+    if (!st.riShards && st.venture.purpose === 1) return;
     this.g.fillStyle(0x86d8ff, 1);
     this.g.fillPoints([{ x: W - 110, y: shardY }, { x: W - 102, y: shardY + 10 }, { x: W - 110, y: shardY + 24 }, { x: W - 118, y: shardY + 10 }] as Phaser.Math.Vector2[], true);
     this.texts.push(addText(this, W - 94, shardY + 2, String(st.riShards), { size: 20, bold: true }));

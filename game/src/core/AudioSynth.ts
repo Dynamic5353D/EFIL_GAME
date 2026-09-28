@@ -25,7 +25,157 @@ const E_PENTA = [64, 66, 69, 71, 74, 76, 78, 81, 83];
 const BATTLE_CHORDS = [[38, 50, 57, 62, 65], [34, 46, 53, 58, 62], [36, 48, 55, 60, 64], [33, 45, 52, 57, 61]];
 const REST_CHORDS = [[41, 53, 57, 60, 64], [46, 53, 58, 62, 65], [43, 50, 55, 58, 62], [48, 52, 55, 60, 67]];
 
+// Earth (Act I). All original.
+const CAMPUS_CHORDS = [[50, 57, 62, 66, 69], [45, 52, 57, 61, 64], [47, 54, 59, 62, 66], [43, 50, 55, 59, 62]];
+const NIGHT_CHORDS = [[45, 52, 57, 60, 64], [41, 48, 53, 57, 60], [48, 55, 60, 64, 67], [43, 50, 55, 59, 62]];
+const MYSTERY_CHORDS = [[38, 50, 53, 57, 62], [37, 49, 53, 57, 61], [36, 48, 53, 57, 60], [35, 47, 53, 56, 59]];
+const CHASE_CHORDS = [[40, 52, 55, 59, 64], [36, 48, 52, 55, 60], [38, 50, 54, 57, 62], [35, 47, 50, 54, 59]];
+const SORROW_CHORDS = [[45, 57, 60, 64, 69], [41, 53, 57, 60, 65], [48, 55, 60, 64, 67], [40, 52, 56, 59, 64]];
+const HERO_CHORDS = [[40, 52, 56, 59, 64], [37, 49, 52, 56, 61], [33, 45, 49, 52, 57], [35, 47, 51, 54, 59]];
+const DANCE_CHORDS = [[45, 57, 60, 64], [41, 53, 57, 60], [43, 55, 59, 62], [40, 52, 55, 59]];
+// A hummed lullaby (original): scale degrees of D major, one note per beat, 0 = rest.
+const LULLABY = [69, 71, 69, 66, 0, 64, 66, 69, 0, 71, 74, 71, 69, 0, 66, 0, 64, 62, 64, 66, 0, 69, 66, 64, 62, 0, 0, 0];
+
 const TRACKS: Record<Exclude<MusicId, 'none'>, Track> = {
+  campus: {
+    bpm: 84,
+    beat(a, t, b, out) {
+      const chord = CAMPUS_CHORDS[Math.floor(b / 8) % 4]!;
+      const e = 60 / 84 / 2;
+      if (b % 8 === 0) a.pad(chord.slice(1), t, (60 / 84) * 8, out, 0.03, 1500);
+      if (b % 8 === 0) a.bass(chord[0]! - 12, t, 4, out, 0.05);
+      const arp = [0, 2, 3, 4, 3, 2, 1, 2];
+      a.pluck(chord[arp[b % 8]!]! + 12, t, out, 0.035, 'triangle', 2600);
+      if (b % 2 === 1) a.pluck(chord[arp[(b + 3) % 8]!]! + 12, t + e, out, 0.02, 'triangle', 2200);
+      if (b % 4 === 0) a.kick(t, out, 0.1);
+      if (Math.random() < 0.15) a.bell(chord[4]! + 12, t + e, out, 0.02, 1.4);
+    },
+  },
+  campus_night: {
+    bpm: 60,
+    beat(a, t, b, out) {
+      const chord = NIGHT_CHORDS[Math.floor(b / 8) % 4]!;
+      if (b % 8 === 0) a.pad(chord, t, 8, out, 0.035, 900);
+      if (b % 2 === 0 && Math.random() < 0.6) a.bell(chord[1 + Math.floor(Math.random() * 4)]! + 12, t, out, 0.025, 2.4);
+      // Crickets.
+      if (Math.random() < 0.5) for (let i = 0; i < 3; i++) a.chirp(t + 0.3 + i * 0.06, out, 0.006);
+    },
+  },
+  mystery: {
+    bpm: 70,
+    beat(a, t, b, out) {
+      const chord = MYSTERY_CHORDS[Math.floor(b / 8) % 4]!;
+      if (b % 8 === 0) a.pad(chord.slice(1), t, (60 / 70) * 8, out, 0.035, 800);
+      if (b % 2 === 0) a.pluck(chord[0]!, t, out, 0.07, 'triangle', 600);
+      if (b % 4 === 3) a.pluck(chord[2 + (b % 3)]! + 12, t + 0.2, out, 0.03, 'square', 1400);
+      if (b % 8 === 7 && Math.random() < 0.6) a.bell(chord[4]! + 12, t, out, 0.02, 3);
+    },
+    layers: (a, out) => a.wind(out, 0.012),
+  },
+  chase: {
+    bpm: 150,
+    beat(a, t, b, out) {
+      const chord = CHASE_CHORDS[Math.floor(b / 8) % 4]!;
+      const e = 60 / 150 / 2;
+      if (b % 8 === 0) a.pad(chord.slice(1), t, (60 / 150) * 8, out, 0.025, 1600);
+      a.pluck(chord[0]!, t, out, 0.1, 'sawtooth', 700);
+      a.pluck(chord[0]! + 12, t + e, out, 0.07, 'sawtooth', 700);
+      a.kick(t, out, 0.3);
+      if (b % 2 === 1) a.snare(t, out, 0.14);
+      a.hat(t + e, out, 0.05);
+      if (b % 4 === 2) a.pluck(chord[3]! + 12, t + e, out, 0.03, 'square', 2400);
+    },
+  },
+  stealth: {
+    bpm: 90,
+    beat(a, t, b, out) {
+      const chord = MYSTERY_CHORDS[Math.floor(b / 16) % 4]!;
+      if (b % 16 === 0) a.pad([chord[0]!, chord[1]!, chord[3]!], t, (60 / 90) * 16, out, 0.04, 600);
+      if (b % 2 === 0) { a.kick(t, out, 0.14); a.kick(t + 0.18, out, 0.08); }
+      if (b % 4 === 1) a.pluck(chord[2]! + 24, t, out, 0.02, 'square', 1800);
+      a.hat(t + 0.33, out, 0.015);
+    },
+  },
+  sorrow: {
+    bpm: 56,
+    beat(a, t, b, out) {
+      const chord = SORROW_CHORDS[Math.floor(b / 8) % 4]!;
+      if (b % 8 === 0) a.pad(chord, t, 8.5, out, 0.03, 1100);
+      const arp = [1, 2, 3, 4, 3, 2, 3, 2];
+      a.bell(chord[arp[b % 8]!]! + 12, t, out, 0.03, 2.8);
+    },
+  },
+  daydream: {
+    bpm: 140,
+    beat(a, t, b, out) {
+      const chord = HERO_CHORDS[Math.floor(b / 8) % 4]!;
+      const e = 60 / 140 / 2;
+      if (b % 8 === 0) a.pad(chord.slice(1), t, (60 / 140) * 8, out, 0.03, 2400);
+      a.pluck(chord[0]!, t, out, 0.09, 'sawtooth', 900);
+      a.pluck(chord[0]! + 12, t + e, out, 0.06, 'sawtooth', 900);
+      const arp = [1, 2, 3, 4, 3, 2];
+      a.pluck(chord[arp[(b * 2) % 6]!]! + 12, t, out, 0.035, 'square', 3000);
+      a.pluck(chord[arp[(b * 2 + 1) % 6]!]! + 12, t + e, out, 0.03, 'square', 3000);
+      if (b % 2 === 0) a.kick(t, out, 0.3);
+      else a.snare(t, out, 0.14);
+      a.hat(t + e, out, 0.04);
+    },
+  },
+  flashmob: {
+    bpm: 118,
+    beat(a, t, b, out) {
+      const chord = DANCE_CHORDS[Math.floor(b / 4) % 4]!;
+      const e = 60 / 118 / 2;
+      a.kick(t, out, 0.35);
+      if (b % 2 === 1) { a.snare(t, out, 0.16); a.snare(t + 0.02, out, 0.08); }
+      a.hat(t + e, out, 0.06);
+      a.pluck(chord[0]! - 12, t, out, 0.1, 'sawtooth', 500);
+      a.pluck(chord[0]!, t + e, out, 0.08, 'sawtooth', 700);
+      if (b % 4 === 0 || b % 4 === 3) for (const n of chord.slice(1)) a.pluck(n + 12, t + (b % 4 === 3 ? e : 0), out, 0.025, 'square', 2800);
+    },
+  },
+  lullaby: {
+    bpm: 64,
+    beat(a, t, b, out) {
+      const chord = [[50, 57, 62], [47, 54, 59], [43, 50, 55], [45, 52, 57]][Math.floor(b / 7) % 4]!;
+      if (b % 7 === 0) a.pad(chord, t, (60 / 64) * 7, out, 0.03, 900);
+      const n = LULLABY[b % LULLABY.length]!;
+      if (n) a.hum(n, t, (60 / 64) * 0.95, out, 0.05);
+    },
+  },
+  fire: {
+    bpm: 100,
+    beat(a, t, b, out) {
+      const chord = CHASE_CHORDS[Math.floor(b / 8) % 4]!;
+      if (b % 8 === 0) a.pad(chord.slice(0, 3), t, (60 / 100) * 8, out, 0.04, 700);
+      if (b % 2 === 0) a.kick(t, out, 0.25);
+      if (b % 4 === 3) { a.kick(t + 0.15, out, 0.18); a.kick(t + 0.3, out, 0.14); }
+      if (b % 8 === 4) a.bell(chord[4]! + 12, t, out, 0.02, 1.5);
+    },
+    layers: (a, out) => a.crackle(out, 0.05),
+  },
+  standoff: {
+    bpm: 80,
+    beat(a, t, b, out) {
+      if (b % 16 === 0) a.pad([38, 45, 50, 51], t, (60 / 80) * 16, out, 0.045, 600);
+      a.hat(t, out, b % 2 ? 0.02 : 0.035);
+      if (b % 4 === 0) { a.kick(t, out, 0.2); a.kick(t + 0.22, out, 0.12); }
+      if (b % 16 === 12) a.bell(63, t, out, 0.02, 3);
+    },
+    layers: (a, out) => a.wind(out, 0.015),
+  },
+  words: {
+    bpm: 96,
+    beat(a, t, b, out) {
+      const chord = MYSTERY_CHORDS[Math.floor(b / 8) % 4]!;
+      const e = 60 / 96 / 2;
+      if (b % 8 === 0) a.pad(chord.slice(1), t, (60 / 96) * 8, out, 0.028, 1200);
+      a.pluck(chord[0]!, t, out, 0.06, 'triangle', 800);
+      a.pluck(chord[b % 2 ? 3 : 2]! + 12, t + e, out, 0.03, 'triangle', 2000);
+      if (b % 4 === 0) a.kick(t, out, 0.15);
+      if (b % 4 === 2) a.snare(t, out, 0.06);
+    },
+  },
   title: {
     bpm: 54,
     beat(a, t, b, out) {
@@ -137,6 +287,9 @@ export class AudioSynth {
     const pending = this.current;
     this.current = 'none';
     if (pending !== 'none') this.music(pending);
+    const amb = this.ambienceId;
+    this.ambienceId = 'none';
+    this.ambience(amb);
   }
 
   private impulse(seconds: number, decay: number): AudioBuffer {
@@ -156,6 +309,20 @@ export class AudioSynth {
     this.master.gain.setTargetAtTime(settings.get('masterVolume'), t, 0.05);
     this.musicBus.gain.setTargetAtTime(settings.get('musicVolume'), t, 0.05);
     this.sfxBus.gain.setTargetAtTime(settings.get('sfxVolume'), t, 0.05);
+  }
+
+  // ---------------------------------------------------------------- ambience
+  private ambienceId: 'none' | 'rain' | 'fire' = 'none';
+  private stopAmbience: (() => void) | null = null;
+
+  /** A room's background sound (rain, fire), independent of the music. */
+  ambience(id: 'none' | 'rain' | 'fire'): void {
+    if (id === this.ambienceId && (this.stopAmbience || id === 'none')) return;
+    this.ambienceId = id;
+    this.stopAmbience?.();
+    this.stopAmbience = null;
+    if (!this.ctx || id === 'none') return;
+    this.stopAmbience = id === 'rain' ? this.rain(this.sfxBus, 0.05) : this.crackle(this.sfxBus, 0.04);
   }
 
   // ---------------------------------------------------------------- music
@@ -300,6 +467,72 @@ export class AudioSynth {
   }
 
   snare(t: number, out: AudioNode, vol: number) { this.noiseHit(t, out, vol, 'bandpass', 1800, 0.14); }
+
+  /** A cricket chirp. */
+  chirp(t: number, out: AudioNode, vol: number) {
+    const ctx = this.ctx!;
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = 4200 + Math.random() * 300;
+    const g = ctx.createGain();
+    this.env(g, t, 0.003, vol, 0.01, 0.03);
+    o.connect(g).connect(out);
+    o.start(t);
+    o.stop(t + 0.06);
+  }
+
+  /** A soft hummed note: a sine with slow attack and a little vibrato. */
+  hum(n: number, t: number, dur: number, out: AudioNode, vol: number) {
+    const ctx = this.ctx!;
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = midi(n);
+    const vib = ctx.createOscillator();
+    vib.frequency.value = 5;
+    const vg = ctx.createGain();
+    vg.gain.value = 3;
+    vib.connect(vg).connect(o.frequency);
+    const f = ctx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.value = 1200;
+    const g = ctx.createGain();
+    this.env(g, t, 0.12, vol, dur * 0.5, dur * 0.5);
+    o.connect(f).connect(g).connect(out);
+    o.start(t); vib.start(t);
+    o.stop(t + dur + 0.2); vib.stop(t + dur + 0.2);
+  }
+
+  /** Crackling fire: random filtered noise pops over a low rumble. */
+  crackle(out: AudioNode, vol: number): () => void {
+    const stopRumble = this.wind(out, vol * 0.6);
+    const id = window.setInterval(() => {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime + Math.random() * 0.2;
+      this.noiseHit(t, out, vol * (0.5 + Math.random()), 'highpass', 2000 + Math.random() * 3000, 0.02 + Math.random() * 0.04);
+    }, 90);
+    return () => { clearInterval(id); stopRumble(); };
+  }
+
+  /** Steady rain: two bands of looped noise. */
+  rain(out: AudioNode, vol: number): () => void {
+    const ctx = this.ctx!;
+    const stops: (() => void)[] = [];
+    for (const [freq, q, v] of [[900, 0.5, vol], [4500, 0.8, vol * 0.5]] as const) {
+      const s = ctx.createBufferSource();
+      s.buffer = this.noise;
+      s.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.frequency.value = freq;
+      f.Q.value = q;
+      const g = ctx.createGain();
+      g.gain.value = v;
+      s.connect(f).connect(g).connect(out);
+      s.start(0, Math.random() * 2);
+      stops.push(() => { try { s.stop(); } catch { /* stopped */ } });
+    }
+    return () => stops.forEach((f) => f());
+  }
   hat(t: number, out: AudioNode, vol: number) { this.noiseHit(t, out, vol, 'highpass', 7000, 0.05); }
 
   wind(out: AudioNode, vol: number): () => void {
@@ -380,6 +613,13 @@ export class AudioSynth {
       case 'ink': this.noiseHit(t, out, 0.2, 'lowpass', 500, 0.35); tone(200, 70, 0.3, 0.1); break;
       case 'reform': verb(tone(70, 200, 0.6, 0.12, 'sawtooth')); break;
       case 'destroy': verb(tone(600, 60, 0.9, 0.12, 'triangle')); this.noiseHit(t, out, 0.2, 'bandpass', 900, 0.8); break;
+      case 'thunder': verb(this.noiseHit(t, out, 0.5, 'lowpass', 200, 2.2, 0.3)); this.noiseHit(t + 0.1, out, 0.3, 'lowpass', 500, 1.2); break;
+      case 'heartbeat': tone(60, 40, 0.18, 0.4); tone(58, 40, 0.16, 0.3, 'sine', 0.28); break;
+      case 'phone': for (let i = 0; i < 6; i++) tone(1400, 1400, 0.06, 0.05, 'square', i * 0.09 + (i >= 3 ? 0.3 : 0)); break;
+      case 'knock': for (let i = 0; i < 3; i++) { this.noiseHit(t + i * 0.18, out, 0.25, 'lowpass', 500, 0.08); tone(180, 120, 0.08, 0.12, 'sine', i * 0.18); } break;
+      case 'siren': { const g = tone(700, 700, 2.4, 0.04, 'sawtooth'); void g; const o = tone(900, 600, 1.2, 0.03, 'triangle', 0.6); void o; break; }
+      case 'crowd': this.noiseHit(t, out, 0.12, 'bandpass', 700, 1.6, 0.4); this.noiseHit(t + 0.2, out, 0.08, 'bandpass', 1200, 1.4, 0.5); break;
+      case 'door': this.noiseHit(t, out, 0.2, 'lowpass', 400, 0.25); tone(90, 70, 0.3, 0.1, 'sine', 0.05); break;
     }
   }
 }

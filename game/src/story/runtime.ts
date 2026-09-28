@@ -8,6 +8,7 @@ export interface StoryHost {
   say(speaker: string, mood: string | undefined, text: Loc): Promise<void>;
   title(text: Loc): Promise<void>;
   warn(text: Loc): Promise<void>;
+  objective(text: Loc): Promise<void>;
   choose(options: Loc[], id?: string): Promise<number>;
   /** scene, time, music, sfx, fx, wait, battle, give, ability, join, leave, codex, rel, tag, venture, card */
   command(name: string, args: string[]): Promise<void>;
@@ -52,6 +53,7 @@ export async function runStory(script: Script, host: StoryHost, from?: string, i
       case 'line': await host.say(n.speaker, n.mood, toLoc(n.text)); break;
       case 'title': await host.title(toLoc(n.text)); break;
       case 'warn': await host.warn(toLoc(n.text)); break;
+      case 'objective': await host.objective(toLoc(n.text)); break;
       case 'choice': {
         const i = await host.choose(n.options.map((o) => toLoc(o.text)), n.id);
         const opt = n.options[Math.max(0, Math.min(n.options.length - 1, i))]!;

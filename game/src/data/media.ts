@@ -1,11 +1,18 @@
 /** Names the story scripts may use with @music, @sfx and @fx. The linter checks against these. */
-export const MUSIC = ['none', 'title', 'glacia', 'winter_path', 'battle', 'tense', 'rest'] as const;
+export const MUSIC = [
+  'none', 'title', 'glacia', 'winter_path', 'battle', 'tense', 'rest',
+  // Earth (Act I): all original.
+  'campus', 'campus_night', 'mystery', 'chase', 'stealth', 'sorrow', 'daydream', 'flashmob', 'lullaby', 'fire', 'standoff', 'words',
+] as const;
 export const SFX = [
   'ui_move', 'ui_ok', 'ui_back', 'jump', 'land', 'dash', 'pickup', 'shard', 'hurt', 'hit', 'slash', 'guard', 'heal',
   'doom', 'absorb', 'light', 'shatter', 'gun', 'fire', 'laser', 'tick', 'rewind', 'dread', 'meld', 'save', 'slap',
-  'ability', 'ink', 'reform', 'destroy', 'blip',
+  'ability', 'ink', 'reform', 'destroy', 'blip', 'thunder', 'heartbeat', 'phone', 'knock', 'siren', 'crowd', 'door',
 ] as const;
-export const FX = ['shake', 'flash', 'red_flash', 'migraine', 'tick', 'fade_out', 'fade_in', 'slap'] as const;
+export const FX = [
+  'shake', 'flash', 'red_flash', 'migraine', 'tick', 'fade_out', 'fade_in', 'slap',
+  'black', 'unblack', 'bang', 'snap', 'dizzy', 'lightning', 'fire', 'heartbeat',
+] as const;
 export type MusicId = (typeof MUSIC)[number];
 export type SfxId = (typeof SFX)[number];
 

@@ -18,10 +18,11 @@ function walk(dir: string): string[] {
 }
 
 const files = walk(storyDir);
+const scripts = new Set(files.map((f) => relative(storyDir, f).replace(/\.story$/, '')));
 let issues = 0;
 for (const f of files) {
   const rel = relative(root, f);
-  for (const i of lintStory(readFileSync(f, 'utf8'), rel, { scenes })) {
+  for (const i of lintStory(readFileSync(f, 'utf8'), rel, { scenes, scripts })) {
     console.log(`${i.file}:${i.line}: ${i.message}`);
     issues++;
   }

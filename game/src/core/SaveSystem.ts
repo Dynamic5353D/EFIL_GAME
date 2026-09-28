@@ -86,6 +86,11 @@ export function sanitizeState(raw: unknown): GameState | null {
   s.soulHunger = Math.min(100, Math.max(0, num(raw.soulHunger, d.soulHunger)));
   s.soulsAbsorbed = Math.max(0, Math.floor(num(raw.soulsAbsorbed, 0)));
   s.ammo = Math.min(6, Math.max(0, Math.floor(num(raw.ammo, 6))));
+  s.objective = isObj(raw.objective) && typeof raw.objective.en === 'string' && typeof raw.objective.ta === 'string'
+    ? { en: raw.objective.en, ta: raw.objective.ta } : null;
+  s.clues = strArr(raw.clues);
+  s.resume = isObj(raw.resume) && typeof raw.resume.script === 'string' && typeof raw.resume.label === 'string'
+    ? { script: raw.resume.script, label: raw.resume.label } : null;
   return s;
 }
 

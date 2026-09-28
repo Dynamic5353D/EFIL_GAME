@@ -323,4 +323,20 @@ export function generateTextures(scene: Phaser.Scene): void {
   g.fillStyle = '#fff';
   g.fillRect(0, 0, 4, 4);
   addCanvas(scene, 'fx:px', c);
+  // A rain streak and a small petal (tinted per use).
+  {
+    const { c, g } = canvas(4, 40);
+    const gr = g.createLinearGradient(0, 0, 0, 40);
+    gr.addColorStop(0, 'rgba(255,255,255,0)');
+    gr.addColorStop(1, 'rgba(255,255,255,0.9)');
+    g.fillStyle = gr;
+    g.fillRect(1, 0, 2, 40);
+    addCanvas(scene, 'fx:streak', c);
+  }
+  {
+    const { c, g } = canvas(24, 16);
+    g.fillStyle = '#fff';
+    g.beginPath(); g.ellipse(12, 8, 10, 5, 0.3, 0, Math.PI * 2); g.fill();
+    addCanvas(scene, 'fx:petal', c);
+  }
 }

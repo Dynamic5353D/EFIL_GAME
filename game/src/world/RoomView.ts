@@ -4,6 +4,8 @@
  */
 import Phaser from 'phaser';
 import { assets } from '../core/Assets';
+import { earthLedge } from './EarthProps';
+import { ensureEarthTextures } from './EarthPainter';
 import { hexRgb, luma, mixRgb, rgbInt } from './Paint';
 import { ledge, spikes } from './Props';
 import { mergeTiles, TILE, type Rect, type RoomDef } from './RoomDef';
@@ -15,6 +17,8 @@ export interface RoomPhysics {
   solids: Phaser.Physics.Arcade.StaticGroup;
   platforms: Phaser.Physics.Arcade.StaticGroup;
   spikes: Rect[];
+  /** Fire tiles ('x'): they burn like spikes. */
+  fires: Rect[];
 }
 
 /** A 4×5 colour matrix that pulls colours toward `tint` by `amount`, keeping their brightness. */
@@ -53,6 +57,8 @@ export function applyGrade(cam: Phaser.Cameras.Scene2D.Camera, grade: RoomDef['g
 export function buildRoom(scene: Phaser.Scene, room: RoomDef): RoomPhysics {
   const pal = assets.palette(room.palette);
   const roomW = room.cols * TILE, roomH = room.rows * TILE;
+  const earth = room.backdrop.startsWith('gen:');
+  ensureEarthTextures(scene, room.backdrop);
 
   new Scenery(scene, room).build();
 
@@ -60,7 +66,7 @@ export function buildRoom(scene: Phaser.Scene, room: RoomDef): RoomPhysics {
   // Textures outlive the scene, so a room is painted once per session.
   const chunks = Math.ceil(roomW / CHUNK);
   if (!scene.textures.exists(`terrain:${room.id}:0`)) {
-    paintTerrain(room.grid, pal, room.id.length * 131 + room.cols).canvases.forEach((c, i) => scene.textures.addCanvas(`terrain:${room.id}:${i}`, c));
+    paintTerrain(room.grid, pal, room.id.length * 131 + room.cols, room.terrain ?? (earth ? 'concrete' : 'snow')).canvases.forEach((c, i) => scene.textures.addCanvas(`terrain:${room.id}:${i}`, c));
   }
   for (let i = 0; i < chunks; i++) scene.add.image(i * CHUNK, 0, `terrain:${room.id}:${i}`).setOrigin(0).setDepth(DEPTH.terrain).setLighting(true);
 
@@ -75,11 +81,14 @@ export function buildRoom(scene: Phaser.Scene, room: RoomDef): RoomPhysics {
       const y = r.y + row * TILE;
       const z = scene.add.zone(r.x + r.w / 2, y + 7, r.w, 14);
       platforms.add(z);
-      scene.add.image(r.x - 10, y - 4, ledge(scene, r.w, pal)).setOrigin(0).setDepth(DEPTH.terrain + 1).setLighting(true);
+      const tex = earth ? earthLedge(scene, r.w, room.terrain === 'wood' || room.terrain === 'grass') : ledge(scene, r.w, pal);
+      scene.add.image(r.x - 10, y - 4, tex).setOrigin(0).setDepth(DEPTH.terrain + 1).setLighting(true);
     }
   }
   const spikeRects = mergeTiles(room.grid, '^');
   for (const r of spikeRects) scene.add.image(r.x, r.y + r.h - 44, spikes(scene, r.w)).setOrigin(0).setDepth(DEPTH.terrain + 1).setLighting(true);
+  const fireRects = mergeTiles(room.grid, 'x');
+  for (const r of fireRects) addFire(scene, r);
 
   // Light: ambient from the room, brighter for pale art so snow still reads as snow.
   const bright = luma(hexRgb(pal.highlight)) / 255;
@@ -90,5 +99,21 @@ export function buildRoom(scene: Phaser.Scene, room: RoomDef): RoomPhysics {
   const cam = scene.cameras.main;
   cam.setBounds(0, 0, roomW, roomH);
   applyGrade(cam, room.grade);
-  return { solids, platforms, spikes: spikeRects };
+  return { solids, platforms, spikes: spikeRects, fires: fireRects };
+}
+
+/** Flames over a strip of fire tiles: rising tongues, a hot core, smoke and a flickering light. */
+function addFire(scene: Phaser.Scene, r: Rect) {
+  const bottom = r.y + r.h;
+  scene.add.particles(0, 0, 'fx:soft', {
+    x: { min: r.x + 6, max: r.x + r.w - 6 }, y: bottom - 6, lifespan: { min: 500, max: 900 }, speedY: { min: -170, max: -90 },
+    speedX: { min: -14, max: 14 }, scale: { start: 0.55, end: 0.05 }, alpha: { start: 0.9, end: 0 },
+    tint: [0xff5a1a, 0xff8a2a, 0xffc24a], blendMode: Phaser.BlendModes.ADD, frequency: Math.max(8, 400 / (r.w / TILE)),
+  }).setDepth(DEPTH.entities + 1);
+  scene.add.particles(0, 0, 'fx:soft', {
+    x: { min: r.x, max: r.x + r.w }, y: bottom - 50, lifespan: 2400, speedY: { min: -60, max: -30 }, scale: { start: 0.8, end: 2.4 },
+    alpha: { start: 0.35, end: 0 }, tint: 0x1a1414, frequency: Math.max(40, 1200 / (r.w / TILE)),
+  }).setDepth(DEPTH.entities);
+  const light = scene.lights.addLight(r.x + r.w / 2, bottom - 40, 220 + r.w * 0.6, 0xff8a3a, 1.6);
+  scene.tweens.addCounter({ from: 0, to: 1, duration: 140, repeat: -1, yoyo: true, onUpdate: () => { light.intensity = 1.3 + Math.random() * 0.6; } });
 }

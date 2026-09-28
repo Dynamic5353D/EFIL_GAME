@@ -1,6 +1,10 @@
 import { ABILITIES } from '../data/abilities';
 import { CHARACTERS } from '../data/characters';
+import { CLUES } from '../data/clues';
 import { CODEX } from '../data/codex';
+import { EARTH_SCENE_NAMES } from '../data/earthScenes';
+import { ROOMS } from '../data/rooms';
+import { WORD_BATTLES } from '../data/wordbattles';
 import { BATTLES } from '../data/enemies';
 import { FLAGS } from '../data/flags';
 import { ITEMS } from '../data/items';
@@ -13,6 +17,8 @@ export interface LintIssue { file: string; line: number; message: string }
 export interface LintContext {
   /** Background slugs available in the asset manifest (kind "env"). */
   scenes: Set<string>;
+  /** Script names ("p01/v02") for checking `@next`; skipped when absent. */
+  scripts?: Set<string>;
 }
 
 const known = (set: readonly string[] | Record<string, unknown>, v: string) =>
@@ -43,6 +49,7 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
         break;
       case 'title':
       case 'warn':
+      case 'objective':
         checkText(n.text, n.line);
         break;
       case 'choice':
@@ -56,7 +63,16 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
         const a = n.args[0] ?? '';
         const check = (ok: boolean, what: string) => { if (!ok) bad(n.line, `unknown ${what} "${a}"`); };
         switch (n.name) {
-          case 'scene': check(ctx.scenes.has(a), 'scene (not an environment in asset-manifest.json)'); break;
+          case 'scene': check(ctx.scenes.has(a) || EARTH_SCENE_NAMES.includes(a), 'scene (not an environment in asset-manifest.json or an Earth scene)'); break;
+          case 'room':
+            check(a in ROOMS, 'room');
+            if (n.args[2] && !(n.args[2] in script.labels)) bad(n.line, `unknown label "${n.args[2]}"`);
+            break;
+          case 'save': if (!(a in script.labels)) bad(n.line, `unknown label "${a}"`); break;
+          case 'party': for (const m of n.args) if (!(m in CHARACTERS)) bad(n.line, `unknown party member "${m}"`); break;
+          case 'clue': check(a in CLUES, 'clue'); break;
+          case 'wordbattle': check(a in WORD_BATTLES, 'word battle'); break;
+          case 'next': if (ctx.scripts && !ctx.scripts.has(a)) bad(n.line, `unknown script "${a}"`); break;
           case 'battle': check(a in BATTLES, 'battle'); break;
           case 'give': case 'take': check(a in ITEMS, 'item'); break;
           case 'ability': check(a in ABILITIES, 'ability'); break;

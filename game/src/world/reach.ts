@@ -130,7 +130,7 @@ export class ReachMap {
 
 /** Entity kinds the player has to be able to get to. */
 export function isDestination(d: EntityDef): boolean {
-  return ['pickup', 'chest', 'tree', 'npc', 'trigger', 'exit', 'enemy'].includes(d.type);
+  return ['pickup', 'chest', 'tree', 'npc', 'trigger', 'exit', 'enemy', 'rest', 'use', 'hide'].includes(d.type);
 }
 
 export interface ReachReport {
@@ -153,7 +153,7 @@ export function checkRoom(room: RoomDef, base: string[] = BASE_ABILITIES): Reach
   const report: ReachReport = { unreachable: [], leaky: [], deadEnds: [] };
   for (const e of room.entities) {
     if (!isDestination(e.def)) continue;
-    const needs = 'needs' in e.def ? e.def.needs : undefined;
+    const needs = e.def.type === 'pickup' || e.def.type === 'chest' ? e.def.needs : undefined;
     const c = { x: e.tx, y: e.ty };
     if (!needs) {
       if (!m.touches(c, reachBase)) report.unreachable.push(label(e.def, e.tx, e.ty));

@@ -17,6 +17,7 @@ import { HudScene } from './scenes/HudScene';
 import { MenuScene } from './scenes/MenuScene';
 import { SettingsScene } from './scenes/SettingsScene';
 import { TitleScene } from './scenes/TitleScene';
+import { WordBattleScene } from './scenes/WordBattleScene';
 import { WorldScene } from './scenes/WorldScene';
 import { MOVE } from './world/movement';
 
@@ -31,7 +32,7 @@ const game = new Phaser.Game({
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 1280, height: 720 },
   physics: { default: 'arcade', arcade: { gravity: { x: 0, y: MOVE.gravity }, debug: false } },
   input: { gamepad: false },
-  scene: [BootScene, TitleScene, WorldScene, BattleScene, HudScene, DialogueScene, ChapterCardScene, MenuScene, SettingsScene, CreditsScene],
+  scene: [BootScene, TitleScene, WorldScene, BattleScene, WordBattleScene, HudScene, DialogueScene, ChapterCardScene, MenuScene, SettingsScene, CreditsScene],
 });
 
 // Input is polled once per frame, before any scene updates.

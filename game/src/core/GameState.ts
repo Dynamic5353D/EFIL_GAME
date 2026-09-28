@@ -37,6 +37,15 @@ export interface GameState {
   soulsAbsorbed: number;
   /** Dhanasree's handgun: 6 shots per rest. */
   ammo: number;
+  /** The HUD's current objective line (Earth acts). */
+  objective: { en: string; ta: string } | null;
+  /** Case Board clues gathered (data/clues.ts). */
+  clues: string[];
+  /**
+   * A story point to run when this state is loaded (set by `@save` in a script, or by starting a
+   * chapter). Cleared once that story segment finishes.
+   */
+  resume: { script: string; label: string } | null;
 }
 
 export function newMember(id: MemberId, level = 1): MemberState {
@@ -54,7 +63,8 @@ export function newGame(): GameState {
     inventory: { red_rosoar: 2 },
     riShards: 0,
     abilities: ['sprint', 'double_jump'],
-    flags: {},
+    // The Glacia slice already knows about Ragul's Soul Hunger; Act I starts before it.
+    flags: { hunger_known: true },
     relationships: {},
     codex: [],
     collected: [],
@@ -64,7 +74,24 @@ export function newGame(): GameState {
     soulHunger: 35,
     soulsAbsorbed: 0,
     ammo: 6,
+    objective: null,
+    clues: [],
+    resume: null,
   };
+}
+
+/**
+ * A fresh game at the start of a Venture: the right room, the story's opening script queued, and
+ * the party that Venture needs (the script's `@party` sets it precisely).
+ */
+export function newGameAt(room: string, script: string, venture: { purpose: number; venture: number }): GameState {
+  const s = newGame();
+  delete s.flags.hunger_known;
+  s.location = { room, x: 0, y: 0, checkpoint: null };
+  s.venture = venture;
+  s.inventory = {};
+  s.resume = { script, label: 'start' };
+  return s;
 }
 
 /** Stats with keepsake bonuses applied. */

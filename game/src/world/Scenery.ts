@@ -5,6 +5,7 @@
  */
 import Phaser from 'phaser';
 import { assets, texKey } from '../core/Assets';
+import { EARTH_SCENES, type EarthScene } from '../data/earthScenes';
 import type { RoomDef } from './RoomDef';
 import { TILE } from './RoomDef';
 import { hexRgb, makeCanvas, mixRgb, Noise, rgbCss, scaleRgb, type RGB } from './Paint';
@@ -27,9 +28,14 @@ function addCanvasTexture(scene: Phaser.Scene, key: string, c: HTMLCanvasElement
 export class Scenery {
   objects: Phaser.GameObjects.GameObject[] = [];
   fogColor: RGB;
+  /** The painted Earth scene behind this room, if it is on Earth. */
+  private earth: EarthScene | null;
   constructor(private scene: Phaser.Scene, private room: RoomDef) {
     const pal = assets.palette(room.palette);
-    this.fogColor = mixRgb(hexRgb(pal.dominant), hexRgb(pal.highlight), 0.35);
+    this.earth = room.backdrop.startsWith('gen:') ? EARTH_SCENES[room.backdrop.slice(4)] ?? null : null;
+    this.fogColor = this.earth
+      ? mixRgb(hexRgb(this.earth.bottom), hexRgb(this.earth.shade), 0.35)
+      : mixRgb(hexRgb(pal.dominant), hexRgb(pal.highlight), 0.35);
   }
 
   build(): void {
@@ -59,6 +65,12 @@ export class Scenery {
       img.setPosition(-(img.displayWidth - need.w) / 2, -(img.displayHeight - need.h) * 0.55);
       this.objects.push(img);
     };
+    if (r.interior) {
+      // Indoors the painted wall sits close behind the play space: no sky, fog or tree bands.
+      place(texKey.bg(r.backdrop), 0.45, 0.3, DEPTH.backdrop, 1);
+      this.floorShade(roomW, roomH);
+      return;
+    }
     place(texKey.far(r.backdrop), 0.03, 0.02, DEPTH.far, 1);
     place(texKey.bg(r.backdrop), 0.1, 0.06, DEPTH.backdrop, 0.92);
 
@@ -76,11 +88,130 @@ export class Scenery {
 
     const noise = new Noise(r.id.length * 7919 + roomW);
     if (r.scenery.ridge) this.ridge(roomW, roomH, noise, mixRgb(this.fogColor, sh, 0.35), 0.28, DEPTH.ridge, 0.85);
+    if (this.earth) {
+      const e = this.earth;
+      const leaf = hexRgb(e.leaf), shade = hexRgb(e.shade);
+      if (r.scenery.trees !== 'none') {
+        this.earthTrees(roomW, roomH, noise, 0.45, DEPTH.treesFar, mixRgb(mixRgb(leaf, shade, 0.5), this.fogColor, 0.45), 0.55, 0.75);
+        this.fogBand(roomW, roomH, 0.5, DEPTH.fogFar, 0.25);
+        this.earthTrees(roomW, roomH, noise, 0.72, DEPTH.treesNear, mixRgb(leaf, shade, 0.55), 0.85, 0.95);
+      }
+      this.fogBand(roomW, roomH, 0.85, DEPTH.fog, 0.14);
+      this.foreground(roomW, roomH, noise, scaleRgb(mixRgb(leaf, shade, 0.7), 0.4));
+      return;
+    }
     this.trees(roomW, roomH, noise, 0.45, DEPTH.treesFar, mixRgb(this.fogColor, dom, 0.25), 0.55, 0.6);
     this.fogBand(roomW, roomH, 0.5, DEPTH.fogFar, 0.35);
     this.trees(roomW, roomH, noise, 0.72, DEPTH.treesNear, mixRgb(mixRgb(dom, sh, 0.45), hi, 0.2), 0.85, 0.85);
     this.fogBand(roomW, roomH, 0.85, DEPTH.fog, 0.22);
     this.foreground(roomW, roomH, noise, scaleRgb(sh, 0.35));
+  }
+
+  /** Indoors: a soft shadow where the wall meets the floor. */
+  private floorShade(roomW: number, roomH: number) {
+    const s = this.scene;
+    const key = `floorshade:${this.room.id}`;
+    if (!s.textures.exists(key)) {
+      const { c, g } = makeCanvas(8, 256);
+      const gr = g.createLinearGradient(0, 0, 0, 256);
+      gr.addColorStop(0, 'rgba(0,0,0,0)');
+      gr.addColorStop(1, 'rgba(0,0,0,0.55)');
+      g.fillStyle = gr;
+      g.fillRect(0, 0, 8, 256);
+      addCanvasTexture(s, key, c);
+    }
+    this.objects.push(s.add.image(0, roomH - 420, key).setOrigin(0).setDisplaySize(roomW, 420).setDepth(DEPTH.fog));
+  }
+
+  /**
+   * Earth tree bands: neem (dense, dark), copper-pod (spreading, with yellow blossom) or coconut palms,
+   * over a hedge line. Same stamped-puff technique as the Glacia frost trees.
+   */
+  private earthTrees(roomW: number, roomH: number, noise: Noise, sx: number, depth: number, col: RGB, scale: number, alpha: number) {
+    const s = this.scene;
+    const key = `trees:${this.room.id}:${depth}`;
+    const sy = sx * 0.8;
+    if (!s.textures.exists(key)) {
+      const e = this.earth!;
+      const size = layerSize(roomW, roomH, sx, sy);
+      const { c, g } = makeCanvas(size.w, size.h);
+      const style = this.room.scenery.trees;
+      const groundY = size.h - VH * 0.1 * scale;
+      const spacing = (style === 'palm' ? 170 : 260) * scale / this.room.scenery.density;
+      const bark = scaleRgb(col, 0.45);
+      const lit = mixRgb(col, hexRgb(e.light.color), 0.35);
+      const puffLit = this.puff(lit, 0.5), puffShade = this.puff(scaleRgb(col, 0.8), 0.55);
+      const bloom = this.puff(mixRgb(hexRgb(e.bloom ?? '#f2c53a'), col, depth === DEPTH.treesFar ? 0.45 : 0.15), 0.3);
+      let rnd = 0;
+      const r01 = () => noise.value(rnd++ * 0.917, depth * 0.41 + 3.3);
+      g.lineCap = 'round';
+      for (let x = -80, i = 0; x < size.w + 80; x += spacing * (0.6 + noise.value(i * 1.3, 4.4) * 0.8), i++) {
+        const kind = style === 'palm' || (style === 'copperpod' && r01() < 0.2) ? 'palm' : style === 'neem' ? 'neem' : r01() < 0.25 ? 'neem' : 'copperpod';
+        if (kind === 'palm') {
+          const h = 520 * scale * (0.75 + r01() * 0.45);
+          const lean = (r01() - 0.5) * 0.35;
+          const tx = x + Math.sin(lean) * h, ty = groundY - h;
+          g.strokeStyle = rgbCss(bark);
+          g.lineWidth = 12 * scale;
+          g.beginPath(); g.moveTo(x, groundY); g.quadraticCurveTo(x + (tx - x) * 0.15, groundY - h * 0.55, tx, ty); g.stroke();
+          g.lineWidth = 4 * scale;
+          for (let f = 0; f < 11; f++) {
+            const a = -Math.PI / 2 + (f - 5) * 0.34 + (r01() - 0.5) * 0.2;
+            const len = (90 + r01() * 60) * scale;
+            const ex = tx + Math.cos(a) * len, ey = ty + Math.sin(a) * len * 0.5 + len * 0.45;
+            g.strokeStyle = rgbCss(f % 2 ? col : lit);
+            g.beginPath(); g.moveTo(tx, ty); g.quadraticCurveTo(tx + Math.cos(a) * len * 0.6, ty + Math.sin(a) * len * 0.6 - 20 * scale, ex, ey); g.stroke();
+          }
+          continue;
+        }
+        const h = (kind === 'neem' ? 380 : 340) * scale * (0.75 + r01() * 0.5);
+        const trunkW = 12 * scale * (0.8 + r01() * 0.5);
+        const tx = x + (r01() - 0.5) * 30 * scale, ty = groundY - h * 0.42;
+        g.fillStyle = rgbCss(bark);
+        g.beginPath();
+        g.moveTo(x - trunkW, groundY); g.quadraticCurveTo(x - trunkW * 0.4, groundY - h * 0.2, tx - trunkW * 0.4, ty);
+        g.lineTo(tx + trunkW * 0.4, ty); g.quadraticCurveTo(x + trunkW * 0.4, groundY - h * 0.2, x + trunkW, groundY);
+        g.fill();
+        // Limbs, then a canopy of stamped puffs: a wide umbrella for copper-pod, a round crown for neem.
+        g.strokeStyle = rgbCss(bark);
+        const wide = kind === 'copperpod' ? 1.5 : 1;
+        for (let k = 0; k < 4; k++) {
+          const a = -Math.PI / 2 + (k - 1.5) * 0.55 * wide;
+          g.lineWidth = trunkW * 0.55;
+          g.beginPath(); g.moveTo(tx, ty); g.lineTo(tx + Math.cos(a) * h * 0.28 * wide, ty + Math.sin(a) * h * 0.22); g.stroke();
+        }
+        const crownW = h * 0.42 * wide, crownH = h * (kind === 'neem' ? 0.36 : 0.22);
+        const cy = ty - h * (kind === 'neem' ? 0.22 : 0.16);
+        const n = Math.round(90 * scale * wide);
+        for (let k = 0; k < n; k++) {
+          const a = r01() * Math.PI * 2, d = Math.sqrt(r01());
+          const px = tx + Math.cos(a) * crownW * d, py = cy + Math.sin(a) * crownH * d;
+          const rr = (14 + r01() * 22) * scale;
+          const litSide = py < cy - crownH * 0.2 || px < tx - crownW * 0.3;
+          g.globalAlpha = 0.6 + r01() * 0.4;
+          g.drawImage(litSide ? puffLit : puffShade, px - rr, py - rr, rr * 2, rr * 2);
+        }
+        if (kind === 'copperpod') {
+          for (let k = 0; k < n * 0.7; k++) {
+            const a = r01() * Math.PI * 2, d = Math.sqrt(r01());
+            const px = tx + Math.cos(a) * crownW * d, py = cy + Math.sin(a) * crownH * d - crownH * 0.2;
+            const rr = (4 + r01() * 7) * scale;
+            g.globalAlpha = 0.7 + r01() * 0.3;
+            g.drawImage(bloom, px - rr, py - rr, rr * 2, rr * 2);
+          }
+        }
+        g.globalAlpha = 1;
+      }
+      // Hedge line along the bottom.
+      g.fillStyle = rgbCss(scaleRgb(col, 0.85));
+      g.beginPath();
+      g.moveTo(0, size.h);
+      for (let x = 0; x <= size.w; x += 10) g.lineTo(x, groundY + 6 - Math.abs(noise.fbm(x / 60, depth + 1.7, 3)) * 36 * scale);
+      g.lineTo(size.w, size.h);
+      g.fill();
+      s.textures.addCanvas(key, c);
+    }
+    this.objects.push(s.add.image(0, 0, key).setOrigin(0).setScrollFactor(sx, sy).setDepth(depth).setAlpha(alpha));
   }
 
   private ridge(roomW: number, roomH: number, noise: Noise, col: RGB, sx: number, depth: number, alpha: number) {
@@ -244,9 +375,23 @@ export class Scenery {
     }
     g.lineTo(w, h);
     g.fill();
-    // Occasional dark frosted twigs.
     g.strokeStyle = rgbCss(col, 0.95);
     g.lineCap = 'round';
+    if (this.earth) {
+      // Tall grass and weeds.
+      for (let x = 40; x < w; x += 60 + noise.value(x, 5) * 160) {
+        const n = 5 + Math.floor(noise.value(x, 7) * 6);
+        for (let k = 0; k < n; k++) {
+          const hh = 30 + noise.value(x + k, 9) * 70;
+          g.lineWidth = 2 + noise.value(k, x) * 2;
+          g.beginPath(); g.moveTo(x + k * 5, h - 8); g.quadraticCurveTo(x + k * 5 + 4, h - hh * 0.6, x + k * 5 + (k - n / 2) * 6, h - hh); g.stroke();
+        }
+      }
+      addCanvasTexture(s, key, c);
+      this.objects.push(s.add.image(0, roomH - h + 30, key).setOrigin(0).setScrollFactor(sx, 1).setDepth(DEPTH.foreground));
+      return;
+    }
+    // Occasional dark frosted twigs.
     for (let x = 200; x < w; x += 700 + noise.value(x, 3) * 900) {
       const base = h - 20;
       g.lineWidth = 5;

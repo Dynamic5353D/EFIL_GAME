@@ -37,6 +37,7 @@ export type StoryNode =
   | { k: 'line'; speaker: string; mood?: string; text: TextNode; line: number }
   | { k: 'title'; text: TextNode; line: number }
   | { k: 'warn'; text: TextNode; line: number }
+  | { k: 'objective'; text: TextNode; line: number }
   | { k: 'choice'; id?: string; options: { text: TextNode; target: string; line: number }[]; line: number }
   | { k: 'cmd'; name: string; args: string[]; line: number }
   | { k: 'set'; flag: string; value: string | number | boolean; line: number }
@@ -74,9 +75,23 @@ export const COMMANDS: Record<string, { min: number; max: number }> = {
   tag: { min: 1, max: 1 },
   card: { min: 0, max: 0 },
   portrait: { min: 2, max: 2 },
+  /** Sets the playable party, leader first: `@party nithish ragul`. */
+  party: { min: 1, max: 4 },
+  /** Moves to another room and, with a label, carries on in this script there: `@room mit_road start after_road`. */
+  room: { min: 2, max: 3 },
+  /** Moves the player to a spawn marker in the current room. */
+  warp: { min: 1, max: 1 },
+  /** Clears the objective line. */
+  done: { min: 0, max: 0 },
+  clue: { min: 1, max: 1 },
+  wordbattle: { min: 1, max: 1 },
+  /** Runs another script from its `start` label once this one ends. */
+  next: { min: 1, max: 1 },
+  /** Saves, so loading resumes this script at the given label. */
+  save: { min: 1, max: 1 },
 };
 
-const TEXT_COMMANDS = new Set(['title', 'warn']);
+const TEXT_COMMANDS = new Set(['title', 'warn', 'objective']);
 
 export function parseValue(raw: string): string | number | boolean {
   const s = raw.trim();
@@ -164,7 +179,7 @@ export function parseStory(source: string, file = '<story>'): Script {
         const rest = sp < 0 ? '' : part.slice(sp + 1).trim();
         if (TEXT_COMMANDS.has(name)) {
           if (!rest) errors.push({ line: no, message: `@${name} needs text` });
-          const node = { k: name as 'title' | 'warn', text: { en: rest }, line: no };
+          const node = { k: name as 'title' | 'warn' | 'objective', text: { en: rest }, line: no };
           nodes.push(node);
           lastText = node.text;
           lastIndent = indent;

@@ -8,7 +8,10 @@ import { CHARACTERS, type MemberId } from '../data/characters';
 import { ITEMS } from '../data/items';
 import { SPEAKERS } from '../data/speakers';
 import { FONT_BODY, FONT_DISPLAY, H, W } from '../ui/theme';
+import { registerEarthPalettes } from '../world/EarthPainter';
 import { generateTextures } from '../world/Generated';
+import { CHAPTERS } from '../data/chapters';
+import { newGameAt } from '../core/GameState';
 
 /** Loads fonts, the asset manifest, palettes and the small textures every scene needs, then shows the title. */
 export class BootScene extends Phaser.Scene {
@@ -35,6 +38,7 @@ export class BootScene extends Phaser.Scene {
       document.fonts.load(`italic 500 24px ${FONT_DISPLAY}`),
     ].map((p) => p.catch(() => undefined)));
     generateTextures(this);
+    registerEarthPalettes();
 
     const specs: ({ key: string; url: string } | null)[] = [];
     // Protagonist overrides replace the generated silhouettes (README, "Art overrides").
@@ -55,6 +59,18 @@ export class BootScene extends Phaser.Scene {
    */
   private devJump(): boolean {
     const q = new URLSearchParams(location.search);
+    // `?venture=5` starts that Act I chapter (in slot 3), optionally at another label: `&label=chase`.
+    const v = Number(q.get('venture'));
+    const chapter = CHAPTERS.find((c) => c.venture === v);
+    if (chapter) {
+      session.startWith(3, newGameAt(chapter.room, chapter.script, { purpose: chapter.purpose, venture: chapter.venture }));
+      const st = session.state;
+      if (q.get('label')) st.resume = { script: chapter.script, label: q.get('label')! };
+      for (const f of (q.get('flags') ?? '').split(',').filter(Boolean)) st.flags[f] = true;
+      audio.unlock();
+      this.scene.start('World', { resume: true });
+      return true;
+    }
     const room = q.get('room');
     if (!room) return false;
     session.startNew(3);

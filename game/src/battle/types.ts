@@ -89,6 +89,8 @@ export interface BattleState {
   snapshots: string[];
   outcome: null | 'won' | 'lost' | 'fled';
   canFlee: boolean;
+  /** A daydream fight: no Soul Hunger, no rewards. */
+  dream: boolean;
   soulHunger: number;
   soulsAbsorbed: number;
   inventory: Record<string, number>;

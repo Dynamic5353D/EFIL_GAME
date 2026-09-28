@@ -7,6 +7,7 @@ import { session } from '../core/Session';
 import { settings } from '../core/Settings';
 import { ABILITIES } from '../data/abilities';
 import { CHARACTERS } from '../data/characters';
+import { CLUES } from '../data/clues';
 import { CODEX } from '../data/codex';
 import { ITEMS } from '../data/items';
 import type { MusicId, SfxId } from '../data/media';
@@ -32,13 +33,21 @@ export interface StoryStage {
   scene: Phaser.Scene;
   fx(name: string): Promise<void>;
   runBattle(id: string): Promise<'won' | 'lost' | 'fled'>;
+  runWordBattle(id: string): Promise<boolean>;
   partyChanged(): void;
+  /** Leaves for another room; `then` is the story to carry on with once it has loaded. */
+  gotoRoom(room: string, entry: string, then: { script: string; label: string } | null): void;
+  warp(entry: string): void;
+  /** Saves the game where the player stands. */
+  save(): void;
 }
 
 export class Director implements StoryHost {
   private cardTitle: Loc | null = null;
   private time = '';
   private cancelled = false;
+  private script = '';
+  private chain: string | null = null;
 
   constructor(private stage: StoryStage) {}
 
@@ -49,7 +58,17 @@ export class Director implements StoryHost {
   async run(scriptName: string, label?: string): Promise<void> {
     try {
       this.cancelled = false;
-      await runStory(getScript(scriptName), this, label, () => this.cancelled);
+      let name: string | null = scriptName;
+      let from = label;
+      while (name) {
+        this.script = name;
+        this.chain = null;
+        await runStory(getScript(name), this, from, () => this.cancelled);
+        if (this.cancelled) break;
+        // `@next` chains straight into the following Venture's script.
+        name = this.chain;
+        from = 'start';
+      }
     } finally {
       this.dialogue.hide();
       await this.dialogue.setBackdrop(null);
@@ -63,6 +82,11 @@ export class Director implements StoryHost {
   async title(text: Loc) { this.cardTitle = text; }
   async warn(text: Loc) {
     if (settings.get('contentWarnings')) await this.dialogue.notice('Content note', tr(text));
+  }
+  async objective(text: Loc) {
+    session.state.objective = { en: text.en, ta: text.ta };
+    audio.sfx('blip');
+    bus.emit('hud', undefined);
   }
   choose(options: Loc[]) { return this.dialogue.choose(options); }
   getFlag(flag: string): FlagValue | undefined { return session.state.flags[flag]; }
@@ -137,6 +161,40 @@ export class Director implements StoryHost {
         st.relationships[k] = (st.relationships[k] ?? 0) + Number(args[2] ?? 0);
         break;
       }
+      case 'party': {
+        const ids = args.filter(isKnownMember);
+        for (const id of ids) if (!st.members[id]) joinParty(st, id, 3);
+        st.party = ids;
+        this.stage.partyChanged();
+        bus.emit('hud', undefined);
+        break;
+      }
+      case 'room':
+        this.dialogue.hide();
+        this.stage.gotoRoom(a, args[1] ?? 'start', args[2] ? { script: this.script, label: args[2] } : null);
+        this.cancelled = true;
+        break;
+      case 'warp': this.stage.warp(a); break;
+      case 'done':
+        if (st.objective) { st.objective = null; audio.sfx('pickup', 0.7); bus.emit('hud', undefined); }
+        break;
+      case 'clue':
+        if (!st.clues.includes(a)) {
+          st.clues.push(a);
+          audio.sfx('pickup', 0.9);
+          this.toast(`Clue: ${tr(CLUES[a]?.title ?? loc(a))}`, 'gen:clue');
+        }
+        break;
+      case 'wordbattle': {
+        this.dialogue.hide();
+        st.flags.won = await this.stage.runWordBattle(a);
+        break;
+      }
+      case 'next': this.chain = a; break;
+      case 'save':
+        st.resume = { script: this.script, label: a };
+        this.stage.save();
+        break;
       default: break; // tag, portrait: metadata only
     }
   }

@@ -1,5 +1,6 @@
 import type { Loc } from '../core/Localization';
 import type { MusicId } from '../data/media';
+import type { TerrainMaterial } from './TerrainPainter';
 
 export const TILE = 40;
 
@@ -8,14 +9,37 @@ export type EntityDef =
   | { type: 'tree'; id: string }
   | { type: 'enemy'; id: string; enemy: string; battle: string; patrol: number }
   | { type: 'pickup'; id: string; item?: string; shards?: number; script?: string; label?: string; visual: 'shard' | 'item' | 'fragment' | 'feather'; needs?: string }
-  | { type: 'npc'; id: string; speaker: string; script: string; label: string; radius: number; hideIf?: string; requires?: string }
+  /**
+   * A character standing in the room. With `talk` the player presses interact to start the script;
+   * otherwise it starts when the player comes within `radius` px. `rig` defaults to the speaker id.
+   */
+  | { type: 'npc'; id: string; speaker: string; script?: string; label?: string; radius: number; hideIf?: string; requires?: string; talk?: boolean; rig?: string; face?: 1 | -1; once?: string }
   | { type: 'trigger'; id: string; script: string; label: string; unless?: string; requires?: string; height: number }
   | { type: 'exit'; id: string; to: string; entry: string; height: number }
   | { type: 'crystal'; color: number }
   | { type: 'chest'; id: string; item: string; needs?: string }
   | { type: 'gate'; ability: string; hint: Loc; height: number }
   /** Shows a first-time tip (data/tips.ts) when the player comes within `radius` tiles. */
-  | { type: 'tip'; tip: string; radius: number };
+  | { type: 'tip'; tip: string; radius: number }
+  /** A rest point on Earth (there are no Rosoar trees there): same as a tree, different look. */
+  | { type: 'rest'; id: string; visual: 'bench' | 'bed' | 'chair' }
+  /** Stealth: a patrolling watcher with a sight cone. Being seen restarts the section, or runs `fail`. */
+  | { type: 'guard'; id: string; rig: string; patrol: number; range: number; facing?: 1 | -1; speed?: number; requires?: string; hideIf?: string; fail?: string; script?: string }
+  /** Cover: press down in front of it to hide. */
+  | { type: 'hide'; id: string; visual: PropVisual; w?: number }
+  /** A pursuer. Catching the player restarts the chase from the last section marker. */
+  | { type: 'chaser'; id: string; rig: string; speed: number; delay?: number; requires?: string; unless?: string }
+  /** Nithish can push these (the shove ability). */
+  | { type: 'crate'; id: string; w: number; h: number }
+  /** Interact here while carrying every item in `items` to run the script label. */
+  | { type: 'use'; id: string; items: string[]; script: string; label: string; prompt: Loc; requires?: string; unless?: string }
+  /** Scenery object (no collision). */
+  | { type: 'prop'; visual: PropVisual; flip?: boolean; scale?: number; front?: boolean }
+  /** Stealth and chase restart point. */
+  | { type: 'section'; id: string };
+
+export type PropVisual = 'bin' | 'chair' | 'stall' | 'auto' | 'plane' | 'statue' | 'lamp' | 'bench' | 'shed' | 'banner' | 'jeep'
+  | 'crate' | 'door' | 'car' | 'bed' | 'desk' | 'shelf' | 'bike' | 'gate' | 'tv' | 'mirror' | 'firetruck';
 
 export interface PlacedEntity { def: EntityDef; x: number; y: number; tx: number; ty: number }
 
@@ -25,7 +49,7 @@ export interface RoomDef {
   area: string;
   cols: number;
   rows: number;
-  /** Tile grid: '#' solid, '=' one-way platform, '^' spikes, '.' empty. */
+  /** Tile grid: '#' solid, '=' one-way platform, '^' spikes, 'x' fire, '.' empty. */
   grid: string[];
   entities: PlacedEntity[];
   backdrop: string;
@@ -34,9 +58,13 @@ export interface RoomDef {
   /** Ambient light colour for lit objects. */
   ambient: number;
   grade: { brightness: number; saturation: number; contrast: number; tint?: number; tintAmount?: number };
-  weather: ('snow' | 'heavy_snow' | 'motes' | 'mist' | 'beads')[];
+  weather: ('snow' | 'heavy_snow' | 'motes' | 'mist' | 'beads' | 'rain' | 'petals' | 'smoke' | 'embers' | 'dust')[];
   /** Silhouette layers between backdrop and play area. */
-  scenery: { trees: 'pluffine' | 'arch' | 'bare'; density: number; ridge: boolean; icicles: boolean };
+  scenery: { trees: 'pluffine' | 'arch' | 'bare' | 'neem' | 'copperpod' | 'palm' | 'none'; density: number; ridge: boolean; icicles: boolean };
+  /** Indoors: the backdrop is a wall close behind the play space (no sky, no tree bands). */
+  interior?: boolean;
+  /** Surface material of the terrain (default snow). */
+  terrain?: TerrainMaterial;
   /** Position on the area map, in tiles of the map screen. */
   mapPos: { x: number; y: number; w: number; h: number };
 }

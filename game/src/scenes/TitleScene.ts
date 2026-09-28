@@ -6,6 +6,8 @@ import { saves, SLOT_COUNT, type SaveMeta } from '../core/SaveSystem';
 import { formatPlaytime, session } from '../core/Session';
 import { settings } from '../core/Settings';
 import { tr } from '../core/Localization';
+import { newGameAt } from '../core/GameState';
+import { CHAPTERS, type Chapter } from '../data/chapters';
 import { ROOMS } from '../data/rooms';
 import { MenuList, type MenuItem } from '../ui/MenuList';
 import { addText, C, drawPanel, H, W } from '../ui/theme';
@@ -59,7 +61,7 @@ export class TitleScene extends Phaser.Scene {
 
     this.layer = this.add.container(0, 0);
     this.hint = addText(this, W / 2, H - 34, '', { size: 16, color: C.textFaint }).setOrigin(0.5);
-    this.add.text(W - 16, H - 16, 'M1 engine slice', { fontSize: '12px', color: '#5d6f88' }).setOrigin(1);
+    this.add.text(W - 16, H - 16, 'Act I review build', { fontSize: '12px', color: '#5d6f88' }).setOrigin(1);
 
     const unlock = () => audio.unlock();
     this.input.once('pointerdown', unlock);
@@ -98,8 +100,9 @@ export class TitleScene extends Phaser.Scene {
     const latest = saves.latest();
     const items: MenuItem[] = [];
     if (latest) items.push({ label: () => 'Continue', hint: () => slotLabel(latest.slot, latest), onSelect: () => this.loadGame(latest.slot) });
-    items.push({ label: () => 'New game', onSelect: () => this.showSlots('new') });
+    items.push({ label: () => 'New game', hint: () => 'Act I: The world is cruel', onSelect: () => this.showSlots('new') });
     items.push({ label: () => 'Load game', disabled: () => !saves.list().some(Boolean), onSelect: () => this.showSlots('load') });
+    items.push({ label: () => 'Chapters', hint: () => 'Start from any Venture of Act I, or the Glacia engine test', onSelect: () => this.showChapters() });
     items.push({ label: () => 'Settings', onSelect: () => this.openOverlay('Settings') });
     items.push({ label: () => 'Credits', onSelect: () => this.openOverlay('Credits') });
     this.menu = new MenuList(this, W / 2 - 150, 350, items, { width: 300, align: 'center', size: 28, display: true, lineHeight: 50 });
@@ -107,7 +110,25 @@ export class TitleScene extends Phaser.Scene {
     this.hint.setText(`↑↓  Choose    ${input.label('confirm')}  Select    ${input.label('language')}  Language: ${settings.get('language') === 'ta' ? 'Tanglish' : 'English'}`);
   }
 
-  private showSlots(mode: 'new' | 'load') {
+  /** Every Venture of Act I (all unlocked in this review build), plus the M1 Glacia test slice. */
+  private showChapters() {
+    this.clear();
+    const g = this.add.graphics();
+    drawPanel(g, W / 2 - 380, 300, 760, 390, 0.92, 12);
+    const head = addText(this, W / 2, 312, 'Chapters', { size: 22, color: C.textDim }).setOrigin(0.5, 0);
+    this.layer.add([g, head]);
+    const items: MenuItem[] = CHAPTERS.map((c) => ({
+      label: () => `Venture ${c.venture}  ·  ${tr(c.title)}`,
+      onSelect: () => this.showSlots('new', c),
+    }));
+    items.push({ label: () => 'Glacia engine test (M1)', onSelect: () => this.showSlots('new', 'slice') });
+    items.push({ label: () => 'Back', onSelect: () => this.showMain() });
+    this.menu = new MenuList(this, W / 2 - 360, 350, items, { width: 720, size: 21, lineHeight: 40, rows: 8, onCancel: () => this.showMain() });
+    this.layer.add(this.menu.container);
+    this.hint.setText(`${input.label('confirm')}  Select    ${input.label('cancel')}  Back`);
+  }
+
+  private showSlots(mode: 'new' | 'load', start: Chapter | 'slice' | null = null) {
     this.clear();
     const g = this.add.graphics();
     drawPanel(g, W / 2 - 380, 320, 760, 240, 0.92, 12);
@@ -120,7 +141,7 @@ export class TitleScene extends Phaser.Scene {
       items.push({
         label: () => slotLabel(i, m),
         disabled: () => mode === 'load' && !m,
-        onSelect: () => (mode === 'load' ? this.loadGame(i) : m ? this.confirmOverwrite(i) : this.startNew(i)),
+        onSelect: () => (mode === 'load' ? this.loadGame(i) : m ? this.confirmOverwrite(i, start) : this.startNew(i, start)),
       });
     }
     items.push({ label: () => 'Back', onSelect: () => this.showMain() });
@@ -129,19 +150,24 @@ export class TitleScene extends Phaser.Scene {
     this.hint.setText(`${input.label('confirm')}  Select    ${input.label('cancel')}  Back`);
   }
 
-  private confirmOverwrite(slot: number) {
+  private confirmOverwrite(slot: number, start: Chapter | 'slice' | null) {
     this.clear();
     const t = addText(this, W / 2, 360, `Slot ${slot} already has a game. Start over in it?`, { size: 24 }).setOrigin(0.5);
     this.layer.add(t);
     this.menu = new MenuList(this, W / 2 - 150, 400, [
-      { label: () => 'No, go back', onSelect: () => this.showSlots('new') },
-      { label: () => 'Yes, overwrite it', onSelect: () => this.startNew(slot) },
-    ], { width: 300, align: 'center', size: 24, onCancel: () => this.showSlots('new') });
+      { label: () => 'No, go back', onSelect: () => this.showSlots('new', start) },
+      { label: () => 'Yes, overwrite it', onSelect: () => this.startNew(slot, start) },
+    ], { width: 300, align: 'center', size: 24, onCancel: () => this.showSlots('new', start) });
     this.layer.add(this.menu.container);
   }
 
-  private startNew(slot: number) {
-    session.startNew(slot);
+  /** A new game starts at Act I, Venture 1, unless a chapter (or the Glacia test slice) was picked. */
+  private startNew(slot: number, start: Chapter | 'slice' | null = null) {
+    if (start === 'slice') session.startNew(slot);
+    else {
+      const c = start ?? CHAPTERS[0]!;
+      session.startWith(slot, newGameAt(c.room, c.script, { purpose: c.purpose, venture: c.venture }));
+    }
     this.enterWorld();
   }
 
@@ -157,7 +183,7 @@ export class TitleScene extends Phaser.Scene {
     audio.unlock();
     this.menu && (this.menu.active = false);
     this.cameras.main.fadeOut(settings.get('reducedMotion') ? 150 : 600, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('World'));
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('World', { resume: true }));
   }
 
   private openOverlay(key: 'Settings' | 'Credits') {

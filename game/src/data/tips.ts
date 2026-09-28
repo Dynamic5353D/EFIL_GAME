@@ -50,6 +50,29 @@ export const TIPS: Record<string, TipDef> = {
     'Press {language} during dialogue to switch between English and the original Tanglish.',
     'Pesumbodhu {language} azhuthi English-ku illa original Tanglish-ku maathikalam.')),
 
+  // ---------------------------------------------------------------- Earth (Act I)
+  rest: T('rest', 'world', loc('Resting', 'Oyvu'), loc(
+    'Quiet spots like a bench or a bunk are rest points. Press {interact} to rest: it heals the party and saves your game.',
+    'Bench, kattil maadhiri amaidhiyaana idangal dhaan oyvu idam. {interact} azhuthi oyvu edu: HP varum, game save aagum.')),
+  objective: T('objective', 'world', loc('Objective', 'Ilakku'), loc(
+    'Your current objective is shown at the top left. It changes as the story moves on.',
+    'Ippo enna pannanum-nu mela idadhu pakkam theriyum. Kadha nagara nagara maarum.')),
+  stealth: T('stealth', 'world', loc('Staying out of sight', 'Kannula padaama'), loc(
+    'Watchers see along the lit cone in front of them. Walls block their view. Wait for them to turn, or hide. If you\'re seen, you go back to the last marker.',
+    'Paakuravanga munnaadi irukura velicha koombu vazhiya paappaanga. Suvar marachidum. Avanga thirumbura varaikum kaathiru, illa olinjuko. Paathuttaa, kadaisi idathukku thirumba poiduva.')),
+  hide: T('hide', 'world', loc('Hiding', 'Olidhal'), loc(
+    'Press {down} in front of a stall, bin or door to hide behind it. Nobody can see you there. Move or jump to come out.',
+    'Kadai, kuppai thotti, kadhavu munnaadi {down} azhuthi olinjuko. Anga yaarum paakka mudiyaadhu. Nagarndhaa, kudhichaa veliya varuva.')),
+  chase: T('chase', 'world', loc('Run!', 'Odu!'), loc(
+    'Someone is after you. Keep moving and hold {dash} to sprint; every stop lets them close in. If they catch you, you start again from the last marker.',
+    'Yaaro thorathuraanga. Nikkaama odu, {dash} pidichaa innum vegam; ovvoru nippum avangala nerunga vidum. Pudichuttaa, kadaisi idathula irundhu thirumba.')),
+  shove: T('shove', 'world', loc('Shove', 'Thallu'), loc(
+    'Nithish is strong enough to push crates. Walk into one to shove it.',
+    'Nithish-ku petti thalla bala irukku. Adhu mela nadandhaa thallum.')),
+  case_board: T('case_board', 'world', loc('Case Board', 'Case Board'), loc(
+    'Clues about the deaths are pinned to the Case Board in the menu ({menu}).',
+    'Saavu pathina thadayangal menu-la ({menu}) Case Board-la irukku.')),
+
   // ---------------------------------------------------------------- battle
   battle: T('battle', 'battle', loc('How battles work', 'Battle yepdi'), loc(
     'The strip at the top is the turn order: faster fighters act more often. On your turn pick Attack, Skills, Defend, a Rosoar fruit or Run. You win when every foe is destroyed for good.',
@@ -69,6 +92,9 @@ export const TIPS: Record<string, TipDef> = {
   cubes: T('cubes', 'battle', loc('Dhanasree', 'Dhanasree'), loc(
     'Her cubes cost CE, which refills a little every turn. The Light Cube blinds and finishes Vales; the Resonance Cube breaks armour and shatters them. The handgun has 6 shots per rest. Loop Sense shows what every foe will do next without using her turn, and Rewind undoes a round once per battle.',
     'Aval cubes-ku CE venum, ovvoru turn-um konjam varum. Velicha Cube kanna kurudaakum, Vale-a mudikkum; Adhirvu Cube armour-a udaikkum, Vale-a norukkum. Thuppakki-la rest-ku 6 thotta. Loop Unarvu turn pogaama edhiri enna pannuvaanga-nu kaattum, Pinnadi oru battle-ku oru round-a azhikkum.')),
+  words: T('words', 'battle', loc('Word battles', 'Vaarthai sandai'), loc(
+    'Some fights are fought with words. Each round the other person takes a stance, shown in the middle with a hint. Pick the move that answers it: a good answer lands hard and softens what comes back; a bad one barely lands and costs you. Keep your Composure above 0. If you lose, you simply try again.',
+    'Sila sandai vaarthaiyaala. Ovvoru round-um edhiraali oru nilaippaadu edupaanga; naduvula clue-oda theriyum. Adhukku sariyaana move-a edu: sariyaa irundhaa nalla padum, thirumba varradhu kammi; thappaa irundhaa konjam dhaan padum, unakku nashtam. Un Composure 0-ku keezha pogaama paathuko. Thothaa, thirumba try pannalaam.')),
   hunger: T('hunger', 'battle', loc('Soul Hunger', 'Aanma Pasi'), loc(
     'Ragul\'s Soul Hunger rises after every battle. Above 70 he starves: he hits softer and a migraine can cost him a turn. Soul Absorb feeds it.',
     'Ovvoru battle-kum aprom Ragul-oda pasi yerum. 70-ku mela pona avan pasiyila: adi kammi, thalavali-la turn poga vaaippu. Aanma Urinju pasiya kuraikkum.')),

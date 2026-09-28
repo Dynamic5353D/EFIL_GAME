@@ -6,6 +6,7 @@ import { tr, type Loc } from '../core/Localization';
 import { ensureTextures, spec } from '../core/Loader';
 import { settings } from '../core/Settings';
 import { SPEAKERS } from '../data/speakers';
+import { earthOverrideSpec, ensureEarthTextures } from '../world/EarthPainter';
 import { MenuList } from '../ui/MenuList';
 import { addText, C, drawPanel, H, W } from '../ui/theme';
 
@@ -106,9 +107,13 @@ export class DialogueScene extends Phaser.Scene {
     this.backdrop?.destroy();
     this.backdrop = null;
     if (!slug) { this.shade.setFillStyle(0x000000, 0); return; }
-    const s = spec('bg', slug) ?? spec('art', slug);
+    if (slug.startsWith('gen:')) {
+      await ensureTextures(this, [earthOverrideSpec(slug)]);
+      ensureEarthTextures(this, slug);
+    }
+    const s = slug.startsWith('gen:') ? { key: `bg:${slug}`, url: '' } : spec('bg', slug) ?? spec('art', slug);
     if (!s) return;
-    await ensureTextures(this, [s]);
+    if (!slug.startsWith('gen:')) await ensureTextures(this, [s]);
     const img = this.add.image(W / 2, H / 2, s.key).setDepth(-1);
     const k = Math.max(W / img.width, H / img.height) * 1.08;
     img.setScale(k);

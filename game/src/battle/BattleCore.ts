@@ -70,6 +70,7 @@ export function createBattle(setup: BattleSetup): BattleState {
     snapshots: [],
     outcome: null,
     canFlee: setup.def.canFlee,
+    dream: !!setup.def.dream,
     soulHunger: setup.soulHunger,
     soulsAbsorbed: 0,
     inventory: { ...setup.inventory },
@@ -79,12 +80,12 @@ export function createBattle(setup: BattleSetup): BattleState {
     const c = CHARACTERS[p.id];
     const u: Unit = {
       id: p.id, kind: p.id, side: 'party', name: c.name, stats: { ...p.stats },
-      hp: Math.max(0, Math.min(p.hp, p.stats.maxHp)), statuses: [], tags: [], skills: [...c.skills],
+      hp: Math.max(0, Math.min(p.hp, p.stats.maxHp)), statuses: [], tags: [], skills: [...(setup.def.skills?.[p.id] ?? c.skills)],
       next: 0, dead: p.hp <= 0, res: {},
     };
     if (p.id === 'dhanasree') u.res = { ce: 4, ceMax: 6, ammo: setup.ammo };
     if (p.id === 'dharshna') u.res = { heat: 20 };
-    if (p.id === 'ragul' && setup.soulHunger >= HUNGER_STARVING) u.statuses.push({ id: 'starving', turns: -1 });
+    if (p.id === 'ragul' && setup.soulHunger >= HUNGER_STARVING && !setup.def.dream) u.statuses.push({ id: 'starving', turns: -1 });
     st.units.push(u);
   }
   const counts: Record<string, number> = {};
@@ -436,6 +437,10 @@ function applySkill(st: BattleState, u: Unit, s: SkillDef, targets: Unit[]) {
     case 'defend':
       addStatus(st, u, 'guard', -1);
       return;
+    case 'dream_shield':
+      heal(st, u, u.stats.maxHp * 0.34);
+      addStatus(st, u, 'guard', -1);
+      return;
     case 'item':
       st.inventory.red_rosoar = (st.inventory.red_rosoar ?? 0) - 1;
       heal(st, t0, t0.stats.maxHp * 0.45);
@@ -525,6 +530,9 @@ function chooseIntent(st: BattleState, u: Unit): { skill: string; target: string
       case 'drain': w = u.hp < u.stats.maxHp * 0.7 ? 5 : 2; break;
       case 'dread': w = foes.some((f) => !has(f, 'fear')) ? 2 : 0; break;
       case 'shadow_meld': w = lowHp && !(u.meldCooldown ?? 0) ? 6 : 0; break;
+      case 'rifle_butt': w = 5; break;
+      case 'volley': w = foes.length > 1 ? 3 : 1; break;
+      case 'saber': w = 4; break;
     }
     return { item: sk, weight: w };
   });
@@ -577,7 +585,7 @@ export function battleResult(st: BattleState): BattleResult {
     shards: won ? enemies.reduce((a, e) => a + (e.shards ?? 0), 0) : 0,
     drops,
     party: st.units.filter((u) => u.side === 'party').map((u) => ({ id: u.id, hp: Math.max(u.dead ? 1 : 0, u.hp) })),
-    soulHunger: Math.min(100, st.soulHunger + HUNGER_PER_BATTLE),
+    soulHunger: st.dream ? st.soulHunger : Math.min(100, st.soulHunger + HUNGER_PER_BATTLE),
     soulsAbsorbed: st.soulsAbsorbed,
     ammo: dh?.res.ammo ?? -1,
     inventory: st.inventory,

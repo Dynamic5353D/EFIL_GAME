@@ -14,11 +14,14 @@ import { showTip, tipSeen } from '../core/Tips';
 import { settings } from '../core/Settings';
 import { BASE_ABILITIES } from '../data/abilities';
 import { AREAS, ROOMS } from '../data/rooms';
-import { ENEMIES } from '../data/enemies';
+import { BATTLES, ENEMIES } from '../data/enemies';
 import { ITEMS } from '../data/items';
 import { Director, type StoryStage } from '../story/Director';
 import { addText, C } from '../ui/theme';
 import { CharacterRig, type RigState } from '../world/CharacterRig';
+import { earthProp, propSize } from '../world/EarthProps';
+import { earthOverrideSpec } from '../world/EarthPainter';
+import { ensureGenSprites } from '../world/GenSprites';
 import { Player } from '../world/Player';
 import { crystal, chest as chestTex, rosoarTree } from '../world/Props';
 import { Puppet } from '../world/Puppet';
@@ -28,7 +31,14 @@ import { DEPTH } from '../world/Scenery';
 import type { HudScene } from './HudScene';
 import type { MemberId } from '../data/characters';
 
-export interface WorldData { room?: string; entry?: string }
+export interface WorldData {
+  room?: string;
+  entry?: string;
+  /** Story to run once the room has loaded (a script's `@room` carrying on). */
+  story?: { script: string; label: string };
+  /** Run the state's saved resume point (loading a game, starting a chapter). */
+  resume?: boolean;
+}
 
 type Initiative = 'party' | 'enemy' | null;
 type Outcome = 'won' | 'lost' | 'fled';
@@ -43,6 +53,27 @@ interface Live {
   update?: (dt: number) => void;
   destroy?: () => void;
   gone?: boolean;
+}
+
+interface Guard {
+  live: Live;
+  rig: CharacterRig;
+  cone: Phaser.GameObjects.Graphics;
+  mark: Phaser.GameObjects.Text;
+  home: number;
+  x: number;
+  dir: number;
+  wait: number;
+  alert: number;
+}
+
+interface Chaser {
+  live: Live;
+  rig: CharacterRig;
+  /** Distance travelled along the recorded path. */
+  s: number;
+  wait: number;
+  active: boolean;
 }
 
 interface WorldEnemy {
@@ -78,6 +109,15 @@ export class WorldScene extends Phaser.Scene {
   /** False while a room is loading; the previous room's objects are gone by then. */
   private ready = false;
   private storyRunning = false;
+  private guards: Guard[] = [];
+  private chasers: Chaser[] = [];
+  /** The player's path while a chase is on: positions with cumulative distance. */
+  private path: { x: number; y: number; d: number; state: RigState; facing: number }[] = [];
+  /** Where stealth and chases restart: the last section marker passed. */
+  private section = { x: 0, y: 0 };
+  private hidden: Live | null = null;
+  private crates: Phaser.Physics.Arcade.Image[] = [];
+  private caught = false;
 
   constructor() { super({ key: 'World' }); }
 
@@ -85,6 +125,12 @@ export class WorldScene extends Phaser.Scene {
     this.ready = false;
     this.live = [];
     this.enemies = [];
+    this.guards = [];
+    this.chasers = [];
+    this.path = [];
+    this.crates = [];
+    this.hidden = null;
+    this.caught = false;
     this.followers = [];
     this.trail = [];
     this.busy = false;
@@ -101,8 +147,9 @@ export class WorldScene extends Phaser.Scene {
   private async setup(data: WorldData) {
     const r = this.room;
     const enemySlugs = r.entities.flatMap((e) => (e.def.type === 'enemy' ? [ENEMIES[e.def.enemy]?.sprite.slug ?? 'vale'] : []));
-    await ensureTextures(this, [spec('bg', r.backdrop), spec('far', r.backdrop), ...enemySlugs.map((s) => spec('cut', s))]);
+    await ensureTextures(this, [spec('bg', r.backdrop), spec('far', r.backdrop), earthOverrideSpec(r.backdrop), ...enemySlugs.map((s) => spec('cut', s))]);
     if (!this.scene.isActive()) return;
+    ensureGenSprites(this, enemySlugs);
     this.phys = buildRoom(this, r);
 
     // Player position: named entry, checkpoint tree, saved coordinates, or the start marker.
@@ -114,6 +161,7 @@ export class WorldScene extends Phaser.Scene {
     if (!data.entry && !st.location.checkpoint && (st.location.x || st.location.y)) { x = st.location.x; y = st.location.y; }
 
     this.player = new Player(this, x, y, st.party[0] ?? 'ragul');
+    this.section = { x, y };
     this.syncAbilities();
     this.player.onAttack = (hb) => this.playerAttack(hb);
     this.physics.add.collider(this.player.body, this.phys.solids);
@@ -125,6 +173,7 @@ export class WorldScene extends Phaser.Scene {
     this.playerLight = this.lights.addLight(x, y - 40, 340, 0xdfeaff, 0.9);
 
     for (const p of r.entities) this.spawnEntity(p);
+    this.updateCrates();
     this.buildFollowers();
 
     const cam = this.cameras.main;
@@ -144,16 +193,24 @@ export class WorldScene extends Phaser.Scene {
       scene: this,
       fx: (n) => this.fx(n),
       runBattle: (id) => this.runBattle(id),
+      runWordBattle: (id) => this.runWordBattle(id),
       partyChanged: () => this.partyChanged(),
+      gotoRoom: (room, entry, then) => this.leave(room, entry, then ?? undefined),
+      warp: (entry) => this.warp(entry),
+      save: () => this.autosave(),
     };
     this.director = new Director(stage);
     audio.music(r.music);
+    audio.ambience(r.weather.includes('rain') ? 'rain' : r.weather.includes('embers') ? 'fire' : 'none');
 
     const firstVisit = !st.visitedRooms.includes(r.id);
     if (firstVisit) st.visitedRooms.push(r.id);
     const banner = () => { if (firstVisit) (this.scene.get('Hud') as HudScene).banner(r.name, tr(AREAS[r.area]?.name ?? loc(''))); };
     this.ready = true;
-    if (!st.flags.slice_intro_done && r.id === 'frozen_shore') {
+    const next = data.story ?? (data.resume && st.resume ? st.resume : null);
+    if (next) {
+      this.time.delayedCall(350, () => void this.story(next.script, next.label).then(banner));
+    } else if (!st.flags.slice_intro_done && r.id === 'frozen_shore') {
       this.time.delayedCall(400, () => void this.story('slice/glacia_slice', 'intro').then(banner));
     } else this.time.delayedCall(700, banner);
   }
@@ -232,28 +289,118 @@ export class WorldScene extends Phaser.Scene {
         break;
       }
       case 'npc': {
-        if (d.hideIf && st.flags[d.hideIf]) return;
-        const rig = new CharacterRig(this, d.speaker as MemberId, DEPTH.entities);
+        const rig = new CharacterRig(this, d.rig ?? d.speaker, DEPTH.entities);
         rig.setState('idle');
+        const shown = () => (!d.requires || !!st.flags[d.requires]) && !(d.hideIf && st.flags[d.hideIf]);
+        let vis = shown() ? 1 : 0;
+        const spent = () => !!(d.once && st.flags[d.once]);
+        const talk = async () => {
+          if (!d.script || !d.label) return;
+          await this.story(d.script, d.label);
+          if (d.once) st.flags[d.once] = true;
+        };
+        if (d.talk) {
+          L.prompt = () => (shown() && !spent() && d.script ? 'Talk' : null);
+          L.interact = () => void talk();
+        }
         L.update = (dt) => {
-          rig.facing = this.player.x < p.x ? -1 : 1;
-          rig.update(dt, p.x, p.y);
-          if (L.gone || this.busy) return;
-          if (d.hideIf && st.flags[d.hideIf]) return;
-          if (d.requires && !st.flags[d.requires]) return;
-          if (Math.abs(this.player.x - p.x) < d.radius && Math.abs(this.player.y - p.y) < 160) {
-            void this.story(d.script, d.label).then(() => {
-              if (d.hideIf && st.flags[d.hideIf]) {
-                L.gone = true;
-                this.tweens.add({ targets: [rig.g, rig.glow], alpha: 0, duration: 500, onComplete: () => rig.destroy() });
-                this.buildFollowers();
-              }
-            });
+          vis = Phaser.Math.Linear(vis, shown() ? 1 : 0, Math.min(1, dt * 4));
+          rig.alpha = vis;
+          rig.g.setVisible(vis > 0.02);
+          rig.glow.setVisible(vis > 0.02);
+          if (vis > 0.02) {
+            rig.facing = d.face ?? (this.player.x < p.x ? -1 : 1);
+            rig.update(dt, p.x, p.y);
           }
+          if (d.talk || L.gone || this.busy || !shown() || spent() || !d.script) return;
+          if (Math.abs(this.player.x - p.x) < d.radius && Math.abs(this.player.y - p.y) < 160) void talk();
         };
         L.destroy = () => rig.destroy();
         break;
       }
+      case 'rest': {
+        const img = this.add.image(p.x, p.y + 2, earthProp(this, d.visual)).setOrigin(0.5, 1).setDepth(DEPTH.props).setLighting(true);
+        L.objs.push(img);
+        const g = glow(p.x, p.y - 40, 0xffd9a0, 2.2, 0.22);
+        if (!settings.get('reducedMotion')) this.tweens.add({ targets: g, alpha: 0.34, duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+        this.lights.addLight(p.x, p.y - 80, 260, 0xffd9a0, 0.9);
+        L.prompt = () => 'Rest';
+        L.interact = () => void this.restAt(d.id, false);
+        break;
+      }
+      case 'prop': {
+        const img = this.add.image(p.x, p.y + 2, earthProp(this, d.visual)).setOrigin(0.5, 1).setScale(d.scale ?? 1)
+          .setFlipX(!!d.flip).setDepth(d.front ? DEPTH.player + 2 : DEPTH.props).setLighting(true);
+        L.objs.push(img);
+        if (d.visual === 'lamp') this.lights.addLight(p.x, p.y - 260 * (d.scale ?? 1), 320, 0xffe2a8, 1.1);
+        if (d.visual === 'tv') this.lights.addLight(p.x, p.y - 90, 240, 0x9ab8ff, 0.9);
+        return;
+      }
+      case 'hide': {
+        const img = this.add.image(p.x, p.y + 2, earthProp(this, d.visual)).setOrigin(0.5, 1).setDepth(DEPTH.player + 2).setLighting(true);
+        if (d.w) img.setScale(d.w * TILE / propSize(d.visual).w);
+        L.objs.push(img);
+        L.prompt = () => (this.hidden ? null : `${input.label('down')} Hide`);
+        L.update = () => {
+          const near = Math.abs(this.player.x - p.x) < img.displayWidth / 2 && Math.abs(this.player.y - p.y) < 30;
+          if (!this.hidden && near && !this.busy && this.player.onGround && input.pressed('down')) this.hide(L);
+          img.setAlpha(this.hidden === L ? 0.82 : 1);
+        };
+        break;
+      }
+      case 'guard': {
+        const rig = new CharacterRig(this, d.rig, DEPTH.entities);
+        const cone = this.add.graphics().setDepth(DEPTH.entities - 1).setBlendMode(Phaser.BlendModes.ADD);
+        const mark = addText(this, p.x, p.y - 150, '!', { size: 40, bold: true, color: '#ff5a5a' }).setOrigin(0.5).setDepth(DEPTH.fx).setVisible(false);
+        const gd: Guard = { live: L, rig, cone, mark, home: p.x, x: p.x, dir: d.facing ?? 1, wait: 0, alert: 0 };
+        this.guards.push(gd);
+        L.update = (dt) => this.updateGuard(gd, dt);
+        L.destroy = () => { rig.destroy(); cone.destroy(); mark.destroy(); };
+        break;
+      }
+      case 'chaser': {
+        const rig = new CharacterRig(this, d.rig, DEPTH.entities + 1);
+        const ch: Chaser = { live: L, rig, s: 0, wait: d.delay ?? 1, active: false };
+        this.chasers.push(ch);
+        L.update = (dt) => this.updateChaser(ch, dt);
+        L.destroy = () => rig.destroy();
+        break;
+      }
+      case 'crate': {
+        const w = d.w * TILE, h = d.h * TILE;
+        const img = this.physics.add.image(p.x, p.y - h / 2, earthProp(this, 'crate')).setDisplaySize(w, h).setDepth(DEPTH.props + 1).setLighting(true);
+        const b = img.body as Phaser.Physics.Arcade.Body;
+        b.setSize(img.width, img.height);
+        b.setDragX(2400);
+        b.setMaxVelocityX(140);
+        this.physics.add.collider(img, this.phys.solids);
+        this.physics.add.collider(this.player.body, img);
+        this.crates.push(img);
+        L.objs.push(img);
+        return;
+      }
+      case 'use': {
+        const shown = () => (!d.requires || !!st.flags[d.requires]) && !(d.unless && st.flags[d.unless]);
+        const mark = glow(p.x, p.y - 30, 0xffe6a0, 0.9, 0.5);
+        if (!settings.get('reducedMotion')) this.tweens.add({ targets: mark, alpha: 0.2, duration: 900, yoyo: true, repeat: -1 });
+        L.prompt = () => (shown() ? tr(d.prompt) : null);
+        L.interact = () => {
+          const missing = d.items.filter((it) => !st.inventory[it]);
+          if (missing.length) {
+            audio.sfx('ui_back');
+            this.floatText(p.x, p.y - 120, `You need: ${missing.map((m) => tr(ITEMS[m]?.name ?? loc(m))).join(', ')}`, C.textDim);
+            return;
+          }
+          void this.story(d.script, d.label);
+        };
+        L.update = () => mark.setVisible(shown());
+        break;
+      }
+      case 'section':
+        L.update = () => {
+          if (Math.abs(this.player.x - p.x) < TILE && Math.abs(this.player.y - p.y) < TILE * 3 && this.player.onGround) this.section = { x: p.x, y: p.y };
+        };
+        break;
       case 'trigger': {
         const top = p.y - d.height * TILE;
         L.update = () => {
@@ -416,6 +563,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.storyRunning = false;
     if (!this.sys.isActive() && !this.sys.isPaused()) return;
+    if (this.leaving) return;
     this.player.locked = false;
     this.busy = false;
     this.syncAbilities();
@@ -444,6 +592,14 @@ export class WorldScene extends Phaser.Scene {
             this.scene.setVisible(true, 'Hud');
             audio.music(this.room.music);
             bus.emit('hud', undefined);
+            if (r === 'lost' && BATTLES[id]?.retry) {
+              // Story fights that must be won (the daydream) start over at full health.
+              const st = session.state;
+              for (const m of st.party) { const ms = st.members[m]; if (ms) ms.hp = memberStats(st, m).maxHp; }
+              bus.emit('toast', { text: 'Try again.' });
+              void this.runBattle(id, initiative).then(resolve);
+              return;
+            }
             if (r === 'lost' && this.storyRunning) { this.lostInStory = true; this.director.cancel(); }
             resolve(r);
           },
@@ -455,8 +611,61 @@ export class WorldScene extends Phaser.Scene {
   }
 
   partyChanged() {
+    const lead = session.state.party[0];
+    if (this.player && lead) {
+      this.player.setMember(lead);
+      this.trail = [];
+    }
+    this.updateCrates();
     this.buildFollowers();
     bus.emit('hud', undefined);
+  }
+
+  /** Word battles run in their own scene over this one; resolves true when won (a loss is retried there). */
+  runWordBattle(id: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.scene.pause();
+      this.scene.setVisible(false, 'Hud');
+      this.scene.launch('WordBattle', {
+        battle: id, backdrop: this.room.backdrop,
+        onDone: (won: boolean) => {
+          this.scene.stop('WordBattle');
+          this.scene.resume();
+          this.scene.setVisible(true, 'Hud');
+          audio.music(this.room.music);
+          bus.emit('hud', undefined);
+          resolve(won);
+        },
+      });
+      this.scene.bringToTop('WordBattle');
+      this.scene.bringToTop('Dialogue');
+    });
+  }
+
+  warp(entry: string) {
+    const p = this.room.entities.find((e) => e.def.type === 'spawn' && e.def.id === entry);
+    if (!p || !this.player) return;
+    this.player.teleport(p.x, p.y);
+    this.section = { x: p.x, y: p.y };
+    this.trail = [];
+    this.cameras.main.centerOn(p.x, p.y - 70);
+  }
+
+  /** `@save`: saves where the player stands; the resume point was set by the script. */
+  autosave() {
+    const st = session.state;
+    st.location = { room: this.room.id, x: this.player?.x ?? 0, y: this.player?.y ?? 0, checkpoint: null };
+    if (session.save(this.room.id)) bus.emit('toast', { text: 'Saved.' });
+  }
+
+  /** Nithish can shove crates; for anyone else they are as solid as a wall. */
+  private updateCrates() {
+    const shove = session.state.party[0] === 'nithish';
+    for (const c of this.crates) {
+      const b = c.body as Phaser.Physics.Arcade.Body;
+      b.setImmovable(!shove);
+      b.pushable = shove;
+    }
   }
 
   async fx(name: string): Promise<void> {
@@ -499,13 +708,244 @@ export class WorldScene extends Phaser.Scene {
       case 'fade_in':
         cam.fadeIn(calm ? 150 : 600, 0, 0, 0);
         return wait(calm ? 150 : 600);
+      case 'black':
+        // Cut to black at once (gore and violence cut away at the moment of impact).
+        cam.fadeOut(0, 0, 0, 0);
+        return wait(60);
+      case 'unblack':
+        cam.fadeIn(calm ? 150 : 700, 0, 0, 0);
+        return wait(calm ? 150 : 700);
+      case 'bang':
+        audio.sfx('gun');
+        cam.flash(90, 255, 255, 255);
+        if (shake) cam.shake(200, 0.014);
+        await wait(90);
+        cam.fadeOut(0, 0, 0, 0);
+        return wait(900);
+      case 'snap': {
+        // Nithish's snap: a red flash and the world freezes grey for a breath.
+        audio.sfx('tick');
+        audio.sfx('meld');
+        cam.flash(500, 255, 30, 40);
+        const cm = cam.filters.internal.addColorMatrix();
+        cm.colorMatrix.desaturate();
+        if (shake) cam.shake(300, 0.01);
+        await wait(900);
+        cam.filters.internal.remove(cm);
+        return;
+      }
+      case 'dizzy': {
+        audio.sfx('dread');
+        if (calm) return wait(400);
+        const barrel = cam.filters.internal.addBarrel(1);
+        const blur = cam.filters.internal.addBlur(0, 2, 2, 1);
+        await new Promise<void>((r) => this.tweens.addCounter({
+          from: 0, to: 1, duration: 2200, onUpdate: (tw) => {
+            const v = tw.getValue()!;
+            barrel.amount = 1 + Math.sin(v * Math.PI * 4) * 0.08 * Math.sin(v * Math.PI);
+            blur.strength = Math.sin(v * Math.PI) * 1.4;
+          },
+          onComplete: () => r(),
+        }));
+        cam.filters.internal.remove(barrel);
+        cam.filters.internal.remove(blur);
+        return;
+      }
+      case 'lightning':
+        cam.flash(160, 220, 230, 255);
+        this.time.delayedCall(220, () => cam.flash(90, 200, 210, 255));
+        this.time.delayedCall(500, () => audio.sfx('thunder'));
+        return wait(300);
+      case 'fire':
+        audio.sfx('fire');
+        cam.flash(400, 255, 140, 40);
+        if (shake) cam.shake(300, 0.008);
+        return wait(400);
+      case 'heartbeat':
+        audio.sfx('heartbeat');
+        return wait(900);
       default:
         return;
     }
   }
 
+
+  // ------------------------------------------------------------------ stealth and chases
+  private hide(L: Live) {
+    this.hidden = L;
+    this.player.locked = true;
+    this.player.arcade.setVelocityX(0);
+    this.player.rig.alpha = 0.4;
+    audio.sfx('guard');
+    showTip('hide');
+  }
+
+  private unhide() {
+    this.hidden = null;
+    if (!this.busy) this.player.locked = false;
+  }
+
+  /** Is the player inside this guard's cone, with nothing solid in between? */
+  private sees(gd: Guard, range: number): boolean {
+    if (this.hidden) return false;
+    const eyeX = gd.x, eyeY = gd.live.placed.y - 100;
+    const px = this.player.x, py = this.player.y - 40;
+    const dx = (px - eyeX) * gd.dir;
+    if (dx < 10 || dx > range) return false;
+    if (Math.abs(py - eyeY) > 40 + dx * 0.32) return false;
+    for (let t = 0.1; t < 1; t += 0.1) {
+      const cx = Math.floor((eyeX + (px - eyeX) * t) / TILE), cy = Math.floor((eyeY + (py - eyeY) * t) / TILE);
+      if (this.room.grid[cy]?.[cx] === '#') return false;
+    }
+    return true;
+  }
+
+  private updateGuard(gd: Guard, dt: number) {
+    const d = gd.live.def as Extract<EntityDef, { type: 'guard' }>;
+    const st = session.state;
+    const active = (!d.requires || !!st.flags[d.requires]) && !(d.hideIf && st.flags[d.hideIf]);
+    gd.rig.g.setVisible(active);
+    gd.rig.glow.setVisible(active);
+    gd.cone.setVisible(active);
+    if (!active) return;
+    const p = gd.live.placed;
+    const range = d.range * TILE * (st.flags.disguised ? 0.5 : 1);
+    // Patrol: walk to one end, look around for a moment, turn back.
+    if (!this.busy && gd.alert <= 0 && d.patrol > 0) {
+      if (gd.wait > 0) gd.wait -= dt;
+      else {
+        gd.x += gd.dir * (d.speed ?? 70) * dt;
+        const lim = d.patrol * TILE;
+        if ((gd.dir > 0 && gd.x > gd.home + lim) || (gd.dir < 0 && gd.x < gd.home - lim)) { gd.dir *= -1; gd.wait = 1.4; }
+      }
+    }
+    gd.rig.facing = gd.dir;
+    gd.rig.speed = gd.wait > 0 || d.patrol <= 0 || gd.alert > 0 ? 0 : gd.dir * (d.speed ?? 70);
+    gd.rig.setState(gd.rig.speed ? 'run' : 'idle');
+    gd.rig.update(dt, gd.x, p.y);
+    // Sight cone.
+    const eyeY = p.y - 100;
+    const c = gd.cone;
+    c.clear();
+    const col = gd.alert > 0 ? 0xff4a4a : 0xffe08a;
+    c.fillStyle(col, gd.alert > 0 ? 0.22 : 0.1);
+    c.fillTriangle(gd.x, eyeY, gd.x + gd.dir * range, eyeY - 40 - range * 0.32, gd.x + gd.dir * range, eyeY + 40 + range * 0.32);
+    c.lineStyle(2, col, 0.3);
+    c.lineBetween(gd.x, eyeY, gd.x + gd.dir * range, eyeY - 40 - range * 0.32);
+    c.lineBetween(gd.x, eyeY, gd.x + gd.dir * range, eyeY + 40 + range * 0.32);
+    gd.mark.setPosition(gd.x, p.y - 160);
+    if (gd.alert > 0) {
+      gd.alert -= dt;
+      if (gd.alert <= 0) void this.spotted(gd);
+      return;
+    }
+    if (!this.busy && !this.caught && this.sees(gd, range)) {
+      gd.alert = 0.7;
+      gd.mark.setVisible(true);
+      audio.sfx('dread');
+      this.player.locked = true;
+      this.player.arcade.setVelocityX(0);
+    }
+  }
+
+  private async spotted(gd: Guard) {
+    const d = gd.live.def as Extract<EntityDef, { type: 'guard' }>;
+    gd.mark.setVisible(false);
+    if (d.fail && d.script) {
+      await this.story(d.script, d.fail);
+      this.resetSection();
+      return;
+    }
+    await this.restartSection('You were seen.');
+  }
+
+  private updateChaser(ch: Chaser, dt: number) {
+    const d = ch.live.def as Extract<EntityDef, { type: 'chaser' }>;
+    const st = session.state;
+    const p = ch.live.placed;
+    const on = (!d.requires || !!st.flags[d.requires]) && !(d.unless && st.flags[d.unless]);
+    ch.rig.g.setVisible(on);
+    ch.rig.glow.setVisible(on);
+    if (!on) { ch.active = false; return; }
+    if (!ch.active) {
+      ch.active = true;
+      ch.s = 0;
+      ch.wait = d.delay ?? 1;
+      this.path = [{ x: p.x, y: p.y, d: 0, state: 'idle', facing: 1 }];
+      showTip('chase');
+    }
+    if (this.busy) { ch.rig.update(dt, ...this.pathAt(ch.s)); return; }
+    if (ch.wait > 0) ch.wait -= dt;
+    else ch.s = Math.min(this.path[this.path.length - 1]!.d, ch.s + d.speed * dt);
+    const [x, y] = this.pathAt(ch.s);
+    const prev = ch.rig.facing;
+    const ahead = this.pathAt(ch.s + 4)[0];
+    ch.rig.facing = ahead > x + 0.5 ? 1 : ahead < x - 0.5 ? -1 : prev;
+    ch.rig.speed = ch.wait > 0 ? 0 : d.speed * ch.rig.facing;
+    const seg = this.path.find((q) => q.d >= ch.s);
+    ch.rig.setState(ch.wait > 0 ? 'idle' : seg && (seg.state === 'jump' || seg.state === 'fall') ? seg.state : 'run');
+    ch.rig.update(dt, x, y);
+    const gap = this.path[this.path.length - 1]!.d - ch.s;
+    if (!this.caught && ch.wait <= 0 && gap < 34 && Math.abs(this.player.x - x) < 40) void this.restartSection('Caught.');
+  }
+
+  /** Position at distance `s` along the recorded chase path. */
+  private pathAt(s: number): [number, number] {
+    const P = this.path;
+    if (!P.length) return [0, 0];
+    let i = P.findIndex((q) => q.d >= s);
+    if (i < 0) i = P.length - 1;
+    if (i === 0) return [P[0]!.x, P[0]!.y];
+    const a = P[i - 1]!, b = P[i]!;
+    const t = b.d > a.d ? (s - a.d) / (b.d - a.d) : 1;
+    return [a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t];
+  }
+
+  private recordPath() {
+    if (!this.chasers.some((c) => c.active)) return;
+    const last = this.path[this.path.length - 1];
+    const x = this.player.x, y = this.player.y;
+    if (!last) { this.path.push({ x, y, d: 0, state: 'idle', facing: 1 }); return; }
+    const step = Math.hypot(x - last.x, y - last.y);
+    if (step < 6) return;
+    this.path.push({ x, y, d: last.d + step, state: this.player.rig.state, facing: this.player.facing });
+  }
+
+  /** Back to the last section marker, with guards and chasers reset. */
+  private async restartSection(msg: string) {
+    if (this.caught) return;
+    this.caught = true;
+    this.player.locked = true;
+    audio.sfx('hurt');
+    const cam = this.cameras.main;
+    cam.flash(200, 255, 80, 80);
+    this.floatText(this.player.x, this.player.y - 130, msg, '#ff9a9a');
+    await new Promise((r) => this.time.delayedCall(700, r));
+    cam.fadeOut(260, 0, 0, 0);
+    await new Promise((r) => this.time.delayedCall(300, r));
+    this.resetSection();
+    cam.fadeIn(300, 0, 0, 0);
+  }
+
+  private resetSection() {
+    if (this.hidden) this.unhide();
+    this.player.teleport(this.section.x, this.section.y);
+    this.trail = [];
+    for (const gd of this.guards) {
+      gd.x = gd.home;
+      gd.dir = (gd.live.def as Extract<EntityDef, { type: 'guard' }>).facing ?? 1;
+      gd.alert = 0;
+      gd.wait = 0.5;
+      gd.mark.setVisible(false);
+    }
+    for (const ch of this.chasers) ch.active = false;
+    this.path = [];
+    this.caught = false;
+    if (!this.busy) this.player.locked = false;
+  }
+
   // ------------------------------------------------------------------ resting, defeat, rooms
-  private async restAt(treeId: string) {
+  private async restAt(treeId: string, isTree = true) {
     const st = session.state;
     this.busy = true;
     this.player.locked = true;
@@ -513,6 +953,7 @@ export class WorldScene extends Phaser.Scene {
     audio.sfx('save');
     audio.music('rest');
     rest(st, treeId, this.room.id);
+    st.resume = null;
     const meta = session.save(this.room.id);
     this.burst(this.player.x, this.player.y - 40, 0xff7080, 22);
     bus.emit('toast', { text: meta ? 'Rested. The party is healed and the game is saved.' : 'Rested. (Saving is unavailable in this browser.)' });
@@ -524,7 +965,7 @@ export class WorldScene extends Phaser.Scene {
     for (const p of this.room.entities.filter((e) => e.def.type === 'enemy')) this.spawnEntity(p);
     const intro = `tree_seen`;
     this.busy = false;
-    if (!st.collected.includes(intro)) {
+    if (isTree && !st.collected.includes(intro)) {
       st.collected.push(intro);
       await this.story('slice/glacia_slice', 'tree');
     } else {
@@ -541,24 +982,24 @@ export class WorldScene extends Phaser.Scene {
     cam.fadeOut(900, 20, 0, 0);
     await new Promise((r) => this.time.delayedCall(950, r));
     const hud = this.scene.get('Hud') as HudScene;
-    hud.toast('Everything goes dark... You wake at the last Rosoar tree.');
+    hud.toast(this.room.backdrop.startsWith('gen:') ? 'Everything goes dark...' : 'Everything goes dark... You wake at the last Rosoar tree.');
     if (!session.loadSlot(session.slot)) {
       // No save yet: heal the party and start the room again.
       const st = session.state;
       for (const id of st.party) { const m = st.members[id]; if (m) m.hp = memberStats(st, id).maxHp; }
       st.location = { room: this.room.id, x: 0, y: 0, checkpoint: null };
     }
-    this.scene.restart({});
+    this.scene.restart({ resume: true });
   }
 
-  private leave(to: string, entry: string) {
-    if (!ROOMS[to]) return;
+  private leave(to: string, entry: string, story?: { script: string; label: string }) {
+    if (!ROOMS[to]) { console.error(`no room ${to}`); return; }
     this.leaving = true;
     this.player.locked = true;
     const st = session.state;
     st.location = { room: to, x: 0, y: 0, checkpoint: null };
     this.cameras.main.fadeOut(settings.get('reducedMotion') ? 100 : 350, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.restart({ room: to, entry }));
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.restart({ room: to, entry, story }));
   }
 
   // ------------------------------------------------------------------ party
@@ -614,7 +1055,13 @@ export class WorldScene extends Phaser.Scene {
     session.tickPlaytime();
     const st = session.state;
 
+    if (this.hidden) {
+      this.player.rig.alpha = 0.4;
+      if (!this.busy && (input.pressed('jump') || input.pressed('up') || Math.abs(input.axisX) > 0.5)) { input.consume('jump', 'up'); this.unhide(); }
+    }
     this.player.update(dt);
+    if (this.hidden) this.player.rig.alpha = 0.4;
+    this.recordPath();
     this.updateFollowers(dt);
     this.playerLight.setPosition(this.player.x, this.player.y - 60);
     for (const L of this.live) L.update?.(dt);
@@ -625,7 +1072,8 @@ export class WorldScene extends Phaser.Scene {
 
     // Spikes and falling out of the room.
     const b = this.player.arcade;
-    const hitSpike = this.phys.spikes.some((r) => b.right > r.x + 6 && b.left < r.x + r.w - 6 && b.bottom > r.y + r.h - 26 && b.top < r.y + r.h);
+    const hitSpike = this.phys.spikes.some((r) => b.right > r.x + 6 && b.left < r.x + r.w - 6 && b.bottom > r.y + r.h - 26 && b.top < r.y + r.h)
+      || this.phys.fires.some((r) => b.right > r.x + 8 && b.left < r.x + r.w - 8 && b.bottom > r.y + r.h - 34 && b.top < r.y + r.h);
     if ((hitSpike || this.player.y > this.room.rows * TILE + 60) && !this.leaving) this.hazard();
 
     // Interaction prompt.
@@ -642,8 +1090,14 @@ export class WorldScene extends Phaser.Scene {
       }
     }
     const pt = this.promptTarget;
-    if (pt) {
+    const hideSpot = !pt && !this.busy && !this.hidden
+      ? this.live.find((L) => L.def.type === 'hide' && Math.abs(L.placed.x - this.player.x) < 60 && Math.abs(L.placed.y - this.player.y) < 30)
+      : undefined;
+    if (hideSpot) {
+      this.promptText.setText(`${input.label('down')}  Hide`).setPosition(hideSpot.placed.x, hideSpot.placed.y - 150).setVisible(true);
+    } else if (pt) {
       if (pt.def.type === 'tree') showTip('tree');
+      if (pt.def.type === 'rest') showTip('rest');
       this.promptText.setText(`${input.label('interact')}  ${pt.prompt!()}`).setPosition(pt.placed.x, pt.placed.y - 150).setVisible(true);
       if (input.pressed('interact') && this.player.onGround) { input.consume('interact', 'up'); pt.interact!(); }
     } else this.promptText.setVisible(false);
@@ -671,6 +1125,10 @@ export class WorldScene extends Phaser.Scene {
     if (!tipSeen('party') && st.party.length > 1) showTip('party');
     if (!tipSeen('fragment') && st.codex.length > 0) showTip('fragment');
     if (!tipSeen('menu') && st.location.checkpoint) showTip('menu');
+    if (!tipSeen('objective') && st.objective) showTip('objective');
+    if (!tipSeen('case_board') && st.clues.length) showTip('case_board');
+    if (!tipSeen('stealth') && this.guards.some((g) => g.cone.visible && Math.abs(g.x - px) < 700 && Math.abs(g.live.placed.y - py) < 300)) showTip('stealth');
+    if (!tipSeen('shove') && st.party[0] === 'nithish' && this.crates.some((c) => Math.abs(c.x - px) < 400)) showTip('shove');
   }
 
   private hazardT = 0;
