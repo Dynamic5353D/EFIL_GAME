@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"/home/ragul/Documents/EFIL: The Game/game/docs\")",
+      "Bash(python3 -)",
+      "Bash(cp /home/ragul/.claude/plans/the-folder-contains-images-glistening-wand.md \"/home/ragul/Documents/EFIL: The Game/game/docs/plan.md\")"
+    ]
+  }
+}

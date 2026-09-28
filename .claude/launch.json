@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "efil-dev",
+      "runtimeExecutable": "/home/ragul/.bun/bin/bun",
+      "runtimeArgs": [
+        "--cwd=/home/ragul/Documents/EFIL: The Game/game",
+        "run",
+        "dev"
+      ],
+      "port": 5173
+    }
+  ]
+}
