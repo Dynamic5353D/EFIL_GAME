@@ -103,6 +103,8 @@ export const COMMANDS: Record<string, { min: number; max: number }> = {
   exit: { min: 1, max: 2 },
   /** `@pose dhanasree dance` (idle, talk, sit, kneel, dance, phone, think, point, ko, run). */
   pose: { min: 2, max: 2 },
+  /** Furniture on stage, behind the cast: `@prop desk@0.4 chair@0.42 bed@0.8^` (`^` further back, `<` flipped). */
+  prop: { min: 1, max: 8 },
   /** `@face ragul left` or `@face ragul dhanasree`. */
   face: { min: 2, max: 2 },
   /** Camera: `@shot on ragul`, `@shot close ragul`, `@shot two a b`, `@shot wide`, `@shot push`, `@shot orbit`, `@shot slow`, `@shot auto`… */

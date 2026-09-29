@@ -40,7 +40,7 @@ function autoCast(script: Script): Script {
   script.nodes.forEach((n, i) => {
     if (n.k !== 'cmd' || n.name !== 'scene' || n.args[0] === 'none') return;
     let j = i + 1;
-    while (script.nodes[j]?.k === 'label') j++;
+    while (script.nodes[j]?.k === 'label' || (script.nodes[j]?.k === 'cmd' && ['prop', 'caption', 'music', 'sfx', 'fx', 'time'].includes((script.nodes[j] as { name: string }).name)) || script.nodes[j]?.k === 'caption') j++;
     const next = script.nodes[j];
     if (next?.k === 'cmd' && next.name === 'cast') return;
     const ids: string[] = [];
@@ -178,6 +178,7 @@ export class Director implements StoryHost {
       case 'exit': this.set?.exit(a, args[1]); break;
       case 'pose': this.set?.pose(a, args[1] ?? 'idle'); break;
       case 'face': this.set?.face(a, args[1] ?? 'right'); break;
+      case 'prop': this.set?.props(args); break;
       case 'shot': {
         const set = this.set;
         if (set) set.shot(a, args[1], args[2]);

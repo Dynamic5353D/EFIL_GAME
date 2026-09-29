@@ -55,11 +55,11 @@ export const SPEAKERS: Record<string, SpeakerDef> = {
   shanmugam: { id: 'shanmugam', name: loc('Dr. Shanmugam'), portrait: 'gen:dhanajay', color: 0xc8d8e0 },
   security: { id: 'security', name: loc('Security guard', 'Security'), portrait: 'gen:security', color: 0xa8b8d8 },
   vendor: { id: 'vendor', name: loc('Vendor', 'Kadaikaarar'), portrait: 'gen:vendor', color: 0xe0b080 },
-  amma: { id: 'amma', name: loc('Nithish\'s mother', 'Aatha'), portrait: null, color: 0xe8c8a8 },
-  appa: { id: 'appa', name: loc('Dharshna\'s father', 'Appa'), portrait: null, color: 0xd8c8b8 },
-  vijaya: { id: 'vijaya', name: loc('Vijayashree'), portrait: null, color: 0xc89090 },
-  subramani_mother: { id: 'subramani_mother', name: loc('Subramani\'s mother', 'Subramani amma'), portrait: null, color: 0xe0b8b8 },
-  amsa: { id: 'amsa', name: loc('Amsa aunty'), portrait: null, color: 0xe0c8a8 },
+  amma: { id: 'amma', name: loc('Nithish\'s mother', 'Aatha'), portrait: 'gen:mother', color: 0xe8c8a8 },
+  appa: { id: 'appa', name: loc('Dharshna\'s father', 'Appa'), portrait: 'gen:appa', color: 0xd8c8b8 },
+  vijaya: { id: 'vijaya', name: loc('Vijayashree'), portrait: 'gen:vijaya', color: 0xc89090 },
+  subramani_mother: { id: 'subramani_mother', name: loc('Subramani\'s mother', 'Subramani amma'), portrait: 'gen:mother', color: 0xe0b8b8 },
+  amsa: { id: 'amsa', name: loc('Amsa aunty'), portrait: 'gen:amsa', color: 0xe0c8a8 },
   news: { id: 'news', name: loc('News anchor', 'Seidhi'), portrait: null, color: 0xc8d8ff },
   guy: { id: 'guy', name: loc('Student', 'Paiyan'), portrait: 'gen:guy', color: 0xb8c0d0 },
   girl: { id: 'girl', name: loc('Student', 'Ponnu'), portrait: 'gen:girl', color: 0xe0b8d0 },
@@ -82,4 +82,4 @@ export function rigFor(id: string): string | null {
 export const STAGE_POSES = ['idle', 'talk', 'sit', 'kneel', 'dance', 'phone', 'think', 'point', 'cross', 'ko', 'run', 'hurt', 'cast'];
 
 /** Camera shots for `@shot` (staged scenes and rooms alike). */
-export const SHOTS = ['auto', 'wide', 'on', 'close', 'two', 'push', 'pull', 'pan', 'orbit', 'dutch', 'shake', 'flash', 'slow', 'normal', 'level'];
+export const SHOTS = ['auto', 'wide', 'on', 'close', 'two', 'push', 'pull', 'pan', 'orbit', 'dutch', 'shake', 'flash', 'slow', 'normal', 'level', 'memory', 'present'];

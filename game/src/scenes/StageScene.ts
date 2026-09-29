@@ -14,12 +14,15 @@ import { audio } from '../core/AudioSynth';
 import { assets } from '../core/Assets';
 import { ensureTextures, spec } from '../core/Loader';
 import { tr, type Loc } from '../core/Localization';
+import { session } from '../core/Session';
 import { settings } from '../core/Settings';
 import { EARTH_SCENES } from '../data/earthScenes';
 import { rigFor, SPEAKERS } from '../data/speakers';
 import { addText, H, W } from '../ui/theme';
 import { CharacterRig, type RigState } from '../world/CharacterRig';
 import { earthOverrideSpec, ensureEarthTextures } from '../world/EarthPainter';
+import { earthProp, PROP_VISUALS } from '../world/EarthProps';
+import type { PropVisual } from '../world/RoomDef';
 import { hexRgb, makeCanvas, mixRgb, rgbCss, rgbInt, scaleRgb, type RGB } from '../world/Paint';
 
 /** Screen y of the stage floor with the camera at rest (just above the dialogue box). */
@@ -27,6 +30,10 @@ const FLOOR = 492;
 /** Figure scale on stage (the world draws them at 1). */
 const FIG = 3.05;
 const BAR = 44;
+/** Props are painted a little under figure scale (the room props are generous next to the figures). */
+const PROP_K = 1.8;
+/** Seat heights, as a fraction of each prop's height, for figures sitting on them. */
+const SEATS: Partial<Record<PropVisual, number>> = { chair: 0.42, bed: 0.52, bench: 0.5, bed_sleeper: 0.5 };
 
 type LayerId = 'far' | 'back' | 'mid' | 'floor' | 'cast' | 'fx' | 'front';
 /** Depth of each layer: how strongly it follows the camera (1 = the cast). */
@@ -46,6 +53,8 @@ interface Actor {
   light: Phaser.GameObjects.Image;
   shadow: Phaser.GameObjects.Ellipse;
   speaking: boolean;
+  /** Seat height (px above the floor) when sitting on a prop. */
+  seat: number;
 }
 
 interface CamState { x: number; y: number; zoom: number; rot: number }
@@ -74,8 +83,10 @@ export class StageScene extends Phaser.Scene {
   private bars!: Phaser.GameObjects.Graphics;
   private captionText!: Phaser.GameObjects.Text;
   private slowGrade: Phaser.Filters.ColorMatrix | null = null;
+  private memoryGrade: Phaser.Filters.ColorMatrix | null = null;
   private lastSpeaker: string | null = null;
   private emitters: Phaser.GameObjects.Particles.ParticleEmitter[] = [];
+  private seats: { x: number; h: number; back: boolean }[] = [];
 
   constructor() { super({ key: 'Stage' }); }
 
@@ -137,7 +148,9 @@ export class StageScene extends Phaser.Scene {
     for (const l of Object.values(this.layers)) l?.destroy();
     this.layers = {} as Record<LayerId, Phaser.GameObjects.Container>;
     this.emitters = [];
+    this.seats = [];
     this.setSlow(false);
+    this.setMemory(false);
     this.cameras.main.setRotation(0);
     this.captionText.setAlpha(0);
     this.move = null;
@@ -260,6 +273,7 @@ export class StageScene extends Phaser.Scene {
       a.y = a.back ? -36 : 0;
       if (e.pose) a.pose = e.pose;
       a.rig.setState(a.pose);
+      this.seatFor(a);
       a.rig.facing = e.face ?? (x < -40 ? 1 : x > 40 ? -1 : 1);
     });
     this.layoutDepth();
@@ -269,11 +283,12 @@ export class StageScene extends Phaser.Scene {
     const rigId = rigFor(id);
     if (!rigId) return undefined;
     const rig = new CharacterRig(this, rigId, 0);
+    rig.cuffed = rigId === 'nithish' && !!session.state.flags.nithish_cuffed;
     const color = SPEAKERS[id]?.color ?? 0x9cc9ff;
     const light = this.add.image(x, -150, 'fx:soft').setTint(color).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setScale(5);
     const shadow = this.add.ellipse(x, 2, 150, 22, 0x000000, 0.45);
     this.layers.cast.add([light, shadow, rig.g, rig.glow]);
-    const a: Actor = { id, rig, x, y: 0, tx: null, exitAfter: false, pose: 'idle', back: false, light, shadow, speaking: false };
+    const a: Actor = { id, rig, x, y: 0, tx: null, exitAfter: false, pose: 'idle', back: false, light, shadow, speaking: false, seat: 0 };
     this.actors.set(id, a);
     return a;
   }
@@ -308,6 +323,7 @@ export class StageScene extends Phaser.Scene {
     if (!a) return;
     a.pose = p as RigState;
     a.rig.setState(a.pose);
+    this.seatFor(a);
   }
 
   face(id: string, dir: string) {
@@ -318,6 +334,30 @@ export class StageScene extends Phaser.Scene {
   }
 
   has(id: string) { return this.actors.has(id); }
+
+  /** Furniture, drawn behind the cast at stage scale: "desk@0.4", "bed@0.8^", "chair@0.3<". */
+  props(entries: string[]) {
+    for (const e of entries) {
+      const m = /^([a-z_]+)(?:@([\d.]+))?([<>])?(\^)?$/.exec(e);
+      if (!m || !(PROP_VISUALS as string[]).includes(m[1]!)) continue;
+      const back = !!m[4];
+      const v = m[1] as PropVisual;
+      const x = stageX(m[2] !== undefined ? Number(m[2]) : 0.5);
+      const img = this.add.image(x, back ? -36 : 4, earthProp(this, v, PROP_K))
+        .setOrigin(0.5, 1).setFlipX(m[3] === '<').setScale(back ? 0.84 : 1).setTint(back ? 0xb8b8c0 : 0xffffff);
+      this.layers.cast.addAt(img, 0);
+      if (SEATS[v]) this.seats.push({ x, h: img.displayHeight * SEATS[v]!, back });
+    }
+    for (const a of this.actors.values()) this.seatFor(a);
+  }
+
+  /** A sitting figure sits on the nearest chair, bed or bench (its hips are 64 px up in the sit pose). */
+  private seatFor(a: Actor) {
+    a.seat = 0;
+    if (a.pose !== 'sit') return;
+    const s = this.seats.filter((q) => Math.abs(q.x - a.x) < 130).sort((p, q) => Math.abs(p.x - a.x) - Math.abs(q.x - a.x))[0];
+    if (s) a.seat = Math.max(0, s.h - 64);
+  }
 
   // ------------------------------------------------------------------ speaking
   /** Someone speaks: they gesture and face whoever spoke before; the rest turn to them; the camera frames them. */
@@ -437,6 +477,29 @@ export class StageScene extends Phaser.Scene {
         this.setSlow(false);
         this.manual = false;
         return;
+      case 'memory':
+        this.setMemory(true);
+        this.manual = false;
+        return;
+      case 'present':
+        this.setMemory(false);
+        this.manual = false;
+        return;
+    }
+  }
+
+  /** A flashback: warm, faded, like an old photograph. Lasts until `@shot present` or the next place. */
+  setMemory(on: boolean) {
+    const cam = this.cameras.main;
+    if (on && !this.memoryGrade) {
+      this.memoryGrade = cam.filters.internal.addColorMatrix();
+      this.memoryGrade.colorMatrix.sepia();
+      this.memoryGrade.colorMatrix.saturate(-0.25, true);
+      this.memoryGrade.colorMatrix.brightness(1.06, true);
+      cam.flash(400, 255, 240, 210);
+    } else if (!on && this.memoryGrade) {
+      cam.filters.internal.remove(this.memoryGrade);
+      this.memoryGrade = null;
     }
   }
 
@@ -513,8 +576,8 @@ export class StageScene extends Phaser.Scene {
       const s = FIG * (a.back ? 0.84 : 1);
       a.rig.scale = s;
       a.rig.alpha = a.back ? 0.82 : 1;
-      a.rig.update(sdt, a.x, a.y);
-      a.shadow.setPosition(a.x, a.y + 2).setScale(a.back ? 0.8 : 1);
+      a.rig.update(sdt, a.x, a.y - a.seat);
+      a.shadow.setPosition(a.x, a.y + 2).setScale(a.back ? 0.8 : 1).setVisible(a.seat === 0);
       a.light.setPosition(a.x, a.y - 150 * (a.back ? 0.84 : 1));
       a.light.setAlpha(Phaser.Math.Linear(a.light.alpha, a.speaking ? 0.22 : 0, 0.08));
     }

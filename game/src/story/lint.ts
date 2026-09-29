@@ -11,6 +11,7 @@ import { ITEMS } from '../data/items';
 import { BANNED_TAGS, BANNED_WORDS, FX, MUSIC, SFX } from '../data/media';
 import { rigFor, SHOTS, SPEAKERS, STAGE_POSES } from '../data/speakers';
 import { parseStory, type TextNode } from './parser';
+import { PROP_VISUALS } from '../world/EarthProps';
 
 export interface LintIssue { file: string; line: number; message: string }
 
@@ -103,6 +104,12 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
             if (n.name === 'pose' && !STAGE_POSES.includes(n.args[1] ?? '')) bad(n.line, `unknown pose "${n.args[1]}"`);
             break;
           case 'shot': if (!SHOTS.includes(a)) bad(n.line, `unknown shot "${a}"`); break;
+          case 'prop':
+            for (const c of n.args) {
+              const m = /^([a-z_]+)(?:@([\d.]+))?([<>])?(\^)?$/.exec(c);
+              if (!m || !(PROP_VISUALS as string[]).includes(m[1]!)) bad(n.line, `bad prop "${c}" (visual@x)`);
+            }
+            break;
         }
         break;
       }

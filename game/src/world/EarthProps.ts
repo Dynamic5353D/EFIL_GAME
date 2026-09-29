@@ -388,16 +388,20 @@ export function propSize(v: PropVisual): { w: number; h: number } {
   return { w: s.w, h: s.h };
 }
 
-/** Texture key of a painted Earth prop (painted once per session). */
-export function earthProp(scene: Phaser.Scene, v: PropVisual): string {
-  const key = `prop:earth:${v}`;
+/** Texture key of a painted Earth prop (painted once per session), at `k` times room scale (the stage uses 3). */
+export function earthProp(scene: Phaser.Scene, v: PropVisual, k = 1): string {
+  const key = k === 1 ? `prop:earth:${v}` : `prop:earth:${v}@${k}`;
   if (scene.textures.exists(key)) return key;
   const s = SPECS[v];
-  const { c, g } = makeCanvas(s.w, s.h);
+  const { c, g } = makeCanvas(Math.ceil(s.w * k), Math.ceil(s.h * k));
+  g.scale(k, k);
   s.draw(g, s.w, s.h);
   scene.textures.addCanvas(key, c);
   return key;
 }
+
+/** Every prop that can be painted (for `@prop` on stage). */
+export const PROP_VISUALS = Object.keys(SPECS) as PropVisual[];
 
 /** A one-way platform on Earth: a wooden plank or a concrete slab, with a lit top edge. */
 export function earthLedge(scene: Phaser.Scene, w: number, wood: boolean): string {

@@ -13,19 +13,36 @@
 @card
 @save start
 @scene gen:classroom
+@cast nithish@0.36>:sit ramanan@0.6<^ rajesh@0.68< police@0.84<^
+@prop desk@0.52 chair@0.36
+@caption Placement hall, 4:00 PM
+  ta: Placement hall, maalai 4:00
 @music mystery
+@shot pan left
 NARRATOR: The placement hall. Nithish waits alone among the cushioned chairs. Inspector Rajesh walks in with Ramanan and another officer, notepads and a recorder in hand.
   ta: Placement hall. Cushion chair-ellam irukura arai-la Nithish thaniya kaathirukaan. Inspector Rajesh, Ramanan, innoru officer, notepad, recorder-oda ulla varaanga.
+@shot auto
 RAJESH: Sit, sit. Nithish, I think you know what's been happening in your college.
   ta: Ukkaru, ukkaru. Nithish… unnoda college-la nadakura incident-lam unakku theriyum-nu nenaikuran.
 RAJESH: We checked the CCTV. Before all three deaths, you were right there.
   ta: CCTV footage yellam check pannadhula, college-la moonu perum savarakku munnadi, nee andha yedathula irundhuruka.
+@shot close nithish
 NARRATOR: He throws three photos on the table.
   ta: Moonu photo-va table-la podraar.
+@shot push rajesh
 RAJESH: Near all three places. And two of the victims, you were in contact with just before they died. Doesn't look like a coincidence, does it?
   ta: Sambavam nadandha moonu yedathuku pakkathulaiyum nee irundhurukaye-pa. Adhula rendu victim kooda vera, avunga saavarukku munnadi contact-la irundhuruka. Coincidence maari illa?
+@shot close nithish
+@choice nithish_answer
+  - Deny everything -> v05_deny
+    ta: Ellathaiyum maru
+  - Explain, one by one -> v05_explain
+    ta: Onnu onna vilakku
+@label v05_deny
 NITHISH (scared): Sir, I didn't do anything! I swear! I might have been there, but I don't even know what happened!
   ta: Sir… Na yedhuvum pannala sir. Sathiyama solren, anga… anga na irundhurupen, aana yenaku enna aachu-nu kooda theriyadhu!
+@label v05_explain
+@shot two nithish rajesh
 NITHISH: Subramani came to our room for my record note. Janani had sweets from her village for me; I went to collect them. And this one... I was going to class.
   ta: Subramani kadaisiya record note vaanga room-ku vandhurundhan sir. Janani yenakku avunga oorla irundhu sweet kondu vandhurundha, adhu vanga-poirundhan. Idhu… Appo na class-ku poitu irundhan.
 RAJESH: Why that road?
@@ -38,35 +55,65 @@ NITHISH: The body wasn't there then, sir.
   ta: Appo body anga illa sir.
 RAJESH: Anything else? Anything strange?
   ta: Vera yedachu notice panniya. Yedachu vithyasama…?
+@shot slow
+@shot close nithish
 NITHISH: I... heard a sound. Like something falling. I don't know what. Just... something falling.
   ta: Appo yenaku oru satham ketudhu, yedho keela vilundha mari. Yenna-nu correct ah therla, aana yedho keela vilundha satham…
 @clue falling_sound
+@shot normal
+@shot on rajesh
 RAJESH: We'll verify all of it. Think again. If you remember anything, call me. We'll be watching you. If you really are innocent, prove it.
   ta: Nee sonnadhellam naanga verify pandrom. Innoru thadava yosichu paaru. Unna watch pannitu-dhaan irupom. Nee unmaiyalume appavi-na, adha prove panna try pannu.
+@scene gen:corridor_day
+@cast arun@0.14> dhanasree@0.26> nithish@0.42> ragul@0.6<
+@caption Outside the placement hall
+  ta: Placement hall veliya
+@shot two nithish ragul
 NARRATOR: At the door Nithish runs into Ragul, who's been called in next. Ragul watches him go, eyes wide.
   ta: Kadhavula Nithish Ragul mela modhuraan; adutha inquiry Ragul-ku. Ragul kanna virichu avana paakuraan.
+@exit ragul right
+@shot on nithish
 NITHISH (scared): They think I'm involved in the deaths. I have to prove I didn't do anything.
   ta: Namma college-la nadakkura saavu-la yellam na involve airukan-nu nenaikuranga. Na yedhuvum pannala-nu yepdiyaadhu prove pannanum avunga kitta.
+@shot two dhanasree nithish
 DHANASREE: Nothing will happen. Don't be scared.
   ta: Onnu aavadhu, bayapadadha.
+@enter ragul right 0.62
+@shot wide
 NARRATOR: Time passes. At last Ragul comes out, slowly, sweating.
   ta: Neram pogudhu. Kadaisiya Ragul mella, vervaiyoda veliya varaan.
+@shot close ragul
 RAGUL (scared): Nithish... you were the red shirt.
   ta: Dei Nithish, nee-dhaana andha red shirt.
+@shot on nithish
 NITHISH: Yes, I wore red on fest day. Did they ask about me?
   ta: Aama... Nan-dhan fest annaiku red colour sattai potutu vandhan. Yedachu ketangala enna pathi?
+@shot on ragul
 RAGUL: If you did something, tell me, da. Maybe you're a psycho. You kill when you're bored and walk around normal the rest of the time. Or you found some drug and needed test subjects—
   ta: Dei… yedhachu pannirundha solliru-da. Oru vela nee oru psycho-va kooda irukalam. Yeppo yellam bore adikidho, appo yellam kolluva, matha neram normal-ah suthitu irupeh. Illa yedachu drug kandupudichitu irukalam, adhuku test subjects ah-
+@shot shake
+@shot two nithish ragul
 NITHISH (angry): Keep talking like that and I'll forget you're my roommate!
   ta: Dei nee ippadiye pesitu irundha, roommate-nu kooda paaka maaten, appiruvan-da!
+@shot auto
 DHANASREE: Why are you two fighting?! Neither of you did anything, okay?
   ta: Neenga rendu perum yenda sanda potukreenga?! Neenga rendu perumueyy thappu pannala sariya.
+@shot on arun
 ARUN: But one thing doesn't fit. Nithish took the cut road and there was no body. Ragul took it after him and there was. Where did it come from?
   ta: Aana onnu mattum inga idikkudhu. Nithish cut route la poirukan, appo road-la body illa. Pinnadiye Ragul-um adhey route la poirukan, aana indha time body irundhuruku. Adhu yepdi?
+@scene gen:station
+@cast rajesh@0.42>:think ramanan@0.66<
+@prop desk@0.5
+@caption Chitlapakkam police station
+  ta: Chitlapakkam police station
+@shot push rajesh
 NARRATOR: Somewhere else, Rajesh is asking himself the same thing. Both boys heard a sound. Hands clapping? A bottle falling? A branch breaking? A finger snapping?
   ta: Vera edathula, Rajesh-um adhe kelviya kettukuraar. Rendu pasangalum oru saththam kettaanga. Kai thattal? Bottle vizhudhal? Kilai odaidhal? Viral sodakku?
+@shot on ramanan
 RAMANAN: Sir, if you ask me, one of those two boys definitely knows the truth.
   ta: Sir, yennaku yenna thonudhu-na, andha rendu-pasangalla, yaaro oruthan-uku kandippa unma theriyum.
+@pose rajesh idle
+@shot close rajesh
 RAJESH: Ramanan, get me everything on that Krishnaa.
   ta: Yov Ramanan, andha Krishnaa-oda information venum yenakku.
 @scene none
@@ -107,6 +154,7 @@ NARRATOR: A bike screeches to a stop ahead of them. Pranav, with Krishnaa riding
 
 @label pranav
 @music tense
+@shot two pranav_v5 player
 PRANAV (angry): So you dumped me to hang around with these guys?
   ta: Nee yennadi, yenna kalati-vittu ivunungaloda suthitu iruka…
 RAGUL (thinking): "Hey, watch your mouth. Mind your business."
@@ -115,6 +163,7 @@ DHANASREE (angry): Hey! Watch your mouth. Mind your business.
   ta: Hey! Thappa pesadha. Mind your business.
 RAGUL (thinking): Called it. Fight!
   ta: Podu fight.
+@shot on krishnaa_v5
 KRISHNAA (mocking): What, rep, hanging around with these two idiots?
   ta: Yennada, rep-uh, indha rendu mutta pasangaloda suthitu iruka?
 ARUN: They're my friends. Don't talk about them like that.
@@ -125,17 +174,22 @@ NITHISH (angry): The police are around, that's the only reason I haven't hit you
   ta: Police-laam irukanga-nu dhan pakuren, illana ippavey unna adichiruvan.
 PRANAV (angry): Nobody knows when college will open again. I came to talk to you one last time. And you're too busy for five minutes, but not for these three.
   ta: Idhuku aprom college yeppo open aagum-nu therla. Adhan seri, kadasiya unna nerla paathu pesalanu vandhan. Yenakku five minutes kudukka time-illa, aana ivunga kooda sutha mattum time-iruka.
+@shot close pranav_v5
 NARRATOR: Pranav leans in and spits a filthy word at her.
   ta: Pranav kitta vandhu aval mela oru asingamaana vaarthaiya thuppuraan.
 RAGUL (thinking): Should I hit him now...?
   ta: Naa ippo avana adikkanum dhaana…
 @fx slap
+@shot shake
 NARRATOR: Dhanasree slaps him.
   ta: Dhanasree avana arainjidura.
 DHANASREE: That's your limit.
   ta: Unaku avlo-dhaan limit.
+@shot on pranav_v5
+@shot slow
 NARRATOR: Pranav swears and raises his hand to hit her back.
   ta: Pranav kettavaarthai solli, thirumbi adikka kaiya oongaraan.
+@shot close player
 RAGUL (thinking): He's definitely going to hit her. If I step in and stop him, she'll like me more...
   ta: Kandippa avan thirupi adipaan. Poi avana thadutha, Dhanasree-ku yen mela affection adhigam aagum.
 @choice pranav
@@ -149,6 +203,8 @@ RAGUL (thinking): No... I'll get hurt. Stay here. Stay...
 NARRATOR: But his legs move anyway.
   ta: Aana kaal thaanaave nagarudhu.
 @label step_in
+@shot normal
+@shot two player pranav_v5
 RAGUL (scared): D-dei, Pranav, the police are around. Don't.
   ta: Dei Pranav police-laam irukanga venam.
 NARRATOR: Ragul grabs Pranav's arm.
@@ -157,9 +213,11 @@ NARRATOR: Ragul grabs Pranav's arm.
 PRANAV (angry): And who the hell are you?!
   ta: Nee yaara?!
 @fx shake
+@shot close player
 NARRATOR: Pranav shoves him. Ragul stumbles back and hits the ground. Dhanasree freezes, a second too long, and Pranav slaps her across the face. She doesn't even flinch. She's still staring at Ragul.
   ta: Pranav avana thalli vidaraan. Ragul pinnaadi thadumaari keezha vizhuraan. Dhanasree uraiyura, oru nodi adhigama. Andha nerathula Pranav aval kannathula araiyuraan. Aval asaiyala kooda. Innum Ragul-a dhaan paakura.
 @fx slap
+@shot auto
 DHANASREE (worried): Rahul. Come on, let's go. Arun, Nithish, let's go.
   ta: Rahul, va polam. Arun, Nithish, vaanga polam.
 NITHISH (angry): Why did he hit you?!
@@ -180,10 +238,18 @@ DHANASREE: Ignore him. We leave. Now.
 @done
 @set v05_at_cafe
 @scene gen:campus_dusk
+@cast rajesh@0.46>:cross
+@prop jeep@0.66
+@caption MIT entrance, 5:40 PM
+  ta: MIT entrance, maalai 5:40
+@shot orbit rajesh
 NARRATOR: At the MIT entrance, Inspector Rajesh is leaning on his jeep. Somewhere behind him, the screech of tyres. Metal on the road.
   ta: MIT entrance-la Inspector Rajesh jeep-la saanju nikkuraar. Pinnaadi engo, tyre "kreech". Road-la ulogam modhura saththam.
 @sfx crowd
 @fx black
+@pose rajesh idle
+@face rajesh left
+@shot close rajesh
 NARRATOR: He turns. His face goes white.
   ta: Thirumbaraar. Mugam veluthu pogudhu.
 @fx unblack
@@ -203,8 +269,10 @@ DHANASREE: Forget it, that's not important now. (On the phone) Dharshna, how are
   ta: Vidunga adhu mukkiyam illa ippo. Dharshna, ippo eppadi iruku? Konjo Cheese N Freeze vara mudiyuma? Konjo urgent, please, please.
 ARUN: Dhana, why are you so tense? You're never like this.
   ta: Hey Dhanasree nee yen oru maari iruka? Oru maari tension ah… nee yeppavum ipdi iruka maatiye?
+@shot on cafe_police
 NARRATOR: Outside the glass, two policemen. Dhanasree goes rigid.
   ta: Glass-kku veliya rendu police. Dhanasree irukkamaagura.
+@shot auto
 DHANASREE (scared): Guys, we have to leave. Now. We'll meet Dharshna on the way.
   ta: Guys namma inga irundhu seekiram kelambi aaganum. Dharshna-va namma pora vali-la meet pannikalam.
 ARUN: Tell us what's going on first. You've been strange all day.
