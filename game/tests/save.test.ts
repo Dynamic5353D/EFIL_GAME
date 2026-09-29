@@ -18,7 +18,7 @@ describe('saves', () => {
     expect(saves.save(2, s, 'Winter Path')).not.toBeNull();
     const back = saves.load(2)!;
     expect(back).toEqual(s);
-    expect(back.abilities).toContain('double_jump');
+    expect(back.abilities).toContain('glide');
     expect(saves.meta(2)).toMatchObject({ slot: 2, roomName: 'Winter Path', level: 3 });
     expect(saves.latest()?.slot).toBe(2);
     expect(saves.load(1)).toBeNull();

@@ -6,6 +6,7 @@ import { tr, type Loc } from '../core/Localization';
 import { ensureTextures, spec } from '../core/Loader';
 import { settings } from '../core/Settings';
 import { SPEAKERS } from '../data/speakers';
+import type { CastEntry, StageScene } from './StageScene';
 import { MenuList } from '../ui/MenuList';
 import { addText, C, drawPanel, H, W } from '../ui/theme';
 
@@ -24,8 +25,10 @@ export class DialogueScene extends Phaser.Scene {
   private bodyText!: Phaser.GameObjects.Text;
   private langChip!: Phaser.GameObjects.Text;
   private nextArrow!: Phaser.GameObjects.Text;
-  private backdrop: Phaser.GameObjects.Image | null = null;
   private shade!: Phaser.GameObjects.Rectangle;
+  private bars!: Phaser.GameObjects.Graphics;
+  private barState = { h: 0 };
+  private barsOn = false;
 
   private current: { speaker: string; mood?: string; text: Loc } | null = null;
   private full = '';
@@ -40,6 +43,9 @@ export class DialogueScene extends Phaser.Scene {
 
   create() {
     this.shade = this.add.rectangle(0, 0, W, H, 0x000000, 0).setOrigin(0);
+    this.bars = this.add.graphics();
+    this.barState = { h: 0 };
+    this.barsOn = false;
     this.root = this.add.container(0, 0).setVisible(false);
     this.box = this.add.graphics();
     drawPanel(this.box, BOX.x, BOX.y, BOX.w, BOX.h, 0.9, 14);
@@ -102,19 +108,38 @@ export class DialogueScene extends Phaser.Scene {
     });
   }
 
-  async setBackdrop(slug: string | null) {
-    this.backdrop?.destroy();
-    this.backdrop = null;
-    if (!slug) { this.shade.setFillStyle(0x000000, 0); return; }
-    const s = spec('bg', slug) ?? spec('art', slug);
-    if (!s) return;
-    await ensureTextures(this, [s]);
-    const img = this.add.image(W / 2, H / 2, s.key).setDepth(-1);
-    const k = Math.max(W / img.width, H / img.height) * 1.08;
-    img.setScale(k);
-    if (!settings.get('reducedMotion')) this.tweens.add({ targets: img, x: W / 2 - 30, scale: k * 1.04, duration: 20000 });
-    this.backdrop = img;
-    this.shade.setFillStyle(0x000000, 0.25);
+  /** `@scene`: opens the Stage (a place with its cast, filmed) under this scene, or closes it. */
+  async setBackdrop(slug: string | null, cast: CastEntry[] = []) {
+    const stage = this.scene.get('Stage') as StageScene | null;
+    if (!stage) return;
+    if (!slug) { stage.close(); return; }
+    if (!this.scene.isActive('Stage')) {
+      this.scene.launch('Stage');
+      await new Promise<void>((r) => { const t = () => (stage.sys.isActive() ? r() : this.time.delayedCall(16, t)); t(); });
+    }
+    await stage.open(slug, cast);
+    this.scene.bringToTop('Stage');
+    this.scene.bringToTop('Dialogue');
+    this.letterbox(true);
+  }
+
+  /** Cinematic bars, top and bottom: on while a story plays. */
+  letterbox(on: boolean) {
+    if (on === this.barsOn) return;
+    this.barsOn = on;
+    bus.emit('cinema', { on });
+    this.tweens.killTweensOf(this.barState);
+    this.tweens.add({
+      targets: this.barState, h: on ? 42 : 0, duration: settings.get('reducedMotion') ? 1 : 450, ease: 'Sine.InOut',
+      onUpdate: () => this.drawBars(),
+    });
+  }
+
+  private drawBars() {
+    const h = this.barState.h;
+    this.bars.clear();
+    if (h <= 0.5) return;
+    this.bars.fillStyle(0x000000, 1).fillRect(0, 0, W, h).fillRect(0, H - h * 0.45, W, h * 0.45);
   }
 
   hide() {
@@ -182,7 +207,7 @@ export class DialogueScene extends Phaser.Scene {
     this.langChip.setText(`${ta ? 'Tanglish' : 'English'}  ·  ${input.label('language')} to switch`);
   }
 
-  update(time: number, delta: number) {
+  override update(time: number, delta: number) {
     if (this.menu) { this.menu.update(time); return; }
     if (input.pressed('language')) {
       settings.set('language', settings.get('language') === 'en' ? 'ta' : 'en');

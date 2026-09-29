@@ -1,18 +1,25 @@
 import { ABILITIES } from '../data/abilities';
 import { CHARACTERS } from '../data/characters';
+import { CLUES } from '../data/clues';
 import { CODEX } from '../data/codex';
+import { EARTH_SCENE_NAMES } from '../data/earthScenes';
+import { ROOMS } from '../data/rooms';
+import { WORD_BATTLES } from '../data/wordbattles';
 import { BATTLES } from '../data/enemies';
 import { FLAGS } from '../data/flags';
 import { ITEMS } from '../data/items';
 import { BANNED_TAGS, BANNED_WORDS, FX, MUSIC, SFX } from '../data/media';
-import { SPEAKERS } from '../data/speakers';
+import { CAST_RE, rigFor, SHOTS, SPEAKERS, STAGE_POSES } from '../data/speakers';
 import { parseStory, type TextNode } from './parser';
+import { PROP_VISUALS } from '../world/EarthProps';
 
 export interface LintIssue { file: string; line: number; message: string }
 
 export interface LintContext {
   /** Background slugs available in the asset manifest (kind "env"). */
   scenes: Set<string>;
+  /** Script names ("p01/v02") for checking `@next`; skipped when absent. */
+  scripts?: Set<string>;
 }
 
 const known = (set: readonly string[] | Record<string, unknown>, v: string) =>
@@ -43,6 +50,8 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
         break;
       case 'title':
       case 'warn':
+      case 'objective':
+      case 'caption':
         checkText(n.text, n.line);
         break;
       case 'choice':
@@ -56,7 +65,17 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
         const a = n.args[0] ?? '';
         const check = (ok: boolean, what: string) => { if (!ok) bad(n.line, `unknown ${what} "${a}"`); };
         switch (n.name) {
-          case 'scene': check(ctx.scenes.has(a), 'scene (not an environment in asset-manifest.json)'); break;
+          case 'scene': check(a === 'none' || ctx.scenes.has(a) || EARTH_SCENE_NAMES.includes(a), 'scene (not an environment in asset-manifest.json or an Earth scene)'); break;
+          case 'room':
+            check(a in ROOMS, 'room');
+            if (n.args[2] && !(n.args[2] in script.labels)) bad(n.line, `unknown label "${n.args[2]}"`);
+            break;
+          case 'save': if (!(a in script.labels)) bad(n.line, `unknown label "${a}"`); break;
+          case 'party': for (const m of n.args) if (!(m in CHARACTERS)) bad(n.line, `unknown party member "${m}"`); break;
+          case 'clue': check(a in CLUES, 'clue'); break;
+          case 'wordbattle': check(a in WORD_BATTLES, 'word battle'); break;
+          case 'add': checkFlag(a, n.line); break;
+          case 'next': if (ctx.scripts && !ctx.scripts.has(a)) bad(n.line, `unknown script "${a}"`); break;
           case 'battle': check(a in BATTLES, 'battle'); break;
           case 'give': case 'take': check(a in ITEMS, 'item'); break;
           case 'ability': check(a in ABILITIES, 'ability'); break;
@@ -70,6 +89,27 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
           case 'tag': if (BANNED_TAGS.includes(a)) bad(n.line, `banned content tag "${a}"`); break;
           case 'venture': if (n.args.some((x) => !/^\d+$/.test(x))) bad(n.line, '@venture needs two numbers'); break;
           case 'wait': if (!/^\d+$/.test(a)) bad(n.line, '@wait needs milliseconds'); break;
+          case 'cast':
+            for (const c of n.args) {
+              const m = CAST_RE.exec(c);
+              if (!m) bad(n.line, `bad cast entry "${c}" (id=rig@x<^:pose)`);
+              else {
+                if (m[2] ? !rigFor(m[2]) : !rigFor(m[1]!)) bad(n.line, `"${m[2] ?? m[1]}" has no figure to put on stage`);
+                if (m[6] && !STAGE_POSES.includes(m[6])) bad(n.line, `unknown pose "${m[6]}"`);
+              }
+            }
+            break;
+          case 'enter': case 'exit': case 'pose': case 'face':
+            if (!rigFor(a)) bad(n.line, `"${a}" has no figure to put on stage`);
+            if (n.name === 'pose' && !STAGE_POSES.includes(n.args[1] ?? '')) bad(n.line, `unknown pose "${n.args[1]}"`);
+            break;
+          case 'shot': if (!SHOTS.includes(a)) bad(n.line, `unknown shot "${a}"`); break;
+          case 'prop':
+            for (const c of n.args) {
+              const m = /^([a-z_]+)(?:@([\d.]+))?([<>])?(\^)?$/.exec(c);
+              if (!m || !(PROP_VISUALS as string[]).includes(m[1]!)) bad(n.line, `bad prop "${c}" (visual@x)`);
+            }
+            break;
         }
         break;
       }

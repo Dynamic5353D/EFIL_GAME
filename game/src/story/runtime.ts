@@ -8,9 +8,13 @@ export interface StoryHost {
   say(speaker: string, mood: string | undefined, text: Loc): Promise<void>;
   title(text: Loc): Promise<void>;
   warn(text: Loc): Promise<void>;
+  objective(text: Loc): Promise<void>;
+  /** A place-and-time caption over a staged scene. */
+  caption(text: Loc): Promise<void>;
   choose(options: Loc[], id?: string): Promise<number>;
   /** scene, time, music, sfx, fx, wait, battle, give, ability, join, leave, codex, rel, tag, venture, card */
-  command(name: string, args: string[]): Promise<void>;
+  /** May return a label to continue from (a `@room` into the room you are already in). */
+  command(name: string, args: string[]): Promise<void | { goto: string }>;
   getFlag(flag: string): FlagValue | undefined;
   setFlag(flag: string, value: FlagValue): void;
 }
@@ -52,6 +56,8 @@ export async function runStory(script: Script, host: StoryHost, from?: string, i
       case 'line': await host.say(n.speaker, n.mood, toLoc(n.text)); break;
       case 'title': await host.title(toLoc(n.text)); break;
       case 'warn': await host.warn(toLoc(n.text)); break;
+      case 'objective': await host.objective(toLoc(n.text)); break;
+      case 'caption': await host.caption(toLoc(n.text)); break;
       case 'choice': {
         const i = await host.choose(n.options.map((o) => toLoc(o.text)), n.id);
         const opt = n.options[Math.max(0, Math.min(n.options.length - 1, i))]!;
@@ -59,7 +65,11 @@ export async function runStory(script: Script, host: StoryHost, from?: string, i
         jump(opt.target);
         break;
       }
-      case 'cmd': await host.command(n.name, n.args); break;
+      case 'cmd': {
+        const r = await host.command(n.name, n.args);
+        if (r && r.goto) jump(r.goto);
+        break;
+      }
       case 'set': host.setFlag(n.flag, n.value); break;
       case 'if': if (evalCond(n.cond, (f) => host.getFlag(f))) jump(n.target); break;
       case 'goto': jump(n.target); break;

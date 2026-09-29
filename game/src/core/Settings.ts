@@ -4,7 +4,7 @@ import { readJSON, storage, writeJSON, type KV } from './Storage';
 export type Lang = 'en' | 'ta';
 
 export const ACTIONS = [
-  'left', 'right', 'up', 'down', 'jump', 'dash', 'attack', 'interact', 'menu', 'confirm', 'cancel', 'language',
+  'left', 'right', 'up', 'down', 'jump', 'dash', 'attack', 'interact', 'menu', 'bag', 'confirm', 'cancel', 'language',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
@@ -18,7 +18,8 @@ export const DEFAULT_BINDINGS: Record<Action, string[]> = {
   dash: ['ShiftLeft', 'KeyC'],
   attack: ['KeyX', 'KeyJ'],
   interact: ['KeyE', 'ArrowUp'],
-  menu: ['Escape', 'Tab'],
+  menu: ['Escape', 'Tab', 'KeyP'],
+  bag: ['KeyI', 'KeyB'],
   confirm: ['Enter', 'Space', 'KeyZ'],
   cancel: ['Escape', 'Backspace', 'KeyX'],
   language: ['KeyL'],
@@ -35,6 +36,8 @@ export interface SettingsData {
   screenShake: boolean;
   contentWarnings: boolean;
   profanityFilter: boolean;
+  /** First-time tips and battle tutorials. */
+  showTips: boolean;
   bindings: Record<Action, string[]>;
 }
 
@@ -48,6 +51,7 @@ export const DEFAULT_SETTINGS: SettingsData = {
   screenShake: true,
   contentWarnings: true,
   profanityFilter: false,
+  showTips: true,
   bindings: DEFAULT_BINDINGS,
 };
 
@@ -78,6 +82,7 @@ export function sanitizeSettings(raw: unknown): SettingsData {
     screenShake: typeof r.screenShake === 'boolean' ? r.screenShake : d.screenShake,
     contentWarnings: typeof r.contentWarnings === 'boolean' ? r.contentWarnings : d.contentWarnings,
     profanityFilter: typeof r.profanityFilter === 'boolean' ? r.profanityFilter : d.profanityFilter,
+    showTips: typeof r.showTips === 'boolean' ? r.showTips : d.showTips,
     bindings,
   };
 }

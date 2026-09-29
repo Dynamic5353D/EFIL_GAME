@@ -37,6 +37,15 @@ export interface GameState {
   soulsAbsorbed: number;
   /** Dhanasree's handgun: 6 shots per rest. */
   ammo: number;
+  /** The HUD's current objective line (Earth acts). */
+  objective: { en: string; ta: string } | null;
+  /** Case Board clues gathered (data/clues.ts). */
+  clues: string[];
+  /**
+   * A story point to run when this state is loaded (set by `@save` in a script, or by starting a
+   * chapter). Cleared once that story segment finishes.
+   */
+  resume: { script: string; label: string } | null;
 }
 
 export function newMember(id: MemberId, level = 1): MemberState {
@@ -53,8 +62,9 @@ export function newGame(): GameState {
     members: { ragul: newMember('ragul', 2) },
     inventory: { red_rosoar: 2 },
     riShards: 0,
-    abilities: ['sprint'],
-    flags: {},
+    abilities: ['sprint', 'double_jump'],
+    // The Glacia slice already knows about Ragul's Soul Hunger; Act I starts before it.
+    flags: { hunger_known: true },
     relationships: {},
     codex: [],
     collected: [],
@@ -64,7 +74,37 @@ export function newGame(): GameState {
     soulHunger: 35,
     soulsAbsorbed: 0,
     ammo: 6,
+    objective: null,
+    clues: [],
+    resume: null,
   };
+}
+
+/**
+ * A fresh game at the start of a Venture: the right room, the story's opening script queued, and
+ * the party that Venture needs (the script's `@party` sets it precisely).
+ */
+export function newGameAt(room: string, script: string, venture: { purpose: number; venture: number }): GameState {
+  const s = newGame();
+  delete s.flags.hunger_known;
+  s.location = { room, x: 0, y: 0, checkpoint: null };
+  s.venture = venture;
+  s.inventory = {};
+  s.resume = { script, label: 'start' };
+  // The four wake to their powers at the dance in Venture 1; any later start comes after it.
+  if (venture.purpose > 1 || venture.venture > 1) s.flags.powers_awakened = true;
+  return s;
+}
+
+/** Whether the four have their powers yet (flag `powers_awakened`, set at the dance in Venture 1). */
+export function powersAwake(state: GameState): boolean {
+  return state.venture.purpose !== 1 || !!state.flags.powers_awakened;
+}
+
+/** Memory Fragments steady the party: every FRAGMENT_STEP gathered adds 5 max HP to everyone. */
+export const FRAGMENT_STEP = 3;
+export function fragmentBonus(count: number): number {
+  return Math.floor(count / FRAGMENT_STEP) * 5;
 }
 
 /** Stats with keepsake bonuses applied. */
@@ -75,6 +115,7 @@ export function memberStats(state: GameState, id: MemberId): Stats {
   if (mods) {
     for (const k of Object.keys(mods) as (keyof Stats)[]) s[k] += mods[k] ?? 0;
   }
+  s.maxHp += fragmentBonus(state.codex.length);
   return s;
 }
 

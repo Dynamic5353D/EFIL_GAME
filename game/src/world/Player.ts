@@ -3,27 +3,10 @@ import { audio } from '../core/AudioSynth';
 import { input } from '../core/Input';
 import type { MemberId } from '../data/characters';
 import { CharacterRig } from './CharacterRig';
+import { MOVE } from './movement';
 import { DEPTH } from './Scenery';
 
-/** Movement tuning (px, seconds). */
-export const MOVE = {
-  run: 290,
-  sprint: 410,
-  accelGround: 2600,
-  accelAir: 1700,
-  decelGround: 3000,
-  gravity: 2150,
-  fallMult: 1.35,
-  maxFall: 960,
-  jump: 860,
-  doubleJump: 760,
-  jumpCut: 0.45,
-  coyote: 0.1,
-  buffer: 0.12,
-  dashSpeed: 640,
-  dashTime: 0.16,
-  dashCooldown: 0.35,
-};
+export { MOVE };
 
 export class Player {
   readonly body: Phaser.Physics.Arcade.Image;
@@ -46,10 +29,13 @@ export class Player {
   safe = { x: 0, y: 0 };
   private safeT = 0;
   dropThrough = 0;
+  gliding = false;
+  /** Scales running speed (Ragul's dizzy walk in V3). */
+  speedMul = 1;
   onAttack: ((hitbox: Phaser.Geom.Rectangle) => void) | null = null;
   private dust: Phaser.GameObjects.Particles.ParticleEmitter;
 
-  constructor(private scene: Phaser.Scene, x: number, y: number, member: MemberId) {
+  constructor(private scene: Phaser.Scene, x: number, y: number, member: MemberId | string) {
     this.body = scene.physics.add.image(x, y - 32, 'fx:px').setVisible(false);
     this.body.setSize(4, 4);
     const b = this.body.body as Phaser.Physics.Arcade.Body;
@@ -71,7 +57,7 @@ export class Player {
   get y() { return this.arcade.bottom; }
   get onGround() { return this.arcade.blocked.down || this.arcade.touching.down; }
 
-  setMember(id: MemberId) {
+  setMember(id: MemberId | string) {
     this.rig.destroy();
     (this as { rig: CharacterRig }).rig = new CharacterRig(this.scene, id, DEPTH.player);
   }
@@ -135,7 +121,7 @@ export class Player {
       b.setAllowGravity(true);
       // Horizontal: accelerate toward the target speed.
       const sprint = ctl && can('sprint') && input.isDown('dash') && ground ? MOVE.sprint : MOVE.run;
-      const target = ax * (Math.abs(b.velocity.x) > MOVE.run + 10 && !ground ? Math.abs(b.velocity.x) : sprint);
+      const target = ax * (Math.abs(b.velocity.x) > MOVE.run + 10 && !ground ? Math.abs(b.velocity.x) : sprint) * this.speedMul;
       const accel = ground ? (ax ? MOVE.accelGround : MOVE.decelGround) : MOVE.accelAir;
       const dv = target - b.velocity.x;
       b.setVelocityX(b.velocity.x + Math.sign(dv) * Math.min(Math.abs(dv), accel * dt));
@@ -163,6 +149,9 @@ export class Player {
       }
       if (input.released('jump') && b.velocity.y < 0 && this.jumping) b.setVelocityY(b.velocity.y * MOVE.jumpCut);
       b.setGravityY(b.velocity.y > 0 ? MOVE.gravity * (MOVE.fallMult - 1) : 0);
+      // Acanus glide: holding jump while falling caps the fall speed.
+      this.gliding = ctl && !ground && can('glide') && input.isDown('jump') && b.velocity.y > MOVE.glideFall;
+      if (this.gliding) b.setVelocityY(MOVE.glideFall);
     }
 
     // Attack: a quick swipe in front. Hitting an enemy starts a battle with the first move.

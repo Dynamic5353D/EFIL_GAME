@@ -36,10 +36,10 @@ export const ITEMS: Record<string, ItemDef> = {
     id: 'acanus_feather',
     kind: 'key',
     name: loc('Acanus down feather', 'Acanus irage'),
-    desc: loc('A feather shed by a giant white bird. Holding it, you can push off the air once more mid-jump.',
-      'Periya vella paravaiyoda irage. Idha vechitu, jump pannumbodhu kaathula innoru dhadava thallalam.'),
+    desc: loc('A feather shed by a giant white bird. Holding it, you drift instead of falling: hold jump in mid-air to glide.',
+      'Periya vella paravaiyoda irage. Idha vechitu keela vizhaama mithakkalam: kaathula jump-a pidi.'),
     icon: 'gen:feather',
-    grantsAbility: 'double_jump',
+    grantsAbility: 'glide',
   },
   pluffine_wool: {
     id: 'pluffine_wool',
@@ -47,5 +47,27 @@ export const ITEMS: Record<string, ItemDef> = {
     name: loc('Pluffine wool'),
     desc: loc('Soft, warm wool. Anushri can craft with it.', 'Mettha wool. Anushri idha vechu edhavadhu senju tharuva.'),
     icon: 'pluffine_wool',
+  },
+  // ---------------------------------------------------------------- Act I (Earth)
+  handgun: {
+    id: 'handgun',
+    kind: 'key',
+    name: loc('Handgun', 'Thuppakki'),
+    desc: loc('Found near the rusty vehicle in Hangar 1, the night of the rain. Dhanasree keeps it hidden.', 'Mazhai raathiri Hangar 1 thuru pidicha vandi pakkathula kedachadhu. Dhanasree maraichu vechirukkaa.'),
+    icon: 'gen:gun',
+  },
+  oil_can: {
+    id: 'oil_can',
+    kind: 'key',
+    name: loc('Can of oil', 'Oil dabba'),
+    desc: loc('Engine oil from the maintenance shed. Very slippery.', 'Maintenance shed-la irundha engine oil. Romba vazhukkum.'),
+    icon: 'gen:oil',
+  },
+  rope: {
+    id: 'rope',
+    kind: 'key',
+    name: loc('Long rope', 'Neenda kayiru'),
+    desc: loc('A coil of rope from the maintenance shed.', 'Maintenance shed-la irundha oru kayiru churul.'),
+    icon: 'gen:rope',
   },
 };

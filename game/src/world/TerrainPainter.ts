@@ -12,7 +12,30 @@ export const CHUNK = 2048;
 
 export interface TerrainChunks { canvases: HTMLCanvasElement[]; width: number; height: number }
 
-export function paintTerrain(grid: string[], pal: Palette, seed: number): TerrainChunks {
+export type TerrainMaterial = 'snow' | 'asphalt' | 'grass' | 'tile' | 'wood' | 'concrete';
+
+interface MaterialLook { cap: RGB; capShade: RGB; capMin: number; capVar: number; body: RGB; deep: RGB; strata: number; seams?: number; bright?: number }
+
+/** Surface cap and body colours per material, derived from the room palette. */
+function materialLook(m: TerrainMaterial, hi: RGB, dom: RGB, sh: RGB): MaterialLook {
+  const darkBase: RGB = luma(sh) > 60 ? scaleRgb(sh, 0.45) : sh;
+  switch (m) {
+    case 'asphalt': return { cap: mixRgb(dom, [124, 124, 130], 0.65), capShade: mixRgb(dom, [72, 72, 80], 0.6), capMin: 9, capVar: 1, body: mixRgb(darkBase, [104, 86, 68], 0.6), deep: scaleRgb(mixRgb(darkBase, [70, 56, 44], 0.5), 0.6), strata: 0.08 };
+    case 'grass': return { cap: mixRgb([92, 138, 62], hi, 0.2), capShade: mixRgb([48, 84, 40], dom, 0.25), capMin: 4, capVar: 5, body: mixRgb([92, 68, 48], dom, 0.3), deep: scaleRgb(mixRgb([60, 44, 32], darkBase, 0.5), 0.6), strata: 0.08, bright: 0.25 };
+    case 'tile': return { cap: mixRgb(hi, [230, 228, 220], 0.4), capShade: mixRgb(dom, hi, 0.4), capMin: 4, capVar: 0, body: mixRgb(dom, darkBase, 0.55), deep: scaleRgb(darkBase, 0.5), strata: 0, seams: 20 };
+    case 'wood': return { cap: mixRgb([150, 100, 62], hi, 0.2), capShade: mixRgb([90, 58, 36], dom, 0.2), capMin: 4, capVar: 0, body: mixRgb([74, 50, 34], darkBase, 0.4), deep: scaleRgb(darkBase, 0.5), strata: 0.12, seams: 34 };
+    case 'concrete': return { cap: mixRgb(hi, [200, 196, 188], 0.5), capShade: mixRgb(dom, [120, 118, 112], 0.5), capMin: 3, capVar: 1, body: mixRgb(dom, darkBase, 0.5), deep: scaleRgb(darkBase, 0.5), strata: 0.04, seams: 60 };
+    default: {
+      const snow: RGB = mixRgb(hi, [240, 248, 255], 0.55);
+      return {
+        cap: snow, capShade: mixRgb(snow, mixRgb(dom, [60, 90, 140], 0.5), 0.45), capMin: 6, capVar: 7,
+        body: mixRgb(scaleRgb(mixRgb(darkBase, dom, 0.3), 0.9), [26, 34, 52], 0.35), deep: mixRgb(scaleRgb(darkBase, 0.35), [6, 9, 16], 0.5), strata: 0.1, bright: 0.5,
+      };
+    }
+  }
+}
+
+export function paintTerrain(grid: string[], pal: Palette, seed: number, material: TerrainMaterial = 'snow'): TerrainChunks {
   const rows = grid.length, cols = grid[0]!.length;
   const W = Math.ceil(cols * TILE * SCALE), H = Math.ceil(rows * TILE * SCALE);
   const tp = TILE * SCALE;
@@ -88,11 +111,8 @@ export function paintTerrain(grid: string[], pal: Palette, seed: number): Terrai
 
   // 4. Colours from the palette.
   const hi = hexRgb(pal.highlight), dom = hexRgb(pal.dominant), sh = hexRgb(pal.shadow), acc = hexRgb(pal.accent);
-  const snow: RGB = mixRgb(hi, [240, 248, 255], 0.55);
-  const snowShade: RGB = mixRgb(snow, mixRgb(dom, [60, 90, 140], 0.5), 0.45);
-  const darkBase: RGB = luma(sh) > 60 ? scaleRgb(sh, 0.45) : sh;
-  const rock: RGB = mixRgb(scaleRgb(mixRgb(darkBase, dom, 0.3), 0.9), [26, 34, 52], 0.35);
-  const deep: RGB = mixRgb(scaleRgb(darkBase, 0.35), [6, 9, 16], 0.5);
+  const look = materialLook(material, hi, dom, sh);
+  const snow = look.cap, snowShade = look.capShade, rock = look.body, deep = look.deep;
   const rimCol: RGB = mixRgb(acc, [220, 240, 255], 0.5);
   const lightLeft = pal.light.x <= 0; // light comes from the left if the bright area sits left
 
@@ -107,17 +127,18 @@ export function paintTerrain(grid: string[], pal: Palette, seed: number): Terrai
       const d = depth[i]!;
       const n1 = noise.fbm(x / 9, y / 9, 3);
       const n2 = noise.value(x / 3.5, y / 3.5);
-      const capT = 6 + noise.value(x / 14, 7.3) * 7;
+      const capT = look.capMin + noise.value(x / 14, 7.3) * look.capVar;
       let c: RGB;
       if (d < capT) {
         const t = d / capT;
         c = mixRgb(snow, snowShade, Math.pow(t, 1.5) * 0.9 + (n2 - 0.5) * 0.12);
-        if (d < 1.6) c = mixRgb(c, [255, 255, 255], 0.5);
+        if (d < 1.6 && look.bright) c = mixRgb(c, [255, 255, 255], look.bright);
       } else {
         const t = clamp01((d - capT) / 70);
         c = mixRgb(rock, deep, Math.pow(t, 0.7));
         const strata = Math.sin(y * 0.55 + n1 * 9) * 0.5 + 0.5;
-        c = scaleRgb(c, 0.86 + strata * 0.1 + (n2 - 0.5) * 0.18);
+        c = scaleRgb(c, 0.86 + strata * look.strata + (n2 - 0.5) * 0.18);
+        if (look.seams && (x % look.seams === 0 || (d - capT) % look.seams < 1)) c = scaleRgb(c, 0.8);
         if (d < capT + 4) c = scaleRgb(c, 0.7); // shadow under the snow cap
       }
       // Rim light on the side facing the light, faint bounce on the other.

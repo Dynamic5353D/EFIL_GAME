@@ -1,20 +1,44 @@
+import '@fontsource/alegreya-sans/400.css';
+import '@fontsource/alegreya-sans/400-italic.css';
+import '@fontsource/alegreya-sans/700.css';
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/500-italic.css';
+import '@fontsource/cormorant-garamond/600.css';
 import Phaser from 'phaser';
+import { effectOf } from './battle/WordCore';
+import { audio } from './core/AudioSynth';
+import { input } from './core/Input';
+import { session } from './core/Session';
+import { BattleScene } from './scenes/BattleScene';
+import { BootScene } from './scenes/BootScene';
+import { ChapterCardScene } from './scenes/ChapterCardScene';
+import { CreditsScene } from './scenes/CreditsScene';
+import { DialogueScene } from './scenes/DialogueScene';
+import { HudScene } from './scenes/HudScene';
+import { StageScene } from './scenes/StageScene';
+import { MenuScene } from './scenes/MenuScene';
+import { SettingsScene } from './scenes/SettingsScene';
+import { TitleScene } from './scenes/TitleScene';
+import { WordBattleScene } from './scenes/WordBattleScene';
+import { WorldScene } from './scenes/WorldScene';
+import { MOVE } from './world/movement';
 
-class SmokeScene extends Phaser.Scene {
-  constructor() { super('Smoke'); }
-  preload() { this.load.image('bg', 'assets/bg/winter_path.webp'); }
-  create() {
-    const bg = this.add.image(640, 360, 'bg');
-    bg.setScale(Math.max(1280 / bg.width, 720 / bg.height));
-    this.add.text(640, 360, 'EFIL — scaffold OK', { fontSize: '48px', color: '#ffffff' }).setOrigin(0.5);
-    console.log('Phaser', Phaser.VERSION);
-  }
-}
+input.attach();
+window.addEventListener('pointerdown', () => audio.unlock());
 
-new Phaser.Game({
+// Scene order is draw order: overlays come last.
+const game = new Phaser.Game({
   type: Phaser.WEBGL,
   parent: 'game',
   backgroundColor: '#05070d',
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 1280, height: 720 },
-  scene: [SmokeScene],
+  physics: { default: 'arcade', arcade: { gravity: { x: 0, y: MOVE.gravity }, debug: false } },
+  input: { gamepad: false },
+  scene: [BootScene, TitleScene, WorldScene, BattleScene, WordBattleScene, HudScene, StageScene, DialogueScene, ChapterCardScene, MenuScene, SettingsScene, CreditsScene],
 });
+
+// Input is polled once per frame, before any scene updates.
+game.events.on(Phaser.Core.Events.PRE_STEP, () => input.update());
+
+// Dev builds expose the game for automated play-throughs (tools in the test scratchpad).
+if (import.meta.env.DEV) Object.assign(window, { game, __efil_state: () => session.state, __efil_word: { effectOf } });

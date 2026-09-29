@@ -74,3 +74,29 @@ export function bar(g: Phaser.GameObjects.Graphics, x: number, y: number, w: num
     g.fillRect(x + h / 2, y + 1, Math.max(0, w * f - h), Math.max(1, h * 0.25));
   }
 }
+
+/**
+ * A panel with a soft outer glow and a bright edge, for UI that sits over busy art (battles, tips).
+ * The glow is a few widening strokes at falling alpha, which is cheap and needs no filter pass.
+ */
+export function drawGlowPanel(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, color: number = C.accentInt, alpha = 0.94, radius = 12) {
+  for (const [grow, a] of [[9, 0.05], [6, 0.08], [3, 0.14]] as const) {
+    g.lineStyle(grow * 2, color, a);
+    g.strokeRoundedRect(x - 1, y - 1, w + 2, h + 2, radius + 1);
+  }
+  g.fillStyle(C.panel, alpha);
+  g.fillRoundedRect(x, y, w, h, radius);
+  g.lineStyle(1.5, color, 0.85);
+  g.strokeRoundedRect(x + 0.5, y + 0.5, w - 1, h - 1, radius);
+  g.lineStyle(1, 0xffffff, 0.22);
+  g.beginPath();
+  g.moveTo(x + radius, y + 2);
+  g.lineTo(x + w - radius, y + 2);
+  g.strokePath();
+}
+
+/** Soft glow around text in `color` (a blurred shadow with no offset). */
+export function glow<T extends Phaser.GameObjects.Text>(t: T, color: string = C.accent, blur = 10): T {
+  t.setShadow(0, 0, color, blur, true, true);
+  return t;
+}

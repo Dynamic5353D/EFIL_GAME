@@ -98,11 +98,28 @@ export const SKILLS: Record<string, SkillDef> = {
     target: 'enemy', element: 'fire', power: 2.6, delay: 1.4, cost: { heat: 70 }, hitsInk: true, sfx: 'laser', vfx: 'laser',
   }),
 
+  // ---------------------------------------------------------------- Ragul's daydream (V8)
+  dream_slash: S({
+    id: 'dream_slash', name: loc('Hero slash', 'Hero slash'), desc: loc('A blade of light that only exists in his head.', 'Avan thalaikkulla mattum irukura oru velicha vaal.'),
+    target: 'enemy', element: 'physical', power: 1.3, delay: 1, sfx: 'slash', vfx: 'slash',
+  }),
+  dream_burst: S({
+    id: 'dream_burst', name: loc('Sky-splitter', 'Vaanam pilakkum adi'), desc: loc('He shouts the move\'s name. It hits everyone.', 'Move peraye kathi solraan. Ellarayum adikkum.'),
+    target: 'all_enemies', element: 'physical', power: 0.85, delay: 1.3, sfx: 'laser', vfx: 'light',
+  }),
+  dream_shield: S({
+    id: 'dream_shield', name: loc('"Stand behind me"', '"En pinnadi nil"'), desc: loc('Heals Ragul by a third. It\'s his daydream.', 'Ragul-ku moonula oru pangu HP. Idhu avan kanavu.'),
+    target: 'self', element: 'none', power: 0, delay: 1, sfx: 'heal',
+  }),
+
   // ---------------------------------------------------------------- enemies
   lash: S({ id: 'lash', name: loc('Vine lash', 'Kodi adi'), desc: loc('Arms become blades.'), target: 'enemy', element: 'physical', power: 1, delay: 1, sfx: 'slash', vfx: 'slash' }),
   crush: S({ id: 'crush', name: loc('Ice crush', 'Pani nasukku'), desc: loc('A heavy, frozen blow.'), target: 'enemy', element: 'physical', power: 1.45, delay: 1.3, sfx: 'hit', vfx: 'slash' }),
   drain: S({ id: 'drain', name: loc('Drain', 'Urinju'), desc: loc('Drinks life to mend itself.'), target: 'enemy', element: 'soul', power: 0.8, delay: 1, sfx: 'absorb', vfx: 'absorb' }),
   dread: S({ id: 'dread', name: loc('Dread whisper', 'Bayam'), desc: loc('A voice that makes the heart go cold. Inflicts Fear.'), target: 'enemy', element: 'none', power: 0, delay: 0.9, sfx: 'dread' }),
+  rifle_butt: S({ id: 'rifle_butt', name: loc('Rifle butt', 'Thuppakki kattai'), desc: loc('A heavy swing.'), target: 'enemy', element: 'physical', power: 1, delay: 1, sfx: 'hit', vfx: 'slash' }),
+  volley: S({ id: 'volley', name: loc('Volley', 'Vedi mazhai'), desc: loc('Wild shots at everyone.'), target: 'all_enemies', element: 'physical', power: 0.55, delay: 1.2, sfx: 'gun', vfx: 'gun' }),
+  saber: S({ id: 'saber', name: loc('Sabre cut', 'Vaal vettu'), desc: loc('A trained cut.'), target: 'enemy', element: 'physical', power: 1.5, delay: 1.2, sfx: 'slash', vfx: 'slash' }),
   shadow_meld: S({ id: 'shadow_meld', name: loc('Shadow meld', 'Nizhal'), desc: loc('Sinks into a flat shadow. Only light can touch it there.'), target: 'self', element: 'none', power: 0, delay: 1, sfx: 'meld' }),
 };
 

@@ -7,10 +7,13 @@ import { session } from '../core/Session';
 import { settings } from '../core/Settings';
 import { ABILITIES } from '../data/abilities';
 import { CHARACTERS } from '../data/characters';
+import { CLUES } from '../data/clues';
 import { CODEX } from '../data/codex';
 import { ITEMS } from '../data/items';
 import type { MusicId, SfxId } from '../data/media';
 import type { DialogueScene } from '../scenes/DialogueScene';
+import { rigFor } from '../data/speakers';
+import { parseCast, type StageScene } from '../scenes/StageScene';
 import { parseStory, type Script } from './parser';
 import { runStory, type FlagValue, type StoryHost } from './runtime';
 
@@ -22,9 +25,33 @@ export function getScript(name: string): Script {
   if (!cache[name]) {
     const src = SOURCES[`./${name}.story`];
     if (src === undefined) throw new Error(`no story script "${name}"`);
-    cache[name] = parseStory(src, `${name}.story`);
+    cache[name] = autoCast(parseStory(src, `${name}.story`));
   }
   return cache[name]!;
+}
+
+/**
+ * A `@scene` with no `@cast` straight after it puts everyone who speaks in it on stage, in order of
+ * appearance (voices with no figure, like a mother on the phone, stay off). The names ride along as
+ * extra `~id` arguments.
+ */
+function autoCast(script: Script): Script {
+  const ends = new Set(['scene', 'room', 'card', 'credits', 'next']);
+  script.nodes.forEach((n, i) => {
+    if (n.k !== 'cmd' || n.name !== 'scene' || n.args[0] === 'none') return;
+    let j = i + 1;
+    while (script.nodes[j]?.k === 'label' || (script.nodes[j]?.k === 'cmd' && ['prop', 'caption', 'music', 'sfx', 'fx', 'time'].includes((script.nodes[j] as { name: string }).name)) || script.nodes[j]?.k === 'caption') j++;
+    const next = script.nodes[j];
+    if (next?.k === 'cmd' && next.name === 'cast') return;
+    const ids: string[] = [];
+    for (let k = i + 1; k < script.nodes.length; k++) {
+      const m = script.nodes[k]!;
+      if (m.k === 'end' || (m.k === 'cmd' && ends.has(m.name))) break;
+      if (m.k === 'line' && m.speaker !== 'narrator' && rigFor(m.speaker) && !ids.includes(m.speaker)) ids.push(m.speaker);
+    }
+    n.args = [n.args[0]!, ...ids.map((x) => `~${x}`)];
+  });
+  return script;
 }
 
 /** What the director needs from the scene hosting the story (usually the World). */
@@ -32,13 +59,30 @@ export interface StoryStage {
   scene: Phaser.Scene;
   fx(name: string): Promise<void>;
   runBattle(id: string): Promise<'won' | 'lost' | 'fled'>;
+  runWordBattle(id: string): Promise<boolean>;
   partyChanged(): void;
+  /** Leaves for another room; `then` is the story to carry on with once it has loaded. */
+  /** Returns true when already there: the player is moved and the script carries straight on. */
+  gotoRoom(room: string, entry: string, then: { script: string; label: string } | null): boolean;
+  warp(entry: string): void;
+  /** Saves the game where the player stands. */
+  save(): void;
+  /** Rolls the credits and returns to the title. */
+  credits(): void;
+  /** Camera work in the room itself (when no stage is open): `@shot`. */
+  shot(kind: string, a?: string, b?: string): void;
+  /** Frames whoever is speaking, if they are in the room. */
+  frame(speaker: string, mood?: string): void;
+  /** A place-and-time caption over the room. */
+  caption(text: Loc): void;
 }
 
 export class Director implements StoryHost {
-  private title: Loc | null = null;
+  private cardTitle: Loc | null = null;
   private time = '';
   private cancelled = false;
+  private script = '';
+  private chain: string | null = null;
 
   constructor(private stage: StoryStage) {}
 
@@ -46,12 +90,29 @@ export class Director implements StoryHost {
     return this.stage.scene.scene.get('Dialogue') as DialogueScene;
   }
 
+  /** The staged-scene layer, when a `@scene` is open. */
+  private get set(): StageScene | null {
+    const s = this.stage.scene.scene.get('Stage') as StageScene | null;
+    return s?.isOpen ? s : null;
+  }
+
   async run(scriptName: string, label?: string): Promise<void> {
     try {
       this.cancelled = false;
-      await runStory(getScript(scriptName), this, label, () => this.cancelled);
+      let name: string | null = scriptName;
+      let from = label;
+      while (name) {
+        this.script = name;
+        this.chain = null;
+        await runStory(getScript(name), this, from, () => this.cancelled);
+        if (this.cancelled) break;
+        // `@next` chains straight into the following Venture's script.
+        name = this.chain;
+        from = 'start';
+      }
     } finally {
       this.dialogue.hide();
+      this.dialogue.letterbox(false);
       await this.dialogue.setBackdrop(null);
     }
   }
@@ -59,10 +120,28 @@ export class Director implements StoryHost {
   /** Stops the running script at the next line (e.g. after a lost battle). */
   cancel() { this.cancelled = true; }
 
-  say(speaker: string, mood: string | undefined, text: Loc) { return this.dialogue.say(speaker, mood, text); }
-  async title(text: Loc) { this.title = text; }
+  say(speaker: string, mood: string | undefined, text: Loc) {
+    const set = this.set;
+    if (set) set.speak(speaker, mood);
+    else {
+      this.dialogue.letterbox(true);
+      this.stage.frame(speaker, mood);
+    }
+    return this.dialogue.say(speaker, mood, text);
+  }
+  async caption(text: Loc) {
+    const set = this.set;
+    if (set) set.caption(text);
+    else this.stage.caption(text);
+  }
+  async title(text: Loc) { this.cardTitle = text; }
   async warn(text: Loc) {
     if (settings.get('contentWarnings')) await this.dialogue.notice('Content note', tr(text));
+  }
+  async objective(text: Loc) {
+    session.state.objective = { en: text.en, ta: text.ta };
+    audio.sfx('blip');
+    bus.emit('hud', undefined);
   }
   choose(options: Loc[]) { return this.dialogue.choose(options); }
   getFlag(flag: string): FlagValue | undefined { return session.state.flags[flag]; }
@@ -70,7 +149,7 @@ export class Director implements StoryHost {
 
   private toast(text: string, icon?: string) { bus.emit('toast', { text, icon }); }
 
-  async command(name: string, args: string[]): Promise<void> {
+  async command(name: string, args: string[]): Promise<void | { goto: string }> {
     const st = session.state;
     const a = args[0] ?? '';
     switch (name) {
@@ -78,16 +157,34 @@ export class Director implements StoryHost {
       case 'time': this.time = a; break;
       case 'card': {
         this.dialogue.hide();
-        await new Promise<void>((res) => this.stage.scene.scene.launch('ChapterCard', {
-          purpose: st.venture.purpose, venture: st.venture.venture, title: this.title, time: this.time, done: res,
-        }));
+        await new Promise<void>((res) => {
+          const plugin = this.stage.scene.scene;
+          plugin.launch('ChapterCard', { purpose: st.venture.purpose, venture: st.venture.venture, title: this.cardTitle, time: this.time, done: res });
+          plugin.bringToTop('ChapterCard');
+        });
         break;
       }
       case 'music': audio.music(a as MusicId); break;
       case 'sfx': audio.sfx(a as SfxId); break;
       case 'fx': await this.stage.fx(a); break;
       case 'wait': await new Promise((r) => setTimeout(r, Number(a) || 0)); break;
-      case 'scene': await this.dialogue.setBackdrop(a); break;
+      case 'scene': {
+        const cast = args.slice(1).map((x) => ({ id: x.replace(/^~/, '') }));
+        await this.dialogue.setBackdrop(a === 'none' ? null : a, cast);
+        break;
+      }
+      case 'cast': this.set?.cast(args.map(parseCast).filter((c): c is NonNullable<typeof c> => !!c)); break;
+      case 'enter': this.set?.enter(a, args[1] ?? 'right', args[2]); break;
+      case 'exit': this.set?.exit(a, args[1]); break;
+      case 'pose': this.set?.pose(a, args[1] ?? 'idle'); break;
+      case 'face': this.set?.face(a, args[1] ?? 'right'); break;
+      case 'prop': this.set?.props(args); break;
+      case 'shot': {
+        const set = this.set;
+        if (set) set.shot(a, args[1], args[2]);
+        else this.stage.shot(a, args[1], args[2]);
+        break;
+      }
       case 'battle': {
         this.dialogue.hide();
         const result = await this.stage.runBattle(a);
@@ -135,6 +232,44 @@ export class Director implements StoryHost {
         st.relationships[k] = (st.relationships[k] ?? 0) + Number(args[2] ?? 0);
         break;
       }
+      case 'party': {
+        const ids = args.filter(isKnownMember);
+        for (const id of ids) if (!st.members[id]) joinParty(st, id, 3);
+        st.party = ids;
+        this.stage.partyChanged();
+        bus.emit('hud', undefined);
+        break;
+      }
+      case 'room':
+        this.dialogue.hide();
+        if (this.stage.gotoRoom(a, args[1] ?? 'start', args[2] ? { script: this.script, label: args[2] } : null)) {
+          return args[2] ? { goto: args[2] } : undefined;
+        }
+        this.cancelled = true;
+        break;
+      case 'warp': this.stage.warp(a); break;
+      case 'done':
+        if (st.objective) { st.objective = null; audio.sfx('pickup', 0.7); bus.emit('hud', undefined); }
+        break;
+      case 'clue':
+        if (!st.clues.includes(a)) {
+          st.clues.push(a);
+          audio.sfx('pickup', 0.9);
+          this.toast(`Clue: ${tr(CLUES[a]?.title ?? loc(a))}`, 'gen:clue');
+        }
+        break;
+      case 'wordbattle': {
+        this.dialogue.hide();
+        st.flags.won = await this.stage.runWordBattle(a);
+        break;
+      }
+      case 'next': this.chain = a; break;
+      case 'credits': this.dialogue.hide(); this.stage.credits(); this.cancelled = true; break;
+      case 'add': st.flags[a] = (Number(st.flags[a]) || 0) + (Number(args[1]) || 1); break;
+      case 'save':
+        st.resume = { script: this.script, label: a };
+        this.stage.save();
+        break;
       default: break; // tag, portrait: metadata only
     }
   }

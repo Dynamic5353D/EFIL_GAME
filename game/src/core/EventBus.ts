@@ -20,7 +20,10 @@ export interface GameEvents extends Record<string, unknown> {
   settings: { key: string };
   language: { lang: 'en' | 'ta' };
   toast: { text: string; icon?: string };
+  tip: { id: string };
   hud: undefined;
+  /** A story is playing (letterbox on): the HUD steps aside. */
+  cinema: { on: boolean };
 }
 
 export const bus = new Emitter<GameEvents>();

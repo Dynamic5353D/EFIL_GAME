@@ -1,0 +1,6 @@
+{
+  "name": "efil-playtest",
+  "private": true,
+  "description": "Headless play-test tools (node + playwright-core). See docs/handoff.md.",
+  "dependencies": { "playwright-core": "1.56" }
+}

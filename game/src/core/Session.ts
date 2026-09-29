@@ -13,6 +13,13 @@ class Session {
     this.startedAt = performance.now();
   }
 
+  /** Starts a prepared state (a chapter start) in a slot. */
+  startWith(slot: number, state: GameState): void {
+    this.state = state;
+    this.slot = slot;
+    this.startedAt = performance.now();
+  }
+
   loadSlot(slot: number): boolean {
     const s = saves.load(slot);
     if (!s) return false;
