@@ -52,7 +52,7 @@ A 2D side-scrolling story RPG (16+), adapted from the user's novel and art.
   - 13 Earth rooms with code-painted backdrops (`data/rooms_p01.ts`), 12 scripts `src/story/p01/v01..v12.story` in English and the novel's Tanglish, 5 word battles, the daydream fights, stealth, chases, the Case Board and Memory Fragments.
   - Dev jump: `?venture=5` starts that Venture in slot 3; add `&label=walk` to start at a label (and `&room=mit_road` to start that label in another room), `&fast` for fast battles.
   - Play-test round 2 (29 Sep): staged story scenes with a cinematic camera (`scenes/StageScene.ts`, commands in `story/parser.ts`), the pause menu rework, the powers waking at the V1 dance, Memory Fragment bonuses. See `docs/decisions.md`.
-- [ ] **Pixel RPG** (`docs/plan-pixel.md`, branch `claude/pixel-rpg`):
+- [ ] **Pixel RPG** (`docs/plan-pixel.md`, branch `claude/pixel-rpg`). **Paused by the user on 2026-09-29, after art pass 2**, to rethink the direction. Nothing is lost: both versions can be resumed.
   - [x] **N1: engine + look test:** built, **awaiting the user's review**. Playable page: https://claude.ai/artifact/Ufei2xKb45qjqJdpAeoSi4 (a separate artifact; the side-scroller keeps its own URL).
     - Code: `src/px/` (scenes, overworld, UI, maps, quests, director), scripts in `src/story/px/`. Art: `python3 tools/pixel/build.py [--preview]` writes `public/assets/pixel/` (tiles, props, UI, bitmap font, 18 characters with portraits).
     - Maps: `hostel_room`, `mit_road` (ASCII ground plus buildings, props, NPCs, looks, warps, triggers, `enter` scripts). Quests: `src/px/quest/quests.ts`, `@quest start|done id`.
