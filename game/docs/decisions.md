@@ -34,3 +34,4 @@ One line per decision that changes or refines `plan.md`.
 - 2026-09-29 · **Powers wake at the dance (V1):** the four look like anyone else (no glowing veins) until time slows at Dhanasree's dance, which is now a playable slow-motion walk with cut-ins of the other three (flag `powers_awakened`). Ragul's Death Touch and Soul Absorb are hidden until then.
 - 2026-09-29 · **Memory Fragments have a use:** every 3 gathered add 5 max HP to the whole party; they also foreshadow the ending (plan.md).
 - 2026-09-29 · **More play between the reading:** new choices in Act I (take her hand V4; Nithish's answer V5; step in while time slows V5; dance to her song V7); slow motion on key beats; the V12 climax is fully staged.
+- 2026-09-29 · **V1 flashmob loop fixed:** its trigger now retires at `v01_dhana_dance`; the slow-motion walk split the scene, and the trigger replayed it as soon as it ended.

@@ -1,7 +1,8 @@
 // Usage: node drive.mjs steps.mjs  — steps module default-exports async ({ page, shot, key, wait }) => {}
 import { chromium } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
-const dir = new URL('./shots/', import.meta.url).pathname;
+import { fileURLToPath } from 'node:url';
+const dir = fileURLToPath(new URL('./shots/', import.meta.url));
 mkdirSync(dir, { recursive: true });
 const steps = (await import(process.argv[2])).default;
 const browser = await chromium.launch({
