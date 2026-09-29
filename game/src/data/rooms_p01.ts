@@ -199,7 +199,7 @@ function mitRoad(): RoomDef {
   b.at(44, 17, { type: 'npc', id: 'krishnaa_v2', speaker: 'krishnaa', radius: 0, face: -1, requires: 'v02_leaving', hideIf: 'v02_done' });
   b.at(47, 17, { type: 'npc', id: 'kabi_v2', speaker: 'kabi', radius: 0, face: -1, requires: 'v02_leaving', hideIf: 'v02_done' });
   b.at(41, 17, { type: 'trigger', id: 'trip', script: V(2), label: 'trip', requires: 'v02_leaving', unless: 'v02_done', height: 6 });
-  b.at(50, 17, { type: 'trigger', id: 'flashmob', script: V(1), label: 'flashmob', requires: 'v01_flashmob', unless: 'v01_fest_cancelled', height: 8 });
+  b.at(50, 17, { type: 'trigger', id: 'flashmob', script: V(1), label: 'flashmob', requires: 'v01_flashmob', unless: 'v01_dhana_dance', height: 8 });
   return finish(b, {
     id: 'mit_road', name: loc('MIT road', 'MIT road'), area: 'mit',
     backdrop: 'gen:campus_noon', palette: 'gen:campus_noon', music: 'campus', ambient: 0xe0d8c0,

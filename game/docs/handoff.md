@@ -63,7 +63,12 @@ Details of each decision are in `docs/decisions.md` (the entries dated 2026-09-2
 
 1. **Verify.** Start the dev server, then run the full autopilot (next section).
    - Each `tools/playtest/full<N>.log` must end with `REACHED V<N+1>` (or `CREDITS` for V12) and `no console errors`.
-   - A full run was started when this session ended; its results were lost.
+   - The last run in the old session covered only the first batch:
+     - **V2 and V3 passed.**
+     - **V1 got stuck.** The flashmob trigger stayed live after its story paused for the slow-motion walk, so it could
+       fire again. Fixed (the trigger now retires at `v01_dhana_dance`), and a new test catches it ("every story
+       trigger is retired by its own story").
+   - Re-run V1 and V4–V12.
    - Before the staging work, every Venture passed.
    - Watch for soft-locks from the new choices, the `slowmo` walk in V1 (trigger `dance_end` at x=62 on the MIT road),
      and staged `@room` changes.

@@ -79,3 +79,20 @@ test('every flag a room hook waits for is set somewhere else first (no self-lock
     }
   }
 });
+
+test('every story trigger is retired by its own story (it would fire again while you stand on it)', () => {
+  const leaves = new Set(['room', 'next', 'credits']);
+  for (const room of Object.values(ROOMS)) {
+    for (const e of room.entities) {
+      const d = e.def as { type: string; unless?: string; script?: string; label?: string };
+      if (d.type !== 'trigger' || !d.script || !d.label || !scripts[d.script]) continue;
+      const s = scripts[d.script]!;
+      const start = s.labels[d.label]!;
+      let end = s.nodes.findIndex((n, i) => i > start && n.k === 'end');
+      if (end < 0) end = s.nodes.length;
+      const part = s.nodes.slice(start, end);
+      const retired = part.some((n) => (n.k === 'set' && n.flag === d.unless && n.value !== false) || (n.k === 'cmd' && leaves.has(n.name)));
+      expect(retired, `${room.id}: trigger ${d.label} @${e.tx},${e.ty} (unless ${d.unless ?? '-'}) is not retired by its story`).toBe(true);
+    }
+  }
+});
