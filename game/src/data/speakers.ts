@@ -83,3 +83,6 @@ export const STAGE_POSES = ['idle', 'talk', 'sit', 'kneel', 'dance', 'phone', 't
 
 /** Camera shots for `@shot` (staged scenes and rooms alike). */
 export const SHOTS = ['auto', 'wide', 'on', 'close', 'two', 'push', 'pull', 'pan', 'orbit', 'dutch', 'shake', 'flash', 'slow', 'normal', 'level', 'memory', 'present'];
+
+/** A cast entry: "krishnaa@0.7<^:sit"; "dhanasree=little_dhana@0.5" draws a speaker as another figure (a flashback). */
+export const CAST_RE = /^([a-z_0-9]+)(?:=([a-z_0-9]+))?(?:@([\d.]+))?([<>])?(\^)?(?::([a-z]+))?$/;

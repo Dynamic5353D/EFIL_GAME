@@ -127,7 +127,9 @@ function cutRoad(): RoomDef {
   b.at(44, 17, { type: 'trigger', id: 'nithish_trips', script: V(11), label: 'trips', requires: 'v11_chase', unless: 'v11_done', height: 8 });
   b.at(42, 17, { type: 'npc', id: 'nithish_down', speaker: 'nithish', radius: 0, pose: 'kneel', cuffed: true, requires: 'v11_done', hideIf: 'v12_fled' });
   b.at(36, 17, { type: 'npc', id: 'rajesh_standoff', speaker: 'rajesh', radius: 0, face: 1, requires: 'v11_done', hideIf: 'v12_fled' });
-  b.at(60, 17, { type: 'npc', id: 'ragul_standoff', speaker: 'ragul', radius: 0, face: -1, requires: 'v11_done', hideIf: 'v12_fled' });
+  b.at(60, 17, { type: 'npc', id: 'ragul_standoff', speaker: 'ragul', radius: 0, face: -1, requires: 'v12_standoff', hideIf: 'v12_fled' });
+  // End of V11 (you are Ragul): Dhanasree arrives with the gun. In V12 you are her.
+  b.at(52, 17, { type: 'npc', id: 'dhanasree_gun', speaker: 'dhanasree', radius: 0, face: -1, pose: 'point', requires: 'v11_done', hideIf: 'v12_standoff' });
   b.at(55, 17, { type: 'npc', id: 'dharshna_standoff', speaker: 'dharshna', radius: 0, face: -1, requires: 'v11_done', hideIf: 'v12_fled' });
   // After the first death the spot stays taped off for a few days.
   b.at(46, 17, { type: 'prop', visual: 'tape', requires: 'v01_fest_cancelled', hideIf: 'v06_started' });

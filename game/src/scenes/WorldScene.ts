@@ -681,9 +681,13 @@ export class WorldScene extends Phaser.Scene {
     const rig = rigFor(id);
     if (id === 'player' || id === lead || (rig && rig === lead)) return { x: this.player.x, y: this.player.y };
     const fol = this.followers.find((f) => f.id === id || f.id === rig);
-    if (fol) return { x: this.player.x - this.player.facing * 60, y: this.player.y };
+    if (fol) return { x: fol.rig.lastX, y: fol.rig.lastY };
     const n = this.npcAt.get(id);
     if (n) return n();
+    const gd = this.guards.find((g) => (g.live.def as { id?: string }).id === id);
+    if (gd) return { x: gd.x, y: gd.live.placed.y };
+    const ch = this.chasers.find((c) => (c.live.def as { id?: string }).id === id);
+    if (ch?.active) return { x: ch.rig.lastX, y: ch.rig.lastY };
     for (const g of this.npcAt.values()) {
       const v = g();
       if (v.shown && (v.speaker === id || (rig && v.rig === rig))) return v;

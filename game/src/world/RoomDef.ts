@@ -13,7 +13,7 @@ export type EntityDef =
    * A character standing in the room. With `talk` the player presses interact to start the script;
    * otherwise it starts when the player comes within `radius` px. `rig` defaults to the speaker id.
    */
-  | { type: 'npc'; id: string; speaker: string; script?: string; label?: string; radius: number; hideIf?: string; requires?: string; talk?: boolean; rig?: string; face?: 1 | -1; once?: string; pose?: 'dance' | 'sit' | 'kneel' | 'ko'; cuffed?: boolean;
+  | { type: 'npc'; id: string; speaker: string; script?: string; label?: string; radius: number; hideIf?: string; requires?: string; talk?: boolean; rig?: string; face?: 1 | -1; once?: string; pose?: 'dance' | 'sit' | 'kneel' | 'ko' | 'point' | 'cross' | 'phone' | 'think' | 'talk'; cuffed?: boolean;
       /** Once `walkFlag` is set, walks (runs) to tile column `walkTo` at `walkSpeed` px/s. */
       walkTo?: number; walkSpeed?: number; walkFlag?: string }
   | { type: 'trigger'; id: string; script: string; label: string; unless?: string; requires?: string; height: number }

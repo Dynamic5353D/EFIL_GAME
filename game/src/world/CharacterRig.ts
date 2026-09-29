@@ -46,8 +46,9 @@ export class CharacterRig {
   private pose: Pose = { ...ZERO };
   private stateTime = 0;
   private scarf: { x: number; y: number; px: number; py: number }[] = [];
-  private lastX = 0;
-  private lastY = 0;
+  /** Where the feet were last drawn. */
+  lastX = 0;
+  lastY = 0;
   /** Horizontal speed used for the run cycle and scarf (px/s). */
   speed = 0;
   vy = 0;

@@ -17,7 +17,7 @@ import { tr, type Loc } from '../core/Localization';
 import { session } from '../core/Session';
 import { settings } from '../core/Settings';
 import { EARTH_SCENES } from '../data/earthScenes';
-import { rigFor, SPEAKERS } from '../data/speakers';
+import { CAST_RE, rigFor, SPEAKERS } from '../data/speakers';
 import { addText, H, W } from '../ui/theme';
 import { CharacterRig, type RigState } from '../world/CharacterRig';
 import { earthOverrideSpec, ensureEarthTextures } from '../world/EarthPainter';
@@ -59,13 +59,12 @@ interface Actor {
 
 interface CamState { x: number; y: number; zoom: number; rot: number }
 
-export interface CastEntry { id: string; x?: number; face?: 1 | -1; back?: boolean; pose?: RigState }
+export interface CastEntry { id: string; rig?: string; x?: number; face?: 1 | -1; back?: boolean; pose?: RigState }
 
-/** "krishnaa@0.7<^:sit" → a cast entry. */
 export function parseCast(s: string): CastEntry | null {
-  const m = /^([a-z_0-9]+)(?:@([\d.]+))?([<>])?(\^)?(?::([a-z]+))?$/.exec(s);
+  const m = CAST_RE.exec(s);
   if (!m) return null;
-  return { id: m[1]!, x: m[2] !== undefined ? Number(m[2]) : undefined, face: m[3] === '<' ? -1 : m[3] === '>' ? 1 : undefined, back: !!m[4], pose: m[5] as RigState | undefined };
+  return { id: m[1]!, rig: m[2], x: m[3] !== undefined ? Number(m[3]) : undefined, face: m[4] === '<' ? -1 : m[4] === '>' ? 1 : undefined, back: !!m[5], pose: m[6] as RigState | undefined };
 }
 
 const stageX = (f: number) => (f - 0.5) * 1300;
@@ -139,7 +138,7 @@ export class StageScene extends Phaser.Scene {
     this.teardown();
     this.isOpen = false;
     this.scene.setVisible(false);
-    this.scene.setVisible(true, 'Hud');
+    if (!this.scene.isActive('Credits')) this.scene.setVisible(true, 'Hud');
   }
 
   private teardown() {
@@ -219,6 +218,16 @@ export class StageScene extends Phaser.Scene {
     // In the air: petals under blossoming trees, snow in Glacia, rain at night, dust indoors.
     const rainy = /rain/.test(id);
     const snowy = !earth;
+    if (/fire/.test(id) && this.textures.exists('fx:soft')) {
+      // Embers rising through the smoke.
+      const em = this.add.particles(0, 0, 'fx:soft', {
+        x: { min: -1100, max: 1100 }, y: 80, lifespan: { min: 2500, max: 5000 }, speedY: { min: -160, max: -70 }, speedX: { min: -30, max: 30 },
+        scale: { start: 0.1, end: 0 }, alpha: { start: 1, end: 0 }, frequency: calm ? 200 : 45, tint: [0xff9a3a, 0xffcf6a, 0xff5a2a],
+        blendMode: Phaser.BlendModes.ADD,
+      });
+      this.layers.fx.add(em);
+      this.emitters.push(em);
+    }
     const tex = bloom && !indoor ? 'fx:petal' : snowy ? 'fx:flake' : rainy ? 'fx:streak' : 'fx:dot';
     if (this.textures.exists(tex)) {
       const em = this.add.particles(0, 0, tex, {
@@ -266,7 +275,7 @@ export class StageScene extends Phaser.Scene {
     const span = Math.min(900, 330 * Math.max(0, n - 1));
     entries.forEach((e, i) => {
       const x = e.x !== undefined ? stageX(e.x) : n <= 1 ? 0 : -span / 2 + (span * i) / (n - 1);
-      const a = this.actors.get(e.id) ?? (fresh.includes(e) ? this.addActor(e.id, x) : undefined);
+      const a = this.actors.get(e.id) ?? (fresh.includes(e) ? this.addActor(e.id, x, e.rig) : undefined);
       if (!a) return;
       a.x = x;
       a.back = !!e.back;
@@ -279,8 +288,8 @@ export class StageScene extends Phaser.Scene {
     this.layoutDepth();
   }
 
-  private addActor(id: string, x: number): Actor | undefined {
-    const rigId = rigFor(id);
+  private addActor(id: string, x: number, as?: string): Actor | undefined {
+    const rigId = as ?? rigFor(id);
     if (!rigId) return undefined;
     const rig = new CharacterRig(this, rigId, 0);
     rig.cuffed = rigId === 'nithish' && !!session.state.flags.nithish_cuffed;

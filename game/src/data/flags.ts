@@ -91,6 +91,7 @@ export const FLAGS: Record<string, string> = {
   v11_went_out: 'V11: Ragul walked out to the police jeep',
   v11_ramanan_down: 'V11: Ramanan has collapsed',
   v11_chase: 'V11: Nithish is chasing Ragul',
+  v12_standoff: 'V12: the standoff on the cut road begins (you are Dhanasree)',
   v11_done: 'V11: Nithish tripped at the cut road; the standoff',
   v11_stayed: 'V11: Ragul hesitated behind the bin (he went anyway)',
   v12_fled: 'V12: the four fled the cut road',

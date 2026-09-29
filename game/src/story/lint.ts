@@ -9,7 +9,7 @@ import { BATTLES } from '../data/enemies';
 import { FLAGS } from '../data/flags';
 import { ITEMS } from '../data/items';
 import { BANNED_TAGS, BANNED_WORDS, FX, MUSIC, SFX } from '../data/media';
-import { rigFor, SHOTS, SPEAKERS, STAGE_POSES } from '../data/speakers';
+import { CAST_RE, rigFor, SHOTS, SPEAKERS, STAGE_POSES } from '../data/speakers';
 import { parseStory, type TextNode } from './parser';
 import { PROP_VISUALS } from '../world/EarthProps';
 
@@ -91,11 +91,11 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
           case 'wait': if (!/^\d+$/.test(a)) bad(n.line, '@wait needs milliseconds'); break;
           case 'cast':
             for (const c of n.args) {
-              const m = /^([a-z_0-9]+)(?:@([\d.]+))?([<>])?(\^)?(?::([a-z]+))?$/.exec(c);
-              if (!m) bad(n.line, `bad cast entry "${c}" (id@x<:pose)`);
+              const m = CAST_RE.exec(c);
+              if (!m) bad(n.line, `bad cast entry "${c}" (id=rig@x<^:pose)`);
               else {
-                if (!rigFor(m[1]!)) bad(n.line, `"${m[1]}" has no figure to put on stage`);
-                if (m[5] && !STAGE_POSES.includes(m[5])) bad(n.line, `unknown pose "${m[5]}"`);
+                if (m[2] ? !rigFor(m[2]) : !rigFor(m[1]!)) bad(n.line, `"${m[2] ?? m[1]}" has no figure to put on stage`);
+                if (m[6] && !STAGE_POSES.includes(m[6])) bad(n.line, `unknown pose "${m[6]}"`);
               }
             }
             break;

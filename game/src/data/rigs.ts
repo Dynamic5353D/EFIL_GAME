@@ -68,6 +68,9 @@ export const NPC_RIGS: Record<string, RigStyle> = {
   amsa: civ('amsa', 0x3a6a4a, 0.9, 1.04, 'bun'),
   appa: civ('appa', 0x6a6a7a, 1.02, 1.06, 'short', { glasses: true }),
   vijaya: civ('vijaya', 0x6a1a2a, 0.98, 0.94, 'long'),
+  // Flashbacks: the four as children.
+  little_dhana: civ('little_dhana', 0x3a7a5a, 0.62, 0.72, 'ponytail'),
+  little_dharshna: civ('little_dharshna', 0x8a6a2a, 0.6, 0.7, 'long'),
   dance_guy: civ('dance_guy', 0x2a6aa0, 1.02, 1.0, 'messy'),
   soldier: { id: 'soldier', body: 0x07080c, cloth: 0x10131c, vein: 0x49b8ff, height: 1.08, width: 1.05, hair: 'short', glowEyes: true },
   captain: { id: 'captain', body: 0x06070a, cloth: 0x1a2440, vein: 0x7fd4ff, height: 1.22, width: 1.2, hair: 'messy', glowEyes: true },
