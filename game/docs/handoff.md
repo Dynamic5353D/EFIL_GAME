@@ -3,7 +3,16 @@
 For the next session, picking up on branch `claude/brave-brown-yda06o` (PR Dynamic5353D/EFIL_GAME#1).
 Read `CLAUDE.md` (the project rules) first, then this.
 
-## Where things stand
+## Update (29 Sep 2026, later session)
+
+- Autopilot: **all 12 Ventures pass** with no console errors. V1 had looped at the slow-motion walk (the
+  `flashmob` trigger stayed armed); fixed in `6b95506` (the trigger retires at `v01_dhana_dance`).
+- Stage runs checked for V1–V12 (V1 dance, V8 twist and V12 climax via `&label=`). Known nits to judge in a real
+  browser: the V12 standoff frames miss Nithish and the officer on some lines; the V1 close-ups read as blur.
+- Playable page republished as **v6** (includes all of round 2). Next: the user's play-test, then Act II (M3).
+- Local machine (not the cloud container): no node, so `node` is a symlink to bun on PATH, and `CHROME=/usr/bin/google-chrome`.
+
+## Where things stand (earlier)
 
 - **M2 (Act I) is built**, and the user is play-testing it. The user asked for round-2 changes (below). Those changes
   are all **committed and pushed**, but **not yet fully verified or republished**.
