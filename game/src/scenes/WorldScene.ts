@@ -5,7 +5,7 @@
 import Phaser from 'phaser';
 import { audio } from '../core/AudioSynth';
 import { bus } from '../core/EventBus';
-import { addItem, memberStats, rest } from '../core/GameState';
+import { addItem, memberStats, powersAwake, rest } from '../core/GameState';
 import { input } from '../core/Input';
 import { ensureTextures, spec } from '../core/Loader';
 import { loc, tr } from '../core/Localization';
@@ -124,6 +124,7 @@ export class WorldScene extends Phaser.Scene {
 
   create(data: WorldData) {
     this.ready = false;
+    CharacterRig.powers = powersAwake(session.state) ? 1 : 0;
     this.live = [];
     this.enemies = [];
     this.guards = [];
@@ -635,12 +636,14 @@ export class WorldScene extends Phaser.Scene {
       cam.flash(250, 200, 230, 255);
       this.time.delayedCall(260, () => {
         this.scene.pause();
+        this.vignette(false);
         this.scene.setVisible(false, 'Hud');
         this.scene.launch('Battle', {
           battle: id, initiative, backdrop: this.room.backdrop, palette: this.room.palette, grade: this.room.grade,
           onDone: (r: Outcome) => {
             this.scene.stop('Battle');
             this.scene.resume();
+            this.vignette(true);
             this.scene.setVisible(true, 'Hud');
             audio.music(this.room.music);
             bus.emit('hud', undefined);
@@ -678,12 +681,14 @@ export class WorldScene extends Phaser.Scene {
   runWordBattle(id: string): Promise<boolean> {
     return new Promise((resolve) => {
       this.scene.pause();
+      this.vignette(false);
       this.scene.setVisible(false, 'Hud');
       this.scene.launch('WordBattle', {
         battle: id, backdrop: this.room.backdrop,
         onDone: (won: boolean) => {
           this.scene.stop('WordBattle');
           this.scene.resume();
+          this.vignette(true);
           this.scene.setVisible(true, 'Hud');
           audio.music(this.room.music);
           bus.emit('hud', undefined);
@@ -1131,6 +1136,8 @@ export class WorldScene extends Phaser.Scene {
     this.clock += dt;
     session.tickPlaytime();
     const st = session.state;
+    // The powers fade in when they wake (the dance in Venture 1).
+    CharacterRig.powers += ((powersAwake(st) ? 1 : 0) - CharacterRig.powers) * Math.min(1, dt * 0.8);
 
     const dizzy = !!st.flags.dizzy;
     this.player.speedMul = dizzy ? 0.55 : 1;
@@ -1186,6 +1193,13 @@ export class WorldScene extends Phaser.Scene {
     if (!this.busy && (input.pressed('menu') || input.pressed('bag'))) this.openMenu(input.pressed('bag') ? 'items' : undefined);
   }
 
+  /** The room's vignette comes off while a battle or the pause menu is up, so everything is easy to see. */
+  private vignette(on: boolean) {
+    const ext = this.cameras.main.filters.external;
+    ext.clear();
+    if (on) ext.addVignette(0.5, 0.5, 0.8, 0.45);
+  }
+
   /** Pauses the world and opens the pause menu, on `section` if given (the bag key opens Items). */
   private openMenu(section?: 'items') {
     const st = session.state;
@@ -1194,8 +1208,9 @@ export class WorldScene extends Phaser.Scene {
     st.location.y = this.player.y;
     audio.sfx('ui_ok');
     this.scene.pause();
+    this.vignette(false);
     this.scene.setVisible(false, 'Hud');
-    this.scene.launch('Menu', { section, onClose: () => { this.scene.resume(); this.scene.setVisible(true, 'Hud'); this.syncAbilities(); bus.emit('hud', undefined); } });
+    this.scene.launch('Menu', { section, onClose: () => { this.scene.resume(); this.vignette(true); this.scene.setVisible(true, 'Hud'); this.syncAbilities(); bus.emit('hud', undefined); } });
     this.scene.bringToTop('Menu');
   }
 

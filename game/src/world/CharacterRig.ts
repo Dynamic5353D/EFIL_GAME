@@ -29,6 +29,11 @@ const mixColor = (a: number, b: number, t: number) => {
 };
 
 export class CharacterRig {
+  /**
+   * How awake the four protagonists' powers are, 0..1: their glowing veins and eyes, and a rim light in
+   * their power colour. 0 until the dance in Venture 1 (they look like anyone else), then it fades up.
+   */
+  static powers = 1;
   readonly g: Phaser.GameObjects.Graphics;
   readonly glow: Phaser.GameObjects.Graphics;
   state: RigState = 'idle';
@@ -49,7 +54,8 @@ export class CharacterRig {
   /** Hands cuffed together in front (Nithish, Ventures 11-12). */
   cuffed = false;
   private readonly body: number;
-  private readonly rim: number;
+  private readonly rimVein: number;
+  private readonly rimCiv: number;
   private readonly vein: number;
   private readonly cloth: number;
   private readonly hair: Hair;
@@ -65,7 +71,8 @@ export class CharacterRig {
     this.body = c.body;
     this.vein = c.vein;
     // Protagonists are rim-lit in their vein colour; everyone else in a pale version of their clothes.
-    this.rim = c.veins ? mixColor(c.vein, 0xffffff, 0.6) : mixColor(c.cloth, 0xdfe8f5, 0.62);
+    this.rimVein = c.veins ? mixColor(c.vein, 0xffffff, 0.6) : mixColor(c.cloth, 0xdfe8f5, 0.62);
+    this.rimCiv = mixColor(c.cloth, 0xdfe8f5, 0.62);
     this.cloth = c.cloth;
     this.hair = c.hair;
     this.glasses = !!c.glasses;
@@ -74,6 +81,10 @@ export class CharacterRig {
     this.g = scene.add.graphics().setDepth(depth);
     this.glow = scene.add.graphics().setDepth(depth + 1).setBlendMode(Phaser.BlendModes.ADD);
   }
+
+  /** Power level for this rig: the protagonists follow `CharacterRig.powers`; the soldiers always glow. */
+  private get pw() { return this.style.veins ? CharacterRig.powers : 0; }
+  private get rim() { return this.style.veins ? mixColor(this.rimCiv, this.rimVein, this.pw) : this.rimCiv; }
 
   setState(s: RigState) {
     if (s !== this.state) { this.state = s; this.stateTime = 0; }
@@ -299,28 +310,29 @@ export class CharacterRig {
       g.lineStyle(1.1 * this.scale, this.rim, 0.9);
       g.strokeRect(eyeX - 2.5 * this.scale, eyeY - 1.8 * this.scale, 5 * this.scale, 3.4 * this.scale);
     }
-    if (this.style.veins || this.style.glowEyes) {
-      gl.fillStyle(this.vein, 0.95);
+    if ((this.style.veins && this.pw > 0.05) || this.style.glowEyes) {
+      gl.fillStyle(this.vein, 0.95 * (this.style.glowEyes ? 1 : this.pw));
       gl.fillRect(eyeX - 1.6 * this.scale, eyeY - 0.5 * this.scale, 3.2 * this.scale, 1.2 * this.scale);
       if (this.style.glowEyes) { gl.fillStyle(this.vein, 0.35); gl.fillCircle(eyeX, eyeY, 4 * this.scale); }
     } else {
       g.fillStyle(0xe8eef8, 0.55);
       g.fillRect(eyeX - 1.2 * this.scale, eyeY - 0.4 * this.scale, 2.4 * this.scale, 1 * this.scale);
     }
-    if (!this.style.veins) return;
+    const pw = this.pw;
+    if (!this.style.veins || pw <= 0.01) return;
 
     // Veins: glowing lines along the forearms and neck, plus a soft halo.
     const vein = (a: { x: number; y: number }, b: { x: number; y: number }) => {
       const A = pt(a.x, a.y), B = pt(b.x, b.y);
-      gl.lineStyle(4 * this.scale, this.vein, 0.18);
+      gl.lineStyle(4 * this.scale, this.vein, 0.18 * pw);
       gl.lineBetween(A.x, A.y, B.x, B.y);
-      gl.lineStyle(1.1 * this.scale, this.vein, 0.95);
+      gl.lineStyle(1.1 * this.scale, this.vein, 0.95 * pw);
       gl.lineBetween(A.x, A.y, B.x, B.y);
     };
     vein(elbF, handF);
     vein({ x: neck.x, y: neck.y + 1 }, { x: chest.x + 1, y: chest.y + 8 });
     const hF = pt(handF.x, handF.y);
-    gl.fillStyle(this.vein, 0.35);
+    gl.fillStyle(this.vein, 0.35 * pw);
     gl.fillCircle(hF.x, hF.y, 3.2 * this.scale);
   }
 

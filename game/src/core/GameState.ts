@@ -91,7 +91,20 @@ export function newGameAt(room: string, script: string, venture: { purpose: numb
   s.venture = venture;
   s.inventory = {};
   s.resume = { script, label: 'start' };
+  // The four wake to their powers at the dance in Venture 1; any later start comes after it.
+  if (venture.purpose > 1 || venture.venture > 1) s.flags.powers_awakened = true;
   return s;
+}
+
+/** Whether the four have their powers yet (flag `powers_awakened`, set at the dance in Venture 1). */
+export function powersAwake(state: GameState): boolean {
+  return state.venture.purpose !== 1 || !!state.flags.powers_awakened;
+}
+
+/** Memory Fragments steady the party: every FRAGMENT_STEP gathered adds 5 max HP to everyone. */
+export const FRAGMENT_STEP = 3;
+export function fragmentBonus(count: number): number {
+  return Math.floor(count / FRAGMENT_STEP) * 5;
 }
 
 /** Stats with keepsake bonuses applied. */
@@ -102,6 +115,7 @@ export function memberStats(state: GameState, id: MemberId): Stats {
   if (mods) {
     for (const k of Object.keys(mods) as (keyof Stats)[]) s[k] += mods[k] ?? 0;
   }
+  s.maxHp += fragmentBonus(state.codex.length);
   return s;
 }
 

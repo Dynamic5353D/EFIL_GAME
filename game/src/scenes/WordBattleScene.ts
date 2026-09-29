@@ -80,14 +80,13 @@ export class WordBattleScene extends Phaser.Scene {
     cam.setBackgroundColor(0x05070d);
     if (this.textures.exists(`bg:${this.data_.backdrop}`)) {
       const bg = this.add.image(W / 2, H / 2, `bg:${this.data_.backdrop}`);
-      bg.setScale(Math.max(W / bg.width, H / bg.height) * 1.1).setAlpha(0.55);
+      bg.setScale(Math.max(W / bg.width, H / bg.height) * 1.1).setAlpha(0.7);
       bg.enableFilters();
       const cm = bg.filters!.internal.addColorMatrix();
-      cm.colorMatrix.brightness(0.55);
+      cm.colorMatrix.brightness(0.7);
       cm.colorMatrix.saturate(-0.35, true);
       bg.filters!.internal.addBlur(1, 2, 2, 1.2);
     }
-    cam.filters.external.addVignette(0.5, 0.5, 0.75, 0.55);
     this.g = this.add.graphics();
     this.bars = this.add.graphics();
 

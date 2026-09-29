@@ -105,7 +105,7 @@ export class TitleScene extends Phaser.Scene {
     items.push({ label: () => 'Chapters', hint: () => 'Start from any Venture of Act I, or the Glacia engine test', onSelect: () => this.showChapters() });
     items.push({ label: () => 'Settings', onSelect: () => this.openOverlay('Settings') });
     items.push({ label: () => 'Credits', onSelect: () => this.openOverlay('Credits') });
-    this.menu = new MenuList(this, W / 2 - 150, 350, items, { width: 300, align: 'center', size: 28, display: true, lineHeight: 50 });
+    this.menu = new MenuList(this, W / 2 - 150, 350, items, { width: 300, align: 'center', size: 28, display: true, lineHeight: 50, idleCursor: true });
     this.layer.add(this.menu.container);
     this.hint.setText(`↑↓  Choose    ${input.label('confirm')}  Select    ${input.label('language')}  Language: ${settings.get('language') === 'ta' ? 'Tanglish' : 'English'}`);
   }
@@ -123,7 +123,7 @@ export class TitleScene extends Phaser.Scene {
     }));
     items.push({ label: () => 'Glacia engine test (M1)', onSelect: () => this.showSlots('new', 'slice') });
     items.push({ label: () => 'Back', onSelect: () => this.showMain() });
-    this.menu = new MenuList(this, W / 2 - 360, 350, items, { width: 720, size: 21, lineHeight: 40, rows: 8, onCancel: () => this.showMain() });
+    this.menu = new MenuList(this, W / 2 - 360, 350, items, { width: 720, size: 21, lineHeight: 40, rows: 8, onCancel: () => this.showMain(), leftCancels: true, idleCursor: true });
     this.layer.add(this.menu.container);
     this.hint.setText(`${input.label('confirm')}  Select    ${input.label('cancel')}  Back`);
   }
@@ -145,7 +145,7 @@ export class TitleScene extends Phaser.Scene {
       });
     }
     items.push({ label: () => 'Back', onSelect: () => this.showMain() });
-    this.menu = new MenuList(this, W / 2 - 360, 376, items, { width: 720, size: 21, lineHeight: 42, onCancel: () => this.showMain() });
+    this.menu = new MenuList(this, W / 2 - 360, 376, items, { width: 720, size: 21, lineHeight: 42, onCancel: () => this.showMain(), leftCancels: true, idleCursor: true });
     this.layer.add(this.menu.container);
     this.hint.setText(`${input.label('confirm')}  Select    ${input.label('cancel')}  Back`);
   }

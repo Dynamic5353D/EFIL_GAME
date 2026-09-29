@@ -139,7 +139,7 @@ export class BattleScene extends Phaser.Scene {
     // The room's grade goes on the painted backdrop only, so fighters and UI stay crisp.
     for (const img of [far, bg]) addGrade(img.enableFilters().filters!.internal, d.grade);
     if (!this.calm) this.tweens.add({ targets: bg, x: W / 2 - 20, duration: 16000, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-    this.add.rectangle(0, 0, W, H, 0x04070d, 0.18).setOrigin(0);
+    this.add.rectangle(0, 0, W, H, 0x04070d, 0.08).setOrigin(0);
 
     // Painted floor: palette gradient with a snowy lip, so units stand on something.
     const key = `battlefloor:${d.palette}`;
@@ -164,16 +164,7 @@ export class BattleScene extends Phaser.Scene {
       x: { min: -60, max: W + 60 }, y: -20, lifespan: 7000, speedY: { min: 40, max: 90 }, speedX: { min: -30, max: 10 },
       scale: { min: 0.15, max: 0.4 }, alpha: { start: 0.8, end: 0.2 }, frequency: this.calm ? 500 : 160,
     }).setDepth(900);
-    if (!this.textures.exists('fx:vignette')) {
-      const { c, g } = makeCanvas(640, 360);
-      const gr = g.createRadialGradient(320, 170, 120, 320, 180, 400);
-      gr.addColorStop(0, 'rgba(3,5,10,0)');
-      gr.addColorStop(1, 'rgba(3,5,10,0.8)');
-      g.fillStyle = gr;
-      g.fillRect(0, 0, 640, 360);
-      this.textures.addCanvas('fx:vignette', c);
-    }
-    this.add.image(0, 0, 'fx:vignette').setOrigin(0).setDisplaySize(W, H).setDepth(700);
+    // No vignette in battle: the whole field should be easy to read.
 
     // Units.
     let pi = 0, ei = 0;

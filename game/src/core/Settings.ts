@@ -18,7 +18,7 @@ export const DEFAULT_BINDINGS: Record<Action, string[]> = {
   dash: ['ShiftLeft', 'KeyC'],
   attack: ['KeyX', 'KeyJ'],
   interact: ['KeyE', 'ArrowUp'],
-  menu: ['Escape', 'Tab'],
+  menu: ['Escape', 'Tab', 'KeyP'],
   bag: ['KeyI', 'KeyB'],
   confirm: ['Enter', 'Space', 'KeyZ'],
   cancel: ['Escape', 'Backspace', 'KeyX'],

@@ -25,12 +25,18 @@ export interface MenuOpts {
   /** Max rows visible; the list scrolls beyond this. */
   rows?: number;
   onCancel?: () => void;
+  /** ← backs out (calls onCancel) on rows without their own onLeft. */
+  leftCancels?: boolean;
+  /** → opens (calls onSelect) on rows without their own onRight. */
+  rightSelects?: boolean;
+  /** Draw a faint cursor while inactive (so you can see where you were); otherwise none. */
+  idleCursor?: boolean;
 }
 
 /** A vertical list driven by up/down/confirm/cancel (+ left/right for values), with mouse support. */
 export class MenuList {
   index = 0;
-  active = true;
+  private active_ = true;
   readonly container: Phaser.GameObjects.Container;
   private rowsObjs: { label: Phaser.GameObjects.Text; value?: Phaser.GameObjects.Text; zone: Phaser.GameObjects.Zone }[] = [];
   private cursor: Phaser.GameObjects.Graphics;
@@ -45,6 +51,14 @@ export class MenuList {
     this.container.add(this.cursor);
     this.build();
     while (this.items[this.index]?.disabled?.() && this.index < this.items.length - 1) this.index++;
+    this.refresh();
+  }
+
+  get active() { return this.active_; }
+  /** An inactive list shows no cursor (or a faint one with `idleCursor`), so it never looks focused. */
+  set active(v: boolean) {
+    if (v === this.active_) return;
+    this.active_ = v;
     this.refresh();
   }
 
@@ -112,9 +126,11 @@ export class MenuList {
     const y = (this.index - this.scroll) * this.lh;
     this.cursor.clear();
     if (!this.items.length) return;
-    this.cursor.fillStyle(C.accentInt, 0.12);
+    if (!this.active_ && !this.o.idleCursor) return;
+    const k = this.active_ ? 1 : 0.4;
+    this.cursor.fillStyle(C.accentInt, 0.12 * k);
     this.cursor.fillRoundedRect(0, y + 3, this.o.width, this.lh - 6, 6);
-    this.cursor.fillStyle(C.accentInt, 0.9);
+    this.cursor.fillStyle(C.accentInt, 0.9 * k);
     this.cursor.fillRoundedRect(2, y + this.lh * 0.28, 3, this.lh * 0.44, 1.5);
   }
 
@@ -141,6 +157,18 @@ export class MenuList {
     if (!it) return;
     if (input.pressed('left') && it.onLeft && !it.disabled?.()) { it.onLeft(); audio.sfx('ui_move'); this.refresh(); }
     if (input.pressed('right') && it.onRight && !it.disabled?.()) { it.onRight(); audio.sfx('ui_move'); this.refresh(); }
+    if (input.pressed('right') && !it.onRight && this.o.rightSelects && it.onSelect && !it.disabled?.()) {
+      input.consume('right');
+      audio.sfx('ui_ok');
+      it.onSelect();
+      return;
+    }
+    if (input.pressed('left') && !it.onLeft && this.o.leftCancels && this.o.onCancel) {
+      input.consume('left');
+      audio.sfx('ui_back');
+      this.o.onCancel();
+      return;
+    }
     if (input.pressed('confirm') && !it.disabled?.()) {
       input.consume('confirm', 'jump');
       if (it.onSelect) { audio.sfx('ui_ok'); it.onSelect(); } else if (it.onRight) { it.onRight(); audio.sfx('ui_move'); this.refresh(); }

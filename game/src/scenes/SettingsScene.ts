@@ -32,6 +32,8 @@ export class SettingsScene extends Phaser.Scene {
     drawPanel(g, W / 2 - 400, 50, 800, 640, 0.95, 14);
     this.title = addText(this, W / 2, 68, 'Settings', { size: 36, display: true, bold: true }).setOrigin(0.5, 0);
     this.hint = addText(this, W / 2, 660, '', { size: 16, color: C.textDim, align: 'center', wordWrap: { width: 740 } }).setOrigin(0.5);
+    const back = settings.get('bindings').cancel.map((k) => input.keyLabel(k)).join(' / ');
+    addText(this, W / 2 + 380, 76, `${back}  Back`, { size: 15, color: C.textFaint }).setOrigin(1, 0);
     this.showMain();
     input.consume();
   }
@@ -39,7 +41,7 @@ export class SettingsScene extends Phaser.Scene {
   private setMenu(items: MenuItem[], onCancel: () => void, rows = 11) {
     this.menu?.destroy();
     this.menu = new MenuList(this, W / 2 - 360, 122, items.map((it) => ({ ...it, onFocus: () => this.hint.setText(it.hint?.() ?? '') })), {
-      width: 720, lineHeight: 41, size: 22, rows, onCancel,
+      width: 720, lineHeight: 41, size: 22, rows, onCancel, leftCancels: false, idleCursor: true,
     });
     this.hint.setText(items[0]?.hint?.() ?? '');
   }

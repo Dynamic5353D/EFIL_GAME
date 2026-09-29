@@ -5,6 +5,7 @@ export const FLAGS: Record<string, string> = {
   slice_asked_about_home: 'Test slice: Ragul asked how to get home (choice)',
   slice_vale_pack_defeated: 'Test slice: the Vale pack on the Winter Path is gone',
   slice_feather_taken: 'Test slice: the Acanus feather has been picked up',
+  powers_awakened: 'Venture 1: time slows at Dhanasree\'s dance and the four wake to their powers',
   slice_done: 'Test slice: the end of the Winter Path has been reached (the slice is over)',
   won: 'Set by @battle: the last battle was won',
 
