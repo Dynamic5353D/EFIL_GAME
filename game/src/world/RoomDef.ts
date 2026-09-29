@@ -19,7 +19,7 @@ export type EntityDef =
   | { type: 'trigger'; id: string; script: string; label: string; unless?: string; requires?: string; height: number }
   | { type: 'exit'; id: string; to: string; entry: string; height: number }
   | { type: 'crystal'; color: number }
-  | { type: 'chest'; id: string; item: string; needs?: string }
+  | { type: 'chest'; id: string; item: string; needs?: string; script?: string; label?: string }
   | { type: 'gate'; ability: string; hint: Loc; height: number }
   /** Shows a first-time tip (data/tips.ts) when the player comes within `radius` tiles. */
   | { type: 'tip'; tip: string; radius: number }

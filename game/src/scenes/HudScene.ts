@@ -7,9 +7,10 @@ import { settings } from '../core/Settings';
 import { CHARACTERS } from '../data/characters';
 import { TIPS } from '../data/tips';
 import { tipBody } from '../core/Tips';
-import { addText, bar, C, drawGlowPanel, glow, W } from '../ui/theme';
+import { input } from '../core/Input';
+import { addText, bar, C, drawGlowPanel, glow, H, W } from '../ui/theme';
 
-/** Exploration HUD: party health, Soul Hunger, RI shards, ammo, toasts and area banners. */
+/** Exploration HUD: party health, Soul Hunger, RI shards, ammo, the key hints, toasts and area banners. */
 export class HudScene extends Phaser.Scene {
   private g!: Phaser.GameObjects.Graphics;
   private texts: Phaser.GameObjects.GameObject[] = [];
@@ -17,15 +18,18 @@ export class HudScene extends Phaser.Scene {
   private offs: (() => void)[] = [];
   private tipQueue: string[] = [];
   private tipCard: Phaser.GameObjects.Container | null = null;
+  private exitMarks = new Map<string, { c: Phaser.GameObjects.Container; arrow: Phaser.GameObjects.Graphics; name: Phaser.GameObjects.Container }>();
 
   constructor() { super({ key: 'Hud' }); }
 
   create() {
+    this.exitMarks.clear();
     this.g = this.add.graphics();
     this.refresh();
     this.offs.push(bus.on('hud', () => this.refresh()));
     this.offs.push(bus.on('toast', ({ text, icon }) => this.toast(text, icon)));
     this.offs.push(bus.on('tip', ({ id }) => { this.tipQueue.push(id); if (!this.tipCard) this.nextTip(); }));
+    this.offs.push(bus.on('settings', () => this.refresh()));
     this.events.once('shutdown', () => this.offs.forEach((o) => o()));
   }
 
@@ -68,6 +72,13 @@ export class HudScene extends Phaser.Scene {
       glow(t, '#000000', 6);
       this.texts.push(t);
     }
+    if (settings.get('showTips')) {
+      // Always-visible reminder of the keys that open things, bottom left.
+      const keys = `${input.label('menu')}  Menu     ${input.label('bag')}  Bag     ${input.label('interact')}  Talk / use`;
+      const t = addText(this, 28, H - 22, keys, { size: 15, color: '#c9d6ea' }).setOrigin(0, 1).setAlpha(0.8);
+      glow(t, '#000000', 5);
+      this.texts.push(t);
+    }
     const shardY = 26;
     if (!st.riShards && st.venture.purpose === 1) return;
     this.g.fillStyle(0x86d8ff, 1);
@@ -100,6 +111,44 @@ export class HudScene extends Phaser.Scene {
         },
       });
     });
+  }
+
+  /**
+   * An exit marker: a double chevron at the room's edge and the next place's name. The world reports
+   * where it is every frame; it is drawn here so the room's grade and vignette can't dim it.
+   */
+  exitMark(id: string, label: string, out: 1 | -1, x: number, y: number, arrowAlpha: number, nameAlpha: number) {
+    if (!this.sys.isActive()) return; // the world's first frame can come before the HUD has started
+    let m = this.exitMarks.get(id);
+    if (!m) {
+      const arrow = this.add.graphics();
+      for (const [w, c, a] of [[11, 0x000000, 0.5], [5, 0xeaf6ff, 1]] as const) {
+        arrow.lineStyle(w, c, a);
+        for (const o of [-10, 10]) {
+          arrow.beginPath();
+          arrow.moveTo((o - 8) * out, -15);
+          arrow.lineTo((o + 8) * out, 0);
+          arrow.lineTo((o - 8) * out, 15);
+          arrow.strokePath();
+        }
+      }
+      const text = addText(this, 0, 0, label, { size: 19, bold: true, color: '#f4f8ff' }).setOrigin(out > 0 ? 1 : 0, 0.5);
+      const pad = 10, bw = text.width + pad * 2, bh = text.height + 8, bx = out > 0 ? -bw + pad : -pad;
+      const back = this.add.graphics();
+      back.fillStyle(0x07101c, 0.8).fillRoundedRect(bx, -bh / 2, bw, bh, 8);
+      back.lineStyle(1, 0x9cc9ff, 0.5).strokeRoundedRect(bx, -bh / 2, bw, bh, 8);
+      const name = this.add.container(out * 24, -62, [back, text]);
+      m = { c: this.add.container(0, 0, [arrow, name]).setDepth(-1), arrow, name };
+      this.exitMarks.set(id, m);
+    }
+    m.c.setPosition(x, y).setVisible(arrowAlpha > 0.01 || nameAlpha > 0.01);
+    m.arrow.setAlpha(Math.min(1, arrowAlpha));
+    m.name.setAlpha(nameAlpha);
+  }
+
+  clearExitMarks() {
+    for (const m of this.exitMarks.values()) m.c.destroy();
+    this.exitMarks.clear();
   }
 
   /** First-time tip card, top centre. Tips queue up and each stays long enough to read. */

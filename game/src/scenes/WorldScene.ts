@@ -187,6 +187,7 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0.5, 1).setDepth(DEPTH.weather + 1).setVisible(false);
 
     if (!this.scene.isActive('Hud')) this.scene.launch('Hud');
+    (this.scene.get('Hud') as HudScene).clearExitMarks();
     if (!this.scene.isActive('Dialogue')) this.scene.launch('Dialogue');
     this.scene.bringToTop('Hud');
     this.scene.bringToTop('Dialogue');
@@ -298,6 +299,7 @@ export class WorldScene extends Phaser.Scene {
             if (it) bus.emit('toast', { text: tr(it.name), icon: it.icon });
             this.burst(p.x, p.y - 30, 0xbfe6ff, 16);
             bus.emit('hud', undefined);
+            if (d.script && d.label) void this.story(d.script, d.label);
           };
         }
         break;
@@ -446,7 +448,24 @@ export class WorldScene extends Phaser.Scene {
       }
       case 'exit': {
         const top = p.y - d.height * TILE;
+        // A double chevron pointing out of the room, and the next place's name when you come close.
+        // Both are drawn by the HUD (see HudScene.exitMark); only the soft halo is in the world.
+        const out = p.tx <= 0 ? -1 : 1;
+        const ax = p.x - out * TILE * 1.3, ay = p.y - TILE * 1.3;
+        const halo = glow(ax, ay, 0xbfe4ff, 1.8, 0.35);
+        const label = ROOMS[d.to] ? tr(ROOMS[d.to]!.name) : '';
+        const markId = `${this.room.id}:${d.id}:${p.tx}`;
+        const calm = settings.get('reducedMotion');
+        let nameA = 0;
         L.update = () => {
+          const hud = this.scene.get('Hud') as HudScene;
+          const cam = this.cameras.main;
+          const near = Math.abs(this.player.x - ax) < TILE * 9 && Math.abs(this.player.y - p.y) < TILE * 6;
+          const wave = calm ? 0 : Math.sin(this.clock * 3);
+          nameA = Phaser.Math.Linear(nameA, near && !this.leaving ? 1 : 0, 0.12);
+          halo.setAlpha(near ? 0.5 : 0.28);
+          hud.exitMark(markId, label, out, (ax - cam.worldView.x) * cam.zoom + wave * 4 * out, (ay - cam.worldView.y) * cam.zoom,
+            this.leaving ? 0 : (near ? 0.95 : 0.6) + wave * 0.12, nameA);
           if (this.busy || this.leaving) return;
           const nearEdge = p.tx <= 0 ? this.player.x < p.x + TILE * 0.6 : this.player.x > p.x - TILE * 0.6;
           if (nearEdge && this.player.y > top && this.player.y <= p.y + TILE) this.leave(d.to, d.entry);
@@ -1164,16 +1183,20 @@ export class WorldScene extends Phaser.Scene {
       if (input.pressed('interact') && this.player.onGround) { input.consume('interact', 'up'); pt.interact!(); }
     } else this.promptText.setVisible(false);
 
-    if (!this.busy && input.pressed('menu')) {
-      input.consume('menu', 'cancel');
-      st.location.x = this.player.x;
-      st.location.y = this.player.y;
-      audio.sfx('ui_ok');
-      this.scene.pause();
-      this.scene.setVisible(false, 'Hud');
-      this.scene.launch('Menu', { onClose: () => { this.scene.resume(); this.scene.setVisible(true, 'Hud'); this.syncAbilities(); bus.emit('hud', undefined); } });
-      this.scene.bringToTop('Menu');
-    }
+    if (!this.busy && (input.pressed('menu') || input.pressed('bag'))) this.openMenu(input.pressed('bag') ? 'items' : undefined);
+  }
+
+  /** Pauses the world and opens the pause menu, on `section` if given (the bag key opens Items). */
+  private openMenu(section?: 'items') {
+    const st = session.state;
+    input.consume('menu', 'bag', 'cancel');
+    st.location.x = this.player.x;
+    st.location.y = this.player.y;
+    audio.sfx('ui_ok');
+    this.scene.pause();
+    this.scene.setVisible(false, 'Hud');
+    this.scene.launch('Menu', { section, onClose: () => { this.scene.resume(); this.scene.setVisible(true, 'Hud'); this.syncAbilities(); bus.emit('hud', undefined); } });
+    this.scene.bringToTop('Menu');
   }
 
   /** First-time tips that depend on where the player is or what they have (data/tips.ts). */
@@ -1187,6 +1210,7 @@ export class WorldScene extends Phaser.Scene {
     if (!tipSeen('party') && st.party.length > 1) showTip('party');
     if (!tipSeen('fragment') && st.codex.length > 0) showTip('fragment');
     if (!tipSeen('menu') && st.location.checkpoint) showTip('menu');
+    if (!tipSeen('bag') && Object.values(st.inventory).some((n) => n > 0)) showTip('bag');
     if (!tipSeen('objective') && st.objective) showTip('objective');
     if (!tipSeen('case_board') && st.clues.length) showTip('case_board');
     if (!tipSeen('stealth') && this.guards.some((g) => g.cone.visible && Math.abs(g.x - px) < 700 && Math.abs(g.live.placed.y - py) < 300)) showTip('stealth');

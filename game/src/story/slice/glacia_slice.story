@@ -24,6 +24,8 @@ RAGUL (thinking): Did I time-travel? Is this some isekai?
 NARRATOR: Beyond the frozen pond, something glitters in the trees.
   ta: Andha urainja kulathukku apram, marangalukulla edho minnudhu.
 @set slice_intro_done
+@objective Head east (right), past the frozen pond, towards the glitter in the trees.
+  ta: Urainja kulathai thaandi, kizhakku (valadhu) pakkam, marangalukulla minnura idathukku po.
 @end
 
 @label tree
@@ -76,6 +78,8 @@ RAGUL (thinking): "Trust me." That's all she ever says.
 @set slice_met_dhanasree
 NARRATOR: Dhanasree joins you. Her staff hums with a faint green light.
   ta: Dhanasree ungaloda serndhaa. Aval kambu mella pachai velichathula adhirudhu.
+@objective Follow the Winter Path east with Dhanasree.
+  ta: Dhanasree kooda Winter Path vazhiya kizhakku po.
 @end
 
 @label pack
@@ -94,6 +98,8 @@ RAGUL (panting): They just... kept... coming back.
 DHANASREE: That's Glacia's gift to us. Pain that nobody else here can feel.
   ta: Glacia namakku kudukura gift adhu. Inga vera yaarukkum theriyadha vali.
 @music winter_path
+@objective Keep going east. Something warm is lying on the raised bank.
+  ta: Innum kizhakku po. Andha mettu mela edho soodaa kedakkudhu.
 @end
 
 @label feather
@@ -103,6 +109,39 @@ NARRATOR: A single feather, longer than your arm, rests on the snow. It is still
 @set slice_feather_taken
 NARRATOR: Holding it, the air feels soft enough to rest on. Hold jump while falling to glide.
   ta: Idha pidichaa, kaaththu mela saanjukalam pola irukku. Keela vizhumbodhu jump-a pidichaa mithakkalam.
+@objective Glide up to the chest on the high ledge ahead, then follow the path to its end.
+  ta: Munnaadi uyarama irukura ledge-la irukura pettikku mithandhu po, aprom path mudiyura varaikum po.
+@end
+
+@label chest
+DHANASREE: Pluffine wool. Wear it. Glacia's cold bites harder the further in we go.
+  ta: Pluffine wool. Pottuko. Ulla poga poga Glacia kulir innum kadikkum.
+NARRATOR: Keepsakes like this are worn from the menu: open it, choose Party, then pick who wears it.
+  ta: Indha maadhiri keepsake-a menu-la podalaam: menu thira, Party edu, yaaru pottukanum-nu thernthedu.
+@if slice_done -> chest_after
+@objective Follow the path to its end (far right).
+  ta: Path mudiyura varaikum po (romba valadhu pakkam).
+@end
+@label chest_after
+@end
+
+@label ending
+@set slice_done
+@done
+NARRATOR: The path ends at the edge of the trees. Beyond it lies the rest of Glacia, and it hasn't been built yet.
+  ta: Marangal mudiyura idathula path mudiyudhu. Adhukku apram meedhi Glacia, adhu innum kattala.
+NARRATOR: This is the end of the Glacia test area. The story itself starts from New game on the title screen, with Act I.
+  ta: Idhodu Glacia test area mudinjudhu. Kadhai title screen-la New game-la, Act I-la irundhu aarambikkudhu.
+@choice slice_end
+  - Roll the credits -> slice_credits
+    ta: Credits paakalaam
+  - Keep exploring -> slice_explore
+    ta: Innum konjam sutthi paakren
+@label slice_credits
+@credits
+@label slice_explore
+@objective Explore as you like. The feather reaches the high ledge back on the Frozen Shore. Quit to the title from the menu when you're done.
+  ta: Unga ishtam pola sutthunga. Feather irundhaa Frozen Shore-la irukura uyarama ledge-ku pogalaam. Mudinjadhum menu-la irundhu title-ku pogalaam.
 @end
 
 @label dream

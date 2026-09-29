@@ -4,7 +4,7 @@ import { ACTIONS, settings, type Action } from './Settings';
 const PAD: Record<Action, number[]> = {
   left: [14], right: [15], up: [12], down: [13],
   jump: [0], dash: [5, 7], attack: [2], interact: [3],
-  menu: [9, 8], confirm: [0], cancel: [1], language: [4],
+  menu: [9], bag: [8], confirm: [0], cancel: [1], language: [4],
 };
 
 const PREVENT = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab', 'Backspace']);
@@ -105,7 +105,7 @@ class InputManager {
   /** Short label for an action's first binding, for on-screen prompts. */
   label(a: Action): string {
     if (this.lastDevice === 'gamepad') {
-      return ({ jump: 'A', confirm: 'A', cancel: 'B', attack: 'X', interact: 'Y', dash: 'RB', menu: 'Start', language: 'LB' } as Partial<Record<Action, string>>)[a] ?? a;
+      return ({ jump: 'A', confirm: 'A', cancel: 'B', attack: 'X', interact: 'Y', dash: 'RB', menu: 'Start', bag: 'Select', language: 'LB' } as Partial<Record<Action, string>>)[a] ?? a;
     }
     const k = settings.get('bindings')[a]?.[0];
     return k ? this.keyLabel(k) : '—';

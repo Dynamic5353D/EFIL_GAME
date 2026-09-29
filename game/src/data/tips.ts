@@ -41,8 +41,11 @@ export const TIPS: Record<string, TipDef> = {
     'Dhanasree follows you now and fights beside Ragul in battle.',
     'Dhanasree ippo un pinnaadi varra, battle-la Ragul kooda sandai poduva.')),
   menu: T('menu', 'world', loc('Menu', 'Menu'), loc(
-    '{menu} opens the menu: your party and keepsakes, items, Memory Fragments, the map and this guide.',
-    '{menu} azhuthaa menu varum: party, keepsakes, porutkal, Memory Fragments, map, indha guide.')),
+    '{menu} opens the menu: your party and keepsakes, items, Memory Fragments, the map and this guide. {bag} opens the bag straight away.',
+    '{menu} azhuthaa menu varum: party, keepsakes, porutkal, Memory Fragments, map, indha guide. {bag} azhuthaa nerla bag thirakkum.')),
+  bag: T('bag', 'world', loc('Your bag', 'Un bag'), loc(
+    'Press {bag} to open your bag and look at what you are carrying. {menu} opens the full menu: party, map, Memory Fragments and more.',
+    '{bag} azhuthaa un bag thirakkum, kaila irukuradhu ellam theriyum. {menu} azhuthaa full menu: party, map, Memory Fragments, innum neraya.')),
   fragment: T('fragment', 'world', loc('Memory Fragments', 'Memory Fragments'), loc(
     'Memory Fragments gather in Kaviya\'s Pool. Read them from the menu ({menu}).',
     'Memory Fragments Kaviya-voda Pool-la serum. Menu-la ({menu}) padikkalam.')),

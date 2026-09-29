@@ -68,7 +68,8 @@ function winterPath(): RoomDef {
   b.at(46, 21, { type: 'trigger', id: 'pack', script: SLICE, label: 'pack', unless: 'slice_vale_pack_defeated', requires: 'slice_met_dhanasree', height: 8 });
   b.at(55, 21, { type: 'tree', id: 'path_tree' });
   b.at(70, 18, { type: 'pickup', id: 'feather', script: SLICE, label: 'feather', visual: 'feather' });
-  b.at(84, 12, { type: 'chest', id: 'path_chest', item: 'pluffine_wrap' });
+  b.at(84, 12, { type: 'chest', id: 'path_chest', item: 'pluffine_wrap', script: SLICE, label: 'chest' });
+  b.at(91, 21, { type: 'trigger', id: 'path_end', script: SLICE, label: 'ending', requires: 'slice_feather_taken', unless: 'slice_done', height: 8 });
   for (const [x, y] of [[12, 21], [14, 21], [31, 16], [33, 16], [47, 17], [53, 14], [64, 18], [66, 18], [90, 21]] as const) {
     b.at(x, y, { type: 'pickup', id: `path_shard_${x}_${y}`, shards: 3, visual: 'shard' });
   }

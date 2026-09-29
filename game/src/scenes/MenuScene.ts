@@ -32,7 +32,7 @@ export class MenuScene extends Phaser.Scene {
 
   constructor() { super({ key: 'Menu' }); }
 
-  create(data: OverlayData) {
+  create(data: OverlayData & { section?: 'items' }) {
     this.data_ = data;
     this.sub = null;
     this.add.rectangle(0, 0, W, H, 0x03050a, 0.8).setOrigin(0);
@@ -54,6 +54,11 @@ export class MenuScene extends Phaser.Scene {
       sec('settings', 'Settings'), sec('title', 'Quit to title'), sec('resume', 'Resume'),
     ], { width: 260, lineHeight: 48, size: 24, display: true, onCancel: () => this.close() });
     this.show('party');
+    if (data.section === 'items') {
+      // The bag key: straight into the item list.
+      this.left.focus(1);
+      this.enter('items');
+    }
     input.consume();
   }
 
@@ -377,6 +382,8 @@ export class MenuScene extends Phaser.Scene {
 
   override update(time: number) {
     if (this.scene.isActive('Settings')) return;
+    // The bag key toggles, even from inside a list.
+    if (input.pressed('bag')) { this.close(); return; }
     if (this.sub) { this.sub.update(time); return; }
     if (input.pressed('menu')) { this.close(); return; }
     this.left.update(time);

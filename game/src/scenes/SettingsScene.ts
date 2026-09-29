@@ -11,7 +11,7 @@ const SPEEDS = [25, 40, 55, 80, 120, 0];
 const speedName = (v: number) => (v === 0 ? 'Instant' : v <= 25 ? 'Slow' : v <= 40 ? 'Relaxed' : v <= 55 ? 'Normal' : v <= 80 ? 'Fast' : 'Very fast');
 const ACTION_NAMES: Record<Action, string> = {
   left: 'Move left', right: 'Move right', up: 'Up / look up', down: 'Down / drop', jump: 'Jump', dash: 'Dash / sprint',
-  attack: 'Attack', interact: 'Interact / talk', menu: 'Menu', confirm: 'Confirm', cancel: 'Back', language: 'Switch language',
+  attack: 'Attack', interact: 'Interact / talk', menu: 'Menu', bag: 'Bag (items)', confirm: 'Confirm', cancel: 'Back', language: 'Switch language',
 };
 
 /** Settings overlay, opened from the title screen or the pause menu. */
@@ -75,7 +75,7 @@ export class SettingsScene extends Phaser.Scene {
       this.toggle('screenShake', 'Screen shake', 'Camera shake on hits and impacts.'),
       this.toggle('contentWarnings', 'Content notes', 'Short notes before chapters with difficult themes.'),
       this.toggle('profanityFilter', 'Profanity filter', 'Masks strong language in dialogue (English and Tanglish).'),
-      this.toggle('showTips', 'Tips', 'Short tips the first time you meet something new. Seen tips stay in the menu\'s Guide.'),
+      this.toggle('showTips', 'Tips and key hints', 'Short tips the first time you meet something new, and the key hints at the bottom left. Seen tips stay in the menu\'s Guide.'),
       { label: () => 'Controls', onSelect: () => this.showControls(), hint: () => 'Rebind keyboard keys. Gamepads use a standard layout.' },
       { label: () => 'Back', onSelect: () => this.close() },
     ], () => this.close(), 12);

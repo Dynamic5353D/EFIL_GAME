@@ -4,7 +4,7 @@ import { readJSON, storage, writeJSON, type KV } from './Storage';
 export type Lang = 'en' | 'ta';
 
 export const ACTIONS = [
-  'left', 'right', 'up', 'down', 'jump', 'dash', 'attack', 'interact', 'menu', 'confirm', 'cancel', 'language',
+  'left', 'right', 'up', 'down', 'jump', 'dash', 'attack', 'interact', 'menu', 'bag', 'confirm', 'cancel', 'language',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
@@ -19,6 +19,7 @@ export const DEFAULT_BINDINGS: Record<Action, string[]> = {
   attack: ['KeyX', 'KeyJ'],
   interact: ['KeyE', 'ArrowUp'],
   menu: ['Escape', 'Tab'],
+  bag: ['KeyI', 'KeyB'],
   confirm: ['Enter', 'Space', 'KeyZ'],
   cancel: ['Escape', 'Backspace', 'KeyX'],
   language: ['KeyL'],
