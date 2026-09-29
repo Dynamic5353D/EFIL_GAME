@@ -9,6 +9,8 @@ export interface StoryHost {
   title(text: Loc): Promise<void>;
   warn(text: Loc): Promise<void>;
   objective(text: Loc): Promise<void>;
+  /** A place-and-time caption over a staged scene. */
+  caption(text: Loc): Promise<void>;
   choose(options: Loc[], id?: string): Promise<number>;
   /** scene, time, music, sfx, fx, wait, battle, give, ability, join, leave, codex, rel, tag, venture, card */
   /** May return a label to continue from (a `@room` into the room you are already in). */
@@ -55,6 +57,7 @@ export async function runStory(script: Script, host: StoryHost, from?: string, i
       case 'title': await host.title(toLoc(n.text)); break;
       case 'warn': await host.warn(toLoc(n.text)); break;
       case 'objective': await host.objective(toLoc(n.text)); break;
+      case 'caption': await host.caption(toLoc(n.text)); break;
       case 'choice': {
         const i = await host.choose(n.options.map((o) => toLoc(o.text)), n.id);
         const opt = n.options[Math.max(0, Math.min(n.options.length - 1, i))]!;

@@ -16,6 +16,7 @@ import { BASE_ABILITIES } from '../data/abilities';
 import { AREAS, ROOMS } from '../data/rooms';
 import { BATTLES, ENEMIES } from '../data/enemies';
 import { ITEMS } from '../data/items';
+import { rigFor } from '../data/speakers';
 import { Director, type StoryStage } from '../story/Director';
 import { addText, C } from '../ui/theme';
 import { CharacterRig, type RigState } from '../world/CharacterRig';
@@ -26,8 +27,10 @@ import { Player } from '../world/Player';
 import { crystal, chest as chestTex, rosoarTree } from '../world/Props';
 import { Puppet } from '../world/Puppet';
 import { roomFor, TILE, type EntityDef, type PlacedEntity, type RoomDef } from '../world/RoomDef';
-import { buildRoom, type RoomPhysics } from '../world/RoomView';
+import { buildRoom, tintMatrix, type RoomPhysics } from '../world/RoomView';
 import { DEPTH } from '../world/Scenery';
+import { cameraFx, FADES } from '../world/CameraFx';
+import type { StageScene } from './StageScene';
 import type { HudScene } from './HudScene';
 import type { MemberId } from '../data/characters';
 
@@ -119,6 +122,15 @@ export class WorldScene extends Phaser.Scene {
   private crates: Phaser.Physics.Arcade.Image[] = [];
   private caught = false;
   private swaying = false;
+  /** Story camera: where NPCs stand (for framing), whether a story holds the camera, and slow motion. */
+  private npcAt = new Map<string, () => { x: number; y: number; speaker: string; rig: string; shown: boolean }>();
+  private camTaken = false;
+  private shotManual = false;
+  private lastOther: { x: number; y: number } | null = null;
+  private slowK = 1;
+  private slowGrade: Phaser.Filters.ColorMatrix | null = null;
+  /** A story camera move: centre and zoom eased together (so room bounds clamp at the right zoom). */
+  private camMove: { fx: number; fy: number; fz: number; tx: number; ty: number; tz: number; t: number; dur: number; ease: (v: number) => number } | null = null;
 
   constructor() { super({ key: 'World' }); }
 
@@ -134,6 +146,13 @@ export class WorldScene extends Phaser.Scene {
     this.hidden = null;
     this.caught = false;
     this.followers = [];
+    this.npcAt = new Map();
+    this.camTaken = false;
+    this.shotManual = false;
+    this.lastOther = null;
+    this.slowK = 1;
+    this.slowGrade = null;
+    this.camMove = null;
     this.trail = [];
     this.busy = false;
     this.leaving = false;
@@ -153,6 +172,7 @@ export class WorldScene extends Phaser.Scene {
     if (!this.scene.isActive()) return;
     ensureGenSprites(this, enemySlugs);
     this.phys = buildRoom(this, r);
+    if (r.weather.includes('petals')) this.scatterPetals(r);
 
     // Player position: named entry, checkpoint tree, saved coordinates, or the start marker.
     const st = session.state;
@@ -189,8 +209,10 @@ export class WorldScene extends Phaser.Scene {
 
     if (!this.scene.isActive('Hud')) this.scene.launch('Hud');
     (this.scene.get('Hud') as HudScene).clearExitMarks();
+    if (!this.scene.isActive('Stage')) this.scene.launch('Stage');
     if (!this.scene.isActive('Dialogue')) this.scene.launch('Dialogue');
     this.scene.bringToTop('Hud');
+    this.scene.bringToTop('Stage');
     this.scene.bringToTop('Dialogue');
     bus.emit('hud', undefined);
     const stage: StoryStage = {
@@ -211,6 +233,9 @@ export class WorldScene extends Phaser.Scene {
       warp: (entry) => this.warp(entry),
       save: () => this.autosave(),
       credits: () => this.rollCredits(),
+      shot: (k, a, b) => this.shot(k, a, b),
+      frame: (sp, mood) => this.frame(sp, mood),
+      caption: (t) => (this.scene.get('Hud') as HudScene).banner(t),
     };
     this.director = new Director(stage);
     audio.music(r.music);
@@ -322,6 +347,7 @@ export class WorldScene extends Phaser.Scene {
           L.interact = () => void talk();
         }
         let nx = p.x;
+        this.npcAt.set(d.id, () => ({ x: nx, y: p.y, speaker: d.speaker, rig: d.rig ?? d.speaker, shown: shown() }));
         L.update = (dt) => {
           vis = Phaser.Math.Linear(vis, shown() ? 1 : 0, Math.min(1, dt * 4));
           rig.alpha = vis;
@@ -608,6 +634,7 @@ export class WorldScene extends Phaser.Scene {
     this.player.locked = true;
     input.consume();
     this.storyRunning = true;
+    this.lastOther = null;
     showTip('language');
     try {
       await this.director.run(script, label);
@@ -615,6 +642,7 @@ export class WorldScene extends Phaser.Scene {
       console.error(err);
     }
     this.storyRunning = false;
+    if (this.sys.isActive() && !this.leaving) this.restoreCamera();
     if (!this.sys.isActive() && !this.sys.isPaused()) return;
     if (this.leaving) return;
     this.player.locked = false;
@@ -625,6 +653,158 @@ export class WorldScene extends Phaser.Scene {
       this.lostInStory = false;
       await this.defeat();
     }
+  }
+
+  /** Copper-pod blossoms lying on the ground under the trees. */
+  private scatterPetals(r: RoomDef) {
+    if (!this.textures.exists('fx:petal')) return;
+    const rnd = new Phaser.Math.RandomDataGenerator([r.id, 'petals']);
+    const tints = [0xf2c53a, 0xf6d860, 0xe8a820, 0xd89a18];
+    for (let c = 0; c < r.cols; c++) {
+      let row = -1;
+      for (let y = 1; y < r.rows; y++) if (r.grid[y]![c] === '#' && r.grid[y - 1]![c] !== '#') { row = y; break; }
+      if (row < 0) continue;
+      const n = rnd.between(1, 4);
+      for (let k = 0; k < n; k++) {
+        this.add.image(c * TILE + rnd.realInRange(0, TILE), row * TILE + rnd.realInRange(-1, 3), 'fx:petal')
+          .setTint(rnd.pick(tints)).setRotation(rnd.realInRange(0, Math.PI * 2)).setScale(rnd.realInRange(0.35, 0.7), rnd.realInRange(0.18, 0.3))
+          .setAlpha(rnd.realInRange(0.75, 1)).setDepth(DEPTH.terrain + 1);
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------ story camera
+  /** Where someone stands in this room: the player (the lead, by any name), an NPC, or any entity by id. */
+  private where(id?: string): { x: number; y: number } | null {
+    if (!id) return null;
+    const lead = session.state.party[0];
+    const rig = rigFor(id);
+    if (id === 'player' || id === lead || (rig && rig === lead)) return { x: this.player.x, y: this.player.y };
+    const fol = this.followers.find((f) => f.id === id || f.id === rig);
+    if (fol) return { x: this.player.x - this.player.facing * 60, y: this.player.y };
+    const n = this.npcAt.get(id);
+    if (n) return n();
+    for (const g of this.npcAt.values()) {
+      const v = g();
+      if (v.shown && (v.speaker === id || (rig && v.rig === rig))) return v;
+    }
+    const e = this.room.entities.find((x) => (x.def as { id?: string }).id === id);
+    return e ? { x: e.x, y: e.y } : null;
+  }
+
+  private takeCamera() {
+    if (this.camTaken) return;
+    this.camTaken = true;
+    this.cameras.main.stopFollow();
+  }
+
+  private frameAt(x: number, y: number, zoom: number, ms: number, lift = 115 / zoom, ease: (v: number) => number = Phaser.Math.Easing.Sine.InOut) {
+    // By default the feet land just above the dialogue box whatever the zoom.
+    const cam = this.cameras.main;
+    this.camMove = { fx: cam.midPoint.x, fy: cam.midPoint.y, fz: cam.zoom, tx: x, ty: y - lift, tz: zoom, t: 0, dur: settings.get('reducedMotion') ? 1 : Math.max(1, ms), ease };
+  }
+
+  /** Runs in real time (not slowed by slow motion). */
+  private stepCamera(deltaMs: number) {
+    const m = this.camMove;
+    if (!m) return;
+    m.t += deltaMs;
+    const k = m.ease(Math.min(1, m.t / m.dur));
+    const cam = this.cameras.main;
+    cam.setZoom(Phaser.Math.Linear(m.fz, m.tz, k));
+    cam.centerOn(Phaser.Math.Linear(m.fx, m.tx, k), Phaser.Math.Linear(m.fy, m.ty, k));
+    if (m.t >= m.dur) this.camMove = null;
+  }
+
+  /** Story lines in a room: the camera eases in on the speaker and whoever they are talking to. */
+  frame(speaker: string, mood?: string) {
+    if (this.shotManual || speaker === 'narrator') return;
+    const at = this.where(speaker);
+    if (!at) return;
+    this.takeCamera();
+    const me = { x: this.player.x, y: this.player.y };
+    const isMe = Math.abs(at.x - me.x) < 2 && Math.abs(at.y - me.y) < 2;
+    const other = isMe ? this.lastOther : at;
+    if (!isMe) this.lastOther = at;
+    const pair = other && Math.abs(other.x - me.x) < 760 && Math.abs(other.y - me.y) < 300;
+    const x = pair ? (me.x + other!.x) / 2 : at.x;
+    const m = mood ?? '';
+    const zoom = pair ? 1.3 : /shouting|shocked|angry|scared/.test(m) ? 1.55 : m === 'thinking' ? 1.45 : 1.35;
+    this.frameAt(x, pair ? (me.y + other!.y) / 2 : at.y, zoom, /shouting|shocked/.test(m) ? 450 : 1000);
+  }
+
+  /** `@shot` in a room. */
+  shot(kind: string, a?: string, b?: string) {
+    const cam = this.cameras.main;
+    const calm = settings.get('reducedMotion');
+    const A = this.where(a) ?? (kind === 'on' || kind === 'close' || kind === 'orbit' || kind === 'pan' ? { x: this.player.x, y: this.player.y } : null);
+    const B = this.where(b);
+    this.shotManual = kind !== 'auto' && kind !== 'shake' && kind !== 'flash' && kind !== 'slow' && kind !== 'normal' ? true : kind === 'auto' ? false : this.shotManual;
+    switch (kind) {
+      case 'auto': return;
+      case 'wide': this.takeCamera(); this.frameAt(cam.midPoint.x, cam.midPoint.y + 115 / cam.zoom, 0.92, 1400); return;
+      case 'on': this.takeCamera(); this.frameAt(A!.x, A!.y, 1.7, 1100); return;
+      case 'close': this.takeCamera(); this.frameAt(A!.x, A!.y, 2.4, 900); return;
+      case 'two':
+        if (A && B) { this.takeCamera(); this.frameAt((A.x + B.x) / 2, (A.y + B.y) / 2, Phaser.Math.Clamp(900 / (Math.abs(A.x - B.x) + 300), 1.1, 1.7), 1100); }
+        return;
+      case 'push': this.takeCamera(); this.frameAt(cam.midPoint.x, cam.midPoint.y + 115 / cam.zoom, cam.zoom * 1.32, 5200, undefined, Phaser.Math.Easing.Quadratic.Out); return;
+      case 'pull': this.takeCamera(); this.frameAt(cam.midPoint.x, cam.midPoint.y + 115 / cam.zoom, 0.95, 3200); return;
+      case 'pan':
+      case 'orbit': {
+        // A slow sideways dolly past the subject: the parallax layers slide at their own depths.
+        this.takeCamera();
+        const d = a === 'left' || b === 'left' ? -1 : 1;
+        cam.setZoom(1.5);
+        cam.centerOn(A!.x - d * 260, A!.y - 115 / 1.5);
+        this.frameAt(A!.x + d * 260, A!.y, 1.58, calm ? 1 : 6800);
+        return;
+      }
+      case 'dutch': this.tweens.add({ targets: cam, rotation: 0.06, duration: calm ? 1 : 900 }); return;
+      case 'level': this.tweens.add({ targets: cam, rotation: 0, duration: calm ? 1 : 600 }); return;
+      case 'shake': if (settings.get('screenShake') && !calm) cam.shake(400, 0.012); return;
+      case 'flash': cam.flash(350, 255, 255, 255); return;
+      case 'slow': this.setSlow(true); return;
+      case 'normal': this.setSlow(false); return;
+    }
+  }
+
+  /** Slow motion in the room: people and particles at a third of their speed, the colour drained. */
+  private setSlow(on: boolean) {
+    const cam = this.cameras.main;
+    const k = 0.3;
+    if (on && !this.slowGrade) {
+      this.slowK = k;
+      this.tweens.timeScale = k;
+      this.physics.world.timeScale = 1 / k;
+      for (const o of this.children.list) if (o instanceof Phaser.GameObjects.Particles.ParticleEmitter) o.timeScale = k;
+      this.slowGrade = cam.filters.internal.addColorMatrix();
+      this.slowGrade.colorMatrix.saturate(-0.6);
+      this.slowGrade.colorMatrix.multiply(tintMatrix(0x9cc4ff, 0.18), true);
+      this.slowGrade.colorMatrix.brightness(1.08, true);
+      audio.sfx('heartbeat');
+    } else if (!on && this.slowGrade) {
+      this.slowK = 1;
+      this.tweens.timeScale = 1;
+      this.physics.world.timeScale = 1;
+      for (const o of this.children.list) if (o instanceof Phaser.GameObjects.Particles.ParticleEmitter) o.timeScale = 1;
+      cam.filters.internal.remove(this.slowGrade);
+      this.slowGrade = null;
+    }
+  }
+
+  /** After a story: the camera goes back to following the player. */
+  private restoreCamera() {
+    this.shotManual = false;
+    this.lastOther = null;
+    this.setSlow(!!session.state.flags.slowmo);
+    const cam = this.cameras.main;
+    if (!session.state.flags.dizzy) this.tweens.add({ targets: cam, rotation: 0, duration: 300 });
+    this.camMove = null;
+    if (!this.camTaken) return;
+    this.camTaken = false;
+    cam.zoomTo(1, settings.get('reducedMotion') ? 1 : 700, 'Sine.easeInOut', true);
+    cam.startFollow(this.player.body, true, 0.1, 0.12);
   }
 
   /** StoryStage: launches the Battle scene over this one and resolves with the outcome. */
@@ -750,104 +930,13 @@ export class WorldScene extends Phaser.Scene {
   }
 
   async fx(name: string): Promise<void> {
-    const cam = this.cameras.main;
-    const calm = settings.get('reducedMotion');
-    const shake = settings.get('screenShake') && !calm;
-    const wait = (ms: number) => new Promise<void>((r) => this.time.delayedCall(ms, () => r()));
-    switch (name) {
-      case 'shake': if (shake) cam.shake(350, 0.012); return wait(350);
-      case 'flash': cam.flash(300, 255, 255, 255); return wait(300);
-      case 'red_flash': cam.flash(600, 255, 40, 50); audio.sfx('meld'); return wait(600);
-      case 'slap':
-        audio.sfx('slap');
-        cam.flash(120, 255, 255, 255);
-        if (shake) cam.shake(160, 0.01);
-        return wait(250);
-      case 'tick': {
-        audio.sfx('tick');
-        const cm = cam.filters.internal.addColorMatrix();
-        cm.colorMatrix.desaturate();
-        await wait(220);
-        cam.filters.internal.remove(cm);
-        return;
-      }
-      case 'migraine': {
-        audio.sfx('dread');
-        cam.flash(900, 120, 20, 40);
-        if (calm) return wait(600);
-        const barrel = cam.filters.internal.addBarrel(1);
-        await new Promise<void>((r) => this.tweens.addCounter({
-          from: 0, to: 1, duration: 1400, onUpdate: (tw) => { barrel.amount = 1 + Math.sin(tw.getValue()! * Math.PI * 3) * 0.12 * (1 - tw.getValue()!); },
-          onComplete: () => r(),
-        }));
-        cam.filters.internal.remove(barrel);
-        return;
-      }
-      case 'fade_out':
-        cam.fadeOut(calm ? 150 : 600, 0, 0, 0);
-        return wait(calm ? 150 : 600);
-      case 'fade_in':
-        cam.fadeIn(calm ? 150 : 600, 0, 0, 0);
-        return wait(calm ? 150 : 600);
-      case 'black':
-        // Cut to black at once (gore and violence cut away at the moment of impact).
-        cam.fadeOut(0, 0, 0, 0);
-        return wait(60);
-      case 'unblack':
-        cam.fadeIn(calm ? 150 : 700, 0, 0, 0);
-        return wait(calm ? 150 : 700);
-      case 'bang':
-        audio.sfx('gun');
-        cam.flash(90, 255, 255, 255);
-        if (shake) cam.shake(200, 0.014);
-        await wait(90);
-        cam.fadeOut(0, 0, 0, 0);
-        return wait(900);
-      case 'snap': {
-        // Nithish's snap: a red flash and the world freezes grey for a breath.
-        audio.sfx('tick');
-        audio.sfx('meld');
-        cam.flash(500, 255, 30, 40);
-        const cm = cam.filters.internal.addColorMatrix();
-        cm.colorMatrix.desaturate();
-        if (shake) cam.shake(300, 0.01);
-        await wait(900);
-        cam.filters.internal.remove(cm);
-        return;
-      }
-      case 'dizzy': {
-        audio.sfx('dread');
-        if (calm) return wait(400);
-        const barrel = cam.filters.internal.addBarrel(1);
-        const blur = cam.filters.internal.addBlur(0, 2, 2, 1);
-        await new Promise<void>((r) => this.tweens.addCounter({
-          from: 0, to: 1, duration: 2200, onUpdate: (tw) => {
-            const v = tw.getValue()!;
-            barrel.amount = 1 + Math.sin(v * Math.PI * 4) * 0.08 * Math.sin(v * Math.PI);
-            blur.strength = Math.sin(v * Math.PI) * 1.4;
-          },
-          onComplete: () => r(),
-        }));
-        cam.filters.internal.remove(barrel);
-        cam.filters.internal.remove(blur);
-        return;
-      }
-      case 'lightning':
-        cam.flash(160, 220, 230, 255);
-        this.time.delayedCall(220, () => cam.flash(90, 200, 210, 255));
-        this.time.delayedCall(500, () => audio.sfx('thunder'));
-        return wait(300);
-      case 'fire':
-        audio.sfx('fire');
-        cam.flash(400, 255, 140, 40);
-        if (shake) cam.shake(300, 0.008);
-        return wait(400);
-      case 'heartbeat':
-        audio.sfx('heartbeat');
-        return wait(900);
-      default:
-        return;
+    // While a staged scene is up the effect plays on the stage; the World only mirrors fades silently.
+    const stage = this.scene.get('Stage') as StageScene | null;
+    if (stage?.isOpen) {
+      if (FADES.has(name)) void cameraFx(this, this.cameras.main, name, true);
+      return cameraFx(stage, stage.cameras.main, name);
     }
+    return cameraFx(this, this.cameras.main, name);
   }
 
 
@@ -1132,12 +1221,15 @@ export class WorldScene extends Phaser.Scene {
   // ------------------------------------------------------------------ frame
   override update(_time: number, deltaMs: number) {
     if (!this.ready) return;
-    const dt = Math.min(0.05, deltaMs / 1000);
+    this.stepCamera(deltaMs);
+    const dt = Math.min(0.05, deltaMs / 1000) * this.slowK;
     this.clock += dt;
     session.tickPlaytime();
     const st = session.state;
     // The powers fade in when they wake (the dance in Venture 1).
     CharacterRig.powers += ((powersAwake(st) ? 1 : 0) - CharacterRig.powers) * Math.min(1, dt * 0.8);
+    // A script can leave the room in slow motion for the player to walk through (flag `slowmo`).
+    if (!this.storyRunning && !!st.flags.slowmo !== !!this.slowGrade) this.setSlow(!!st.flags.slowmo);
 
     const dizzy = !!st.flags.dizzy;
     this.player.speedMul = dizzy ? 0.55 : 1;

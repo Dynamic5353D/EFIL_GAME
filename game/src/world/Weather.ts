@@ -63,8 +63,14 @@ export function addWeather(scene: Phaser.Scene, room: RoomDef, tint: number): Ph
         add('fx:petal', {
           x: { min: -50, max: VW + 50 }, y: -20, lifespan: 9000, speedY: { min: 30, max: 60 }, speedX: { min: -30, max: 30 },
           scale: { min: 0.35, max: 0.7 }, rotate: { start: 0, end: 540 }, alpha: { start: 0.95, end: 0.6 },
-          frequency: 420 / calm, tint: [0xf2c53a, 0xf6d860, 0xe8a820],
+          frequency: 150 / calm, tint: [0xf2c53a, 0xf6d860, 0xe8a820],
         }, DEPTH.weather, 0);
+        // A few big ones drifting right past the lens.
+        add('fx:petal', {
+          x: { min: -50, max: VW + 50 }, y: -30, lifespan: 7000, speedY: { min: 45, max: 80 }, speedX: { min: -40, max: 20 },
+          scale: { min: 1.0, max: 1.6 }, rotate: { start: 0, end: 720 }, alpha: { start: 0.9, end: 0.5 },
+          frequency: 1400 / calm, tint: [0xf2c53a, 0xf6d860],
+        }, DEPTH.foreground + 1, 0);
         break;
       case 'smoke':
         add('fx:soft', {

@@ -5,6 +5,7 @@ export const FLAGS: Record<string, string> = {
   slice_asked_about_home: 'Test slice: Ragul asked how to get home (choice)',
   slice_vale_pack_defeated: 'Test slice: the Vale pack on the Winter Path is gone',
   slice_feather_taken: 'Test slice: the Acanus feather has been picked up',
+  slowmo: 'Engine: the room runs in slow motion while set (the V1 dance)',
   powers_awakened: 'Venture 1: time slows at Dhanasree\'s dance and the four wake to their powers',
   slice_done: 'Test slice: the end of the Winter Path has been reached (the slice is over)',
   won: 'Set by @battle: the last battle was won',
@@ -29,6 +30,7 @@ export const FLAGS: Record<string, string> = {
   v01_passed_body: 'V1: he walked past the man on the road',
   v01_flashmob: 'V1: the flashmob is on (10:30 AM)',
   v01_dhana_dance: 'V1: Dhanasree dances',
+  v01_time_stopped: 'V1: time slows at the dance; walk to her',
   v01_fest_cancelled: 'V1: the fest is cancelled',
 
   // ---------------------------------------------------------------- Venture 2

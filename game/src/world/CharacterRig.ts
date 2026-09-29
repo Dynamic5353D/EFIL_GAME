@@ -7,7 +7,9 @@
 import Phaser from 'phaser';
 import { rigStyle, type Hair, type RigStyle } from '../data/rigs';
 
-export type RigState = 'idle' | 'run' | 'jump' | 'fall' | 'dash' | 'hurt' | 'attack' | 'interact' | 'battle' | 'cast' | 'ko' | 'dance' | 'sit' | 'kneel';
+export type RigState = 'idle' | 'run' | 'jump' | 'fall' | 'dash' | 'hurt' | 'attack' | 'interact' | 'battle' | 'cast' | 'ko' | 'dance' | 'sit' | 'kneel'
+  // Staged scenes (StageScene):
+  | 'talk' | 'phone' | 'think' | 'point' | 'cross';
 
 interface Pose {
   lean: number; bob: number; head: number;
@@ -133,6 +135,19 @@ export class CharacterRig {
         return { ...ZERO, bob: 16, thighF: 1.5, shinF: 0, thighB: 1.4, shinB: -0.1, armF: 0.6, foreF: 1.3, armB: 0.4, foreB: 1.1, head: 0.2 + Math.sin(this.t * 1.2) * 0.03 };
       case 'kneel':
         return { ...ZERO, lean: 0.35, bob: 14, thighF: 1.4, shinF: -0.2, thighB: 0.1, shinB: -1.5, armF: 1.1, foreF: 1.3, armB: 0.6, foreB: 0.9, head: 0.4 };
+      // Staging poses. Angles: 0 points down, positive swings toward the facing side, π points up.
+      case 'talk': {
+        const a = Math.sin(this.t * 3.2), b = Math.sin(this.t * 4.1 + 1);
+        return { ...ZERO, bob: Math.sin(this.t * 1.8) * 0.8, head: Math.sin(this.t * 5) * 0.05, armF: 0.55 + a * 0.35, foreF: 1.45 + b * 0.4, armB: 0.1 + b * 0.08, foreB: 0.4, thighF: 0.05, thighB: -0.05 };
+      }
+      case 'phone':
+        return { ...ZERO, bob: Math.sin(this.t * 1.6) * 0.6, head: -0.08, armF: 1.3, foreF: 3.7, armB: 0.05, foreB: 0.2, thighF: 0.05, thighB: -0.05 };
+      case 'think':
+        return { ...ZERO, bob: Math.sin(this.t * 1.2) * 0.5, head: 0.12, armF: 0.6, foreF: 3.1, armB: 0.7, foreB: 2.0, thighF: 0.05, thighB: -0.05 };
+      case 'point':
+        return { ...ZERO, lean: 0.06, bob: 0, head: -0.05, armF: 1.5, foreF: 1.6, armB: -0.1, foreB: 0.2, thighF: 0.25, shinF: 0.05, thighB: -0.2, shinB: -0.2 };
+      case 'cross':
+        return { ...ZERO, bob: Math.sin(this.t * 1.4) * 0.5, head: -0.04, armF: 0.45, foreF: 2.1, armB: 0.5, foreB: 2.3, thighF: 0.08, thighB: -0.08 };
       case 'battle':
         return { ...ZERO, lean: 0.1, bob: Math.sin(this.t * 2.4) * 1.2, thighF: 0.35, shinF: 0.05, thighB: -0.3, shinB: -0.45, armF: 0.5, foreF: 1.5, armB: 0.3, foreB: 1.3, head: 0 };
       default: {
@@ -242,8 +257,8 @@ export class CharacterRig {
       const p = this.scarf[i]!;
       const vx = (p.x - p.px) * 0.9, vy = (p.y - p.py) * 0.9;
       p.px = p.x; p.py = p.y;
-      p.x += vx + (wind - f * 30) * dt * dt * 60;
-      p.y += vy + 260 * dt * dt;
+      p.x += vx + (wind - f * 30) * dt * dt * 60 * this.scale;
+      p.y += vy + 260 * dt * dt * this.scale;
     }
     for (let it = 0; it < 3; it++) {
       for (let i = 1; i < this.scarf.length; i++) {
@@ -277,19 +292,32 @@ export class CharacterRig {
     };
     drawAll(this.rim, mixColor(this.rim, 0x000000, 0.4), rimDx, rimDy, 0.9);
     drawAll(body, back, 0, 0, 1);
-    // Non-protagonists wear their clothes: a tinted torso so uniforms and shirts read at a glance.
-    if (!this.style.veins) {
-      g.fillStyle(mixColor(this.style.cloth, body, 0.3), 1);
-      torso(0, 0);
-    }
 
-    // Scarf over the body (protagonists); everyone else gets a collar band in their clothing colour.
+    // Clothes over the silhouette, a touch inside its edge so the dark outline and the rim light stay:
+    // a shirt with sleeves, trousers. The four wear dark clothes; everyone else their own colour.
+    const mid = (a: { x: number; y: number }, b: { x: number; y: number }, t: number) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+    const shirt = this.style.veins ? mixColor(this.cloth, body, 0.7) : mixColor(this.style.cloth, body, 0.3);
+    const uniform = this.style.cap !== undefined && this.style.cap === this.style.cloth;
+    const pants = uniform ? mixColor(shirt, 0x000000, 0.18) : mixColor(0x26324a, body, this.style.veins ? 0.55 : 0.4);
+    const dim = (c: number) => mixColor(c, 0x000000, 0.38);
+    g.fillStyle(dim(shirt), 1);
+    cap(sh, elbB, 2.7); cap(elbB, mid(elbB, handB, 0.55), 2.3);
+    g.fillStyle(dim(pants), 1);
+    cap(hip, kneeB, 3.6); cap(kneeB, mid(kneeB, footB, 0.82), 2.9);
+    g.fillStyle(pants, 1);
+    cap(hip, kneeF, 3.8); cap(kneeF, mid(kneeF, footF, 0.82), 3.0);
+    g.fillStyle(shirt, 1);
+    torso(0, 0);
+    // A soft fold of light down the lit side of the shirt.
+    g.fillStyle(mixColor(shirt, 0xffffff, 0.12), 0.55);
+    cap(mid(hip, chest, 0.2), mid(hip, chest, 0.85), 2.2, -2.4 * this.scale * f, 0);
+    g.fillStyle(shirt, 1);
+    cap(sh, elbF, 2.8); cap(elbF, mid(elbF, handF, 0.55), 2.4);
     if (!this.style.scarf) {
-      const c = pt(chest.x, chest.y);
-      g.fillStyle(this.cloth, 1);
-      g.fillEllipse(c.x, c.y + 3 * this.scale, 15 * this.scale * this.w, 9 * this.scale);
-      g.fillStyle(mixColor(this.cloth, 0xffffff, 0.3), 0.8);
-      g.fillEllipse(c.x - f * 3 * this.scale, c.y + 1 * this.scale, 6 * this.scale, 3 * this.scale);
+      // Collar.
+      const c = pt(neck.x, neck.y + 2.5);
+      g.fillStyle(mixColor(shirt, 0xffffff, 0.18), 1);
+      g.fillEllipse(c.x, c.y, 11 * this.scale * this.w, 4 * this.scale);
     }
     if (this.style.scarf) g.lineStyle(4.2 * this.scale, this.cloth, 1);
     else g.lineStyle(0, 0, 0);

@@ -9,7 +9,7 @@ import { BATTLES } from '../data/enemies';
 import { FLAGS } from '../data/flags';
 import { ITEMS } from '../data/items';
 import { BANNED_TAGS, BANNED_WORDS, FX, MUSIC, SFX } from '../data/media';
-import { SPEAKERS } from '../data/speakers';
+import { rigFor, SHOTS, SPEAKERS, STAGE_POSES } from '../data/speakers';
 import { parseStory, type TextNode } from './parser';
 
 export interface LintIssue { file: string; line: number; message: string }
@@ -50,6 +50,7 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
       case 'title':
       case 'warn':
       case 'objective':
+      case 'caption':
         checkText(n.text, n.line);
         break;
       case 'choice':
@@ -87,6 +88,21 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
           case 'tag': if (BANNED_TAGS.includes(a)) bad(n.line, `banned content tag "${a}"`); break;
           case 'venture': if (n.args.some((x) => !/^\d+$/.test(x))) bad(n.line, '@venture needs two numbers'); break;
           case 'wait': if (!/^\d+$/.test(a)) bad(n.line, '@wait needs milliseconds'); break;
+          case 'cast':
+            for (const c of n.args) {
+              const m = /^([a-z_0-9]+)(?:@([\d.]+))?([<>])?(\^)?(?::([a-z]+))?$/.exec(c);
+              if (!m) bad(n.line, `bad cast entry "${c}" (id@x<:pose)`);
+              else {
+                if (!rigFor(m[1]!)) bad(n.line, `"${m[1]}" has no figure to put on stage`);
+                if (m[5] && !STAGE_POSES.includes(m[5])) bad(n.line, `unknown pose "${m[5]}"`);
+              }
+            }
+            break;
+          case 'enter': case 'exit': case 'pose': case 'face':
+            if (!rigFor(a)) bad(n.line, `"${a}" has no figure to put on stage`);
+            if (n.name === 'pose' && !STAGE_POSES.includes(n.args[1] ?? '')) bad(n.line, `unknown pose "${n.args[1]}"`);
+            break;
+          case 'shot': if (!SHOTS.includes(a)) bad(n.line, `unknown shot "${a}"`); break;
         }
         break;
       }

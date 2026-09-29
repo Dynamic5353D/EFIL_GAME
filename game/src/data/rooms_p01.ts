@@ -171,6 +171,8 @@ function mitRoad(): RoomDef {
     b.at(x, 17, { type: 'npc', id: `dancer_${x}`, speaker: 'guy', rig, radius: 0, face: -1, pose: 'dance', requires: 'v01_flashmob', hideIf: 'v01_dhana_dance' });
   }
   b.at(68, 17, { type: 'npc', id: 'dhana_dance', speaker: 'dhanasree', radius: 0, face: -1, pose: 'dance', requires: 'v01_dhana_dance', hideIf: 'v01_fest_cancelled' });
+  b.at(77, 17, { type: 'npc', id: 'senior_mic', speaker: 'senior', radius: 0, face: -1, requires: 'v01_dhana_dance', hideIf: 'v01_fest_cancelled' });
+  b.at(62, 17, { type: 'trigger', id: 'dance_end', script: V(1), label: 'dance_end', requires: 'v01_time_stopped', unless: 'v01_fest_cancelled', height: 8 });
   for (const [x, rig] of [[52, 'girl'], [55, 'guy'], [58, 'sneya'], [79, 'guy'], [82, 'girl'], [85, 'kabi']] as const) {
     b.at(x, 17, { type: 'npc', id: `crowd_${x}`, speaker: 'guy', rig, radius: 0, requires: 'v01_flashmob', hideIf: 'v01_fest_cancelled' });
   }

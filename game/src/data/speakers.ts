@@ -1,4 +1,6 @@
 import { loc, type Loc } from '../core/Localization';
+import { CHARACTERS } from './characters';
+import { NPC_RIGS } from './rigs';
 
 export interface SpeakerDef {
   id: string;
@@ -64,3 +66,20 @@ export const SPEAKERS: Record<string, SpeakerDef> = {
   soldier: { id: 'soldier', name: loc('Black-suited soldier', 'Karuppu uda veeran'), portrait: 'gen:soldier', color: 0x7fd4ff },
   captain: { id: 'captain', name: loc('The Captain', 'Thalaivan'), portrait: 'gen:captain', color: 0x9fe0ff },
 };
+
+/** The figure a speaker is drawn as on stage (a party member or an NPC rig), or null for voices only. */
+export function rigFor(id: string): string | null {
+  if (id in CHARACTERS || id in NPC_RIGS) return id;
+  const p = SPEAKERS[id]?.portrait;
+  if (p?.startsWith('gen:')) {
+    const r = p.slice(4);
+    if (r in CHARACTERS || r in NPC_RIGS) return r;
+  }
+  return null;
+}
+
+/** Poses a staged figure can hold (`@cast x:pose`, `@pose x pose`). */
+export const STAGE_POSES = ['idle', 'talk', 'sit', 'kneel', 'dance', 'phone', 'think', 'point', 'cross', 'ko', 'run', 'hurt', 'cast'];
+
+/** Camera shots for `@shot` (staged scenes and rooms alike). */
+export const SHOTS = ['auto', 'wide', 'on', 'close', 'two', 'push', 'pull', 'pan', 'orbit', 'dutch', 'shake', 'flash', 'slow', 'normal', 'level'];

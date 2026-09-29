@@ -38,6 +38,7 @@ export type StoryNode =
   | { k: 'title'; text: TextNode; line: number }
   | { k: 'warn'; text: TextNode; line: number }
   | { k: 'objective'; text: TextNode; line: number }
+  | { k: 'caption'; text: TextNode; line: number }
   | { k: 'choice'; id?: string; options: { text: TextNode; target: string; line: number }[]; line: number }
   | { k: 'cmd'; name: string; args: string[]; line: number }
   | { k: 'set'; flag: string; value: string | number | boolean; line: number }
@@ -93,9 +94,22 @@ export const COMMANDS: Record<string, { min: number; max: number }> = {
   credits: { min: 0, max: 0 },
   /** Adds to a numeric flag: `@add v04_asked` (1) or `@add score 5`. */
   add: { min: 1, max: 2 },
+  // ---- Staging (see scenes/StageScene.ts). A `@scene` casts everyone who speaks in it unless a `@cast` follows.
+  /** Who is on stage: `@cast guy1@0.35:sit krishnaa@0.7<` (x 0..1, `<`/`>` facing, `:pose`, `^` at the back). */
+  cast: { min: 1, max: 10 },
+  /** Walks someone on: `@enter krishnaa right 0.7` (from left/right or an x, to an x). */
+  enter: { min: 2, max: 3 },
+  /** Walks someone off: `@exit krishnaa right`. */
+  exit: { min: 1, max: 2 },
+  /** `@pose dhanasree dance` (idle, talk, sit, kneel, dance, phone, think, point, ko, run). */
+  pose: { min: 2, max: 2 },
+  /** `@face ragul left` or `@face ragul dhanasree`. */
+  face: { min: 2, max: 2 },
+  /** Camera: `@shot on ragul`, `@shot close ragul`, `@shot two a b`, `@shot wide`, `@shot push`, `@shot orbit`, `@shot slow`, `@shot auto`… */
+  shot: { min: 1, max: 3 },
 };
 
-const TEXT_COMMANDS = new Set(['title', 'warn', 'objective']);
+const TEXT_COMMANDS = new Set(['title', 'warn', 'objective', 'caption']);
 
 export function parseValue(raw: string): string | number | boolean {
   const s = raw.trim();
@@ -183,7 +197,7 @@ export function parseStory(source: string, file = '<story>'): Script {
         const rest = sp < 0 ? '' : part.slice(sp + 1).trim();
         if (TEXT_COMMANDS.has(name)) {
           if (!rest) errors.push({ line: no, message: `@${name} needs text` });
-          const node = { k: name as 'title' | 'warn' | 'objective', text: { en: rest }, line: no };
+          const node = { k: name as 'title' | 'warn' | 'objective' | 'caption', text: { en: rest }, line: no };
           nodes.push(node);
           lastText = node.text;
           lastIndent = indent;

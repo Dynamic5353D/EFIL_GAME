@@ -12,6 +12,8 @@ import { CODEX } from '../data/codex';
 import { ITEMS } from '../data/items';
 import type { MusicId, SfxId } from '../data/media';
 import type { DialogueScene } from '../scenes/DialogueScene';
+import { rigFor } from '../data/speakers';
+import { parseCast, type StageScene } from '../scenes/StageScene';
 import { parseStory, type Script } from './parser';
 import { runStory, type FlagValue, type StoryHost } from './runtime';
 
@@ -23,9 +25,33 @@ export function getScript(name: string): Script {
   if (!cache[name]) {
     const src = SOURCES[`./${name}.story`];
     if (src === undefined) throw new Error(`no story script "${name}"`);
-    cache[name] = parseStory(src, `${name}.story`);
+    cache[name] = autoCast(parseStory(src, `${name}.story`));
   }
   return cache[name]!;
+}
+
+/**
+ * A `@scene` with no `@cast` straight after it puts everyone who speaks in it on stage, in order of
+ * appearance (voices with no figure, like a mother on the phone, stay off). The names ride along as
+ * extra `~id` arguments.
+ */
+function autoCast(script: Script): Script {
+  const ends = new Set(['scene', 'room', 'card', 'credits', 'next']);
+  script.nodes.forEach((n, i) => {
+    if (n.k !== 'cmd' || n.name !== 'scene' || n.args[0] === 'none') return;
+    let j = i + 1;
+    while (script.nodes[j]?.k === 'label') j++;
+    const next = script.nodes[j];
+    if (next?.k === 'cmd' && next.name === 'cast') return;
+    const ids: string[] = [];
+    for (let k = i + 1; k < script.nodes.length; k++) {
+      const m = script.nodes[k]!;
+      if (m.k === 'end' || (m.k === 'cmd' && ends.has(m.name))) break;
+      if (m.k === 'line' && m.speaker !== 'narrator' && rigFor(m.speaker) && !ids.includes(m.speaker)) ids.push(m.speaker);
+    }
+    n.args = [n.args[0]!, ...ids.map((x) => `~${x}`)];
+  });
+  return script;
 }
 
 /** What the director needs from the scene hosting the story (usually the World). */
@@ -43,6 +69,12 @@ export interface StoryStage {
   save(): void;
   /** Rolls the credits and returns to the title. */
   credits(): void;
+  /** Camera work in the room itself (when no stage is open): `@shot`. */
+  shot(kind: string, a?: string, b?: string): void;
+  /** Frames whoever is speaking, if they are in the room. */
+  frame(speaker: string, mood?: string): void;
+  /** A place-and-time caption over the room. */
+  caption(text: Loc): void;
 }
 
 export class Director implements StoryHost {
@@ -56,6 +88,12 @@ export class Director implements StoryHost {
 
   private get dialogue(): DialogueScene {
     return this.stage.scene.scene.get('Dialogue') as DialogueScene;
+  }
+
+  /** The staged-scene layer, when a `@scene` is open. */
+  private get set(): StageScene | null {
+    const s = this.stage.scene.scene.get('Stage') as StageScene | null;
+    return s?.isOpen ? s : null;
   }
 
   async run(scriptName: string, label?: string): Promise<void> {
@@ -74,6 +112,7 @@ export class Director implements StoryHost {
       }
     } finally {
       this.dialogue.hide();
+      this.dialogue.letterbox(false);
       await this.dialogue.setBackdrop(null);
     }
   }
@@ -81,7 +120,20 @@ export class Director implements StoryHost {
   /** Stops the running script at the next line (e.g. after a lost battle). */
   cancel() { this.cancelled = true; }
 
-  say(speaker: string, mood: string | undefined, text: Loc) { return this.dialogue.say(speaker, mood, text); }
+  say(speaker: string, mood: string | undefined, text: Loc) {
+    const set = this.set;
+    if (set) set.speak(speaker, mood);
+    else {
+      this.dialogue.letterbox(true);
+      this.stage.frame(speaker, mood);
+    }
+    return this.dialogue.say(speaker, mood, text);
+  }
+  async caption(text: Loc) {
+    const set = this.set;
+    if (set) set.caption(text);
+    else this.stage.caption(text);
+  }
   async title(text: Loc) { this.cardTitle = text; }
   async warn(text: Loc) {
     if (settings.get('contentWarnings')) await this.dialogue.notice('Content note', tr(text));
@@ -116,7 +168,22 @@ export class Director implements StoryHost {
       case 'sfx': audio.sfx(a as SfxId); break;
       case 'fx': await this.stage.fx(a); break;
       case 'wait': await new Promise((r) => setTimeout(r, Number(a) || 0)); break;
-      case 'scene': await this.dialogue.setBackdrop(a === 'none' ? null : a); break;
+      case 'scene': {
+        const cast = args.slice(1).map((x) => ({ id: x.replace(/^~/, '') }));
+        await this.dialogue.setBackdrop(a === 'none' ? null : a, cast);
+        break;
+      }
+      case 'cast': this.set?.cast(args.map(parseCast).filter((c): c is NonNullable<typeof c> => !!c)); break;
+      case 'enter': this.set?.enter(a, args[1] ?? 'right', args[2]); break;
+      case 'exit': this.set?.exit(a, args[1]); break;
+      case 'pose': this.set?.pose(a, args[1] ?? 'idle'); break;
+      case 'face': this.set?.face(a, args[1] ?? 'right'); break;
+      case 'shot': {
+        const set = this.set;
+        if (set) set.shot(a, args[1], args[2]);
+        else this.stage.shot(a, args[1], args[2]);
+        break;
+      }
       case 'battle': {
         this.dialogue.hide();
         const result = await this.stage.runBattle(a);

@@ -18,6 +18,7 @@ export class HudScene extends Phaser.Scene {
   private offs: (() => void)[] = [];
   private tipQueue: string[] = [];
   private tipCard: Phaser.GameObjects.Container | null = null;
+  private cinema = false;
   private exitMarks = new Map<string, { c: Phaser.GameObjects.Container; arrow: Phaser.GameObjects.Graphics; name: Phaser.GameObjects.Container }>();
 
   constructor() { super({ key: 'Hud' }); }
@@ -30,6 +31,7 @@ export class HudScene extends Phaser.Scene {
     this.offs.push(bus.on('toast', ({ text, icon }) => this.toast(text, icon)));
     this.offs.push(bus.on('tip', ({ id }) => { this.tipQueue.push(id); if (!this.tipCard) this.nextTip(); }));
     this.offs.push(bus.on('settings', () => this.refresh()));
+    this.offs.push(bus.on('cinema', ({ on }) => { this.cinema = on; this.refresh(); }));
     this.events.once('shutdown', () => this.offs.forEach((o) => o()));
   }
 
@@ -38,6 +40,8 @@ export class HudScene extends Phaser.Scene {
     this.texts.forEach((t) => t.destroy());
     this.texts = [];
     const st = session.state;
+    // During a story the bars are down and only tips and toasts show.
+    if (this.cinema) { for (const m of this.exitMarks.values()) m.c.setVisible(false); return; }
     let x = 28;
     const y = 24;
     for (const id of st.party) {
@@ -119,6 +123,7 @@ export class HudScene extends Phaser.Scene {
    */
   exitMark(id: string, label: string, out: 1 | -1, x: number, y: number, arrowAlpha: number, nameAlpha: number) {
     if (!this.sys.isActive()) return; // the world's first frame can come before the HUD has started
+    if (this.cinema) { arrowAlpha = 0; nameAlpha = 0; }
     let m = this.exitMarks.get(id);
     if (!m) {
       const arrow = this.add.graphics();

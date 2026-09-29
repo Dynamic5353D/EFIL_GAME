@@ -114,14 +114,18 @@ THAT_GUY (thinking): I can't. I just can't do this.
 @label man
 @set v01_passed_body
 @music mystery
+@shot orbit body
 NARRATOR: Someone is lying on the road. Face down, not moving.
   ta: Road-la yaaro kedakkuraanga. Kavundhu, asaivillaama.
+@shot on that_guy
 THAT_GUY (panicked): What happened to him? At this hour, lying on the road... Maybe he's sick and fainted. Or he's a drunk.
   ta: Yenna airukum avaruku, yen indha nerathula road-la paduthurukaru. Oru vela udambu sari illama mayangi vilundhutaro. Illana, kudigara payana irupano!
 THAT_GUY (panicked): Or... someone killed him and dumped him here!! What do I do? There's nobody around.
   ta: Illana oru vela… yarachu konnu apdiye road-la potu poitangala!! Ippo yenna panna... Yaraiyum kaanom inga.
+@shot on red_shirt
 NARRATOR: Far down the road, a man in a red shirt is walking away.
   ta: Road-oda dhoorathula, sivappu sattai pottu oru aal nadandhu poraan.
+@shot auto
 @choice man_on_road
   - Call out to the man in the red shirt -> call
     ta: Andha sivappu sattai aala koopidu
@@ -130,13 +134,17 @@ NARRATOR: Far down the road, a man in a red shirt is walking away.
   - Walk away -> walk
     ta: Nadandhu po
 @label call
+@shot on red_shirt
 THAT_GUY (thinking): There's someone over there. Should I call him? ...He's too far. My throat won't even open.
   ta: Anga oruthar poraru, avura koopduvoma? …Romba dhooram. Thondaila sathame varala.
+@shot auto
 @goto excuse
 @label check
+@shot close body
 NARRATOR: He takes one step toward the man, and the headache hits like a nail driven through his temple.
   ta: Avan pakkathula oru adi vaikkuraan. Thalavazhi pottula aani adicha maari thaakkudhu.
 @fx migraine
+@shot auto
 @goto excuse
 @label walk
 THAT_GUY (thinking): Looking at him, I feel sorry for him too...
@@ -147,19 +155,26 @@ THAT_GUY (stressed): No! I've got a thousand problems of my own, and this headac
   ta: Illa! Yenakkey aairathettu prechana iruku, idhula indha thala vazhi veraya.
 THAT_GUY: Maybe you've got some big problem too. Or maybe saving you would be like... saving the whole world.
   ta: Ungalukum maybe yedadhu periya prechana irukalam, or maybe… ungala kaapathunaa… ULAGATHAIYE save panra mari kooda irukalam.
+@shot close that_guy
 THAT_GUY: Whatever it is, helping you now does nothing for me. Sorry bro, the world is cruel. I can't help you.
   ta: Yedhuvaa venalum irukatum, aana ippo ungaluku udhavi pannaa, enakku yendha prayojanam-um illa. Sorry bro, the world is cruel. Ungaluku yennala help panna mudiyadhu.
 @clue first_body
+@shot pull
 NARRATOR: That guy walks off.
   ta: Andha paiyan nadandhu poraan.
 @fx fade_out
 
 # ---------------------------------------------------------------- meanwhile
 @scene gen:shed
+@cast girl@0.28> krishnaa@0.5< vamika@0.74<
+@caption The old shed, 9:40 AM
+  ta: Pazhaya shed, kaalai 9:40
 @music campus
 @fx fade_in
+@shot pan right
 NARRATOR: Meanwhile, in a big, dim old shed, about fifty students stand around a box. Inside it, a cake: "Happy Birthday Rep".
   ta: Adhe neram, oru periya pazhaya shed-la, kammiyaana velichathula, oru aimbadhu students oru box-a suththi nikkuraanga. Ulla oru cake: "Happy Birthday Rep".
+@shot auto
 GIRL: Hey Krishnaa, keep your hands to yourself!
   ta: Hey Krishnaa, kaiya vechikitu summa iru!
 KRISHNAA: I didn't do anything. Just checking the cake hasn't melted.
@@ -172,6 +187,9 @@ VAMIKA: She's talking to Richard senior. Said she'd be here in ten minutes.
   ta: Ava Richard senior oda pesitu iruka, 10 mins la vara nu sonna.
 
 @scene gen:campus_morning
+@cast dhanasree@0.36> senior@0.64<
+@caption Outside the dance club
+  ta: Dance club-ku veliya
 DHANASREE: Senior, however many times you ask, I'm not coming to perform.
   ta: Senior, neenga evlo dhan kooptalum na perform panna varala senior.
 SENIOR: Practice was going fine until last week. Then you called and said you couldn't come, and after that nobody practised properly. What happened?
@@ -182,14 +200,21 @@ SENIOR: With you there the performance is something else. Nobody in second or th
   ta: Nee iruntha thaan performance-ey nalla irukum. 2nd and 3rd year-layae un alavuku aada yarum illa. Talent irukurapo yen jnr nee waste panra?!
 DHANASREE: Senior, the club matters, but my peace of mind matters more. I can't perform.
   ta: Senior yenaku puridhu. But club-ah vida yenaku yennoda peace of life dhan mukkiyam. Yennala perform panna mudiyadhu snr.
+@shot on senior
 SENIOR: Did you forget the steps? Or are you scared you'll make a mistake on stage and embarrass yourself?
   ta: Steps yellam maranthu pocha? Illa stage-la perform panni yedhachu mistake panni asingapatruvom-nu bayama iruka…?
+@shot close dhanasree
 NARRATOR: Dhanasree gives him a long, serious look.
   ta: Dhanasree avara serious-ah oru paarvai paakura.
+@shot push dhanasree
 DHANASREE (serious): OK, senior. I'll perform.
   ta: Ok senior. Na perform pandren.
+@shot auto
 
 @scene gen:classroom
+@cast guy1@0.42>:phone
+@caption First-year IT classroom
+  ta: First year IT classroom
 GUY1: College is going fine, 'tha.
   ta: College yellam nalla dhan 'tha povudhu.
 GUY1_MOTHER: Has the place suited you, saamy?
@@ -198,22 +223,33 @@ GUY1: It suits me. There's a train right near where I stay, every ten minutes. T
   ta: Adhellam othu povuchu. Inga na thangura yedathuku pakathulayeyy rayilu odudhu. 10 nimsathuku oruka varum. Pathu roova dhan tha selavu aavum.
 GUY1_MOTHER: Study well, saamy. Get a good job, and shut the mouths of everyone back in the village.
   ta: Cher saamy, nalla padi. Nee padichu nalla osathiyaana velaiku poyi, indha oor-karainga naara vayellam adaikanum.
+@pose guy1 idle
+@enter krishnaa right 0.7
+@enter kfriend right 0.86
 NARRATOR: That puts a smile on his face. Then two boys appear at the door.
   ta: Adhu avan mugathula oru sirippa kondu vandhuchu. Appo rendu paiyanga vaasal-la nikkuraanga.
 KRISHNAA (laughing): Dei, you idiot!
   ta: Dei muttaa punda!
 KFRIEND: Look at him, he actually believed us and he's sitting in class!
   ta: Namma sonnadha nambi class laye ukkandhunnu irukan paaren.
+@shot on guy1
 GUY1 (confused): So... so there's no class?
   ta: Appo… appo class illaya?
+@shot auto
 KRISHNAA: It's Sivaranjani today, da. No classes. Everyone's dancing on the road. Go and look.
   ta: Dei, Inaiku sivaranjani da, class yellam illa inaiku. Inaiku road la dance aadinu irupaanunga. Poi paaru…
+@exit kfriend right
 KRISHNAA (leaving): How do they even let idiots like this into college?
   ta: Indha paithiyakaranga-ya yellam yepdi da college-la sethunnanunga.
+@exit krishnaa right
+@shot close guy1
 NARRATOR: Guy 1 looks down at his desk.
   ta: Paiyan 1 thalaiya kunindhu desk-a paakuraan.
 
 @scene gen:hostel_room
+@cast dharshna@0.36> sneka@0.64<
+@caption Girls' hostel
+  ta: Ponnunga hostel
 SNEKA: Dharshna, come on, let's go!
   ta: Dharshna, vaadi polam!
 DHARSHNA (smiling): No, I told you I'm not coming. You go.
@@ -226,10 +262,13 @@ SNEKA: Meaning?
   ta: Apdina?
 DHARSHNA: Allergy to crowded places.
   ta: Allergy to crowded places.
+@shot two sneka dharshna
 SNEKA (suspicious): There's some other reason. You shouldn't hide things from your roomie.
   ta: Illa vera yedho iruku… Roomie kitta yellam yedhuvum maraika koodadhu di.
+@shot close dharshna
 DHARSHNA: It's nothing like that, Sneka. That's the real reason.
   ta: Apdi yellam onnu illa Sneka. Idhan unmaiyana reason.
+@shot auto
 SNEKA: Fine. Do what you want.
   ta: Fine, yennamo pannu…
 @scene none
@@ -238,8 +277,10 @@ SNEKA: Fine. Do what you want.
 
 @label crowd
 @music flashmob
+@shot orbit dancer_68
 NARRATOR: 10:30 AM. The MIT road is packed. The flashmob has begun.
   ta: Kaalai 10:30. MIT road full-ah kootam. Flashmob aarambichuduchu.
+@shot auto
 @objective Get through the crowd.
   ta: Kootatha thaandi po.
 @end
@@ -247,38 +288,81 @@ NARRATOR: 10:30 AM. The MIT road is packed. The flashmob has begun.
 @label flashmob
 @done
 @fx migraine
+@shot on that_guy
 THAT_GUY (thinking): The noise they're making is going to split my head!! The only good thing in this college is this fest.
   ta: Ivunga podra sathathula thala vazhi vandhurum polaye!! College la iruku orey oru nalla vishayam indha fest dhaan.
 THAT_GUY (thinking): If I can't even enjoy this, why am I alive?
   ta: Idha kuda yennala olunga enjoy panna mudilana yedhuku na vazhanum.
 THAT_GUY (thinking): That's it? I can never be normal like everyone else? Never enjoy a fest?
   ta: Avlothana? Inimel yennala mathavanga maari normal ah iruka mudiyadha… Fest yellam enjoy panna mudiyadha…
+@shot dutch
 THAT_GUY (angry): Why did God have to give ME a body like this? I know lots of people have it worse. But everyone only knows their own pain...
   ta: Yen, yen yenaku mattum kadavul ipdi oru health-ah kudukanum? Yenaku puridhu, yenna vida neraya peruku idhey maari problems irukunnu. But avan-avan prechana avan-avanukku thaana theriyum...
 THAT_GUY (angry): Why did God invent pain in the first place?! If he can do anything, why not make a world with only the good things? No pain, no grief, no death. WHY?!
   ta: Yen kadavul modhala vali-nu oru concept kondu varanum?! Avuraala enna venunalum panna mudiyumnaa, vali, sogam, saavu… indha maari negative visayathaiyum implement pannama, full-ah positive things mattum vechu ulagatha create panirkalameyy!!? Yen??!
+@shot level
 THAT_GUY (sad): There's no other way. I have to get out of here. My head hurts so much...
   ta: Vera vali illa... na inga irundhu kelambi dhaan aganum. Thala romba valikuthu…
 @set v01_dhana_dance
 @music flashmob
+@shot on dhana_dance
 NARRATOR: The track changes. Dhanasree steps onto the floor.
   ta: Paatu maarudhu. Dhanasree floor-kulla varaa.
+@shot two that_guy dhana_dance
 THAT_GUY (thinking): I want to push through this crowd, stand right in the centre and dance like a hero. She'd fall for my moves.
   ta: Yenaku apdiye indha crowd-yellam thalli vittutu mass-ah centre-la poi ninnu aadanum-nu thonudhu. Dhanasree yen dance-ah paathu mayangiduva.
 THAT_GUY (thinking): But this isn't a film. Shove two people and they'll throw me out by the collar.
   ta: Aana idhu onnum padam illa… Rendu peru-a thalli vittaaley podaniyoda thatti veliya thaati utruvanga.
+@shot orbit dhana_dance
 NARRATOR: Her moves are smooth and quick, each one landing exactly on the beat. The crowd can't look away. Neither can he.
   ta: Aval move-ellam smooth-ah, vegama, ovvonnum beat-la correct-ah vizhudhu. Kootam kanna edukka mudiyala. Avanaalum dhaan.
-NARRATOR: When the song ends, the road erupts. For him, time has stopped. His eyes are only on her.
-  ta: Paatu mudinjadhum road-e athirudhu. Avanukku neram nindhu pochu. Avan kann aval mela mattum dhaan.
+@shot slow
+@shot close that_guy
+NARRATOR: And then, for him, time stops. The music stretches into one long note. Every petal hangs in the air.
+  ta: Appo, avanukku neram nindhu pochu. Paatu oru neenda sathamaa izhukkudhu. Ovvoru poovum kaathula appadiye nikkudhu.
+@set powers_awakened
+@fx flash
+NARRATOR: Something behind his eyes pulls tight, like a thread. A faint light runs down his arms.
+  ta: Kannukku pinnaadi edho oru nool maari izhukkudhu. Avan kaiyila mella oru velicham odudhu.
+# Elsewhere, at the same moment, three others feel it too.
+@scene gen:classroom
+@cast guy1@0.5>
+@shot close guy1
+NARRATOR: In an empty classroom, a boy lifts his head from his desk. His hands are glowing.
+  ta: Kaaliyaana classroom-la, oru paiyan desk-la irundhu thalaiya thookuraan. Avan kai minnudhu.
+@scene gen:hostel_room
+@cast dharshna@0.5<
+@shot close dharshna
+NARRATOR: In the girls' hostel, a girl stops halfway to the door. Light pulses at her wrists.
+  ta: Ponnunga hostel-la, oru ponnu kadhavu pakkam poga paadhi-la nikkura. Aval manikattula velicham thudikkudhu.
+@scene none
+@shot close dhana_dance
+NARRATOR: And on the road, mid-turn, Dhanasree's eyes flick toward him for the briefest moment.
+  ta: Road-la, suthikittu irukumbodhu, Dhanasree kann oru nodi avan pakkam thirumbudhu.
+@set slowmo
+@set v01_time_stopped
+@objective Time has slowed. Walk toward her.
+  ta: Neram mella aayiduchu. Aval pakkam nadandhu po.
+@end
+
+@label dance_end
+@set slowmo = false
+@shot normal
+@done
+@shot wide
+NARRATOR: The song ends. Time snaps back, and the road erupts in cheers. His eyes are only on her.
+  ta: Paatu mudiyudhu. Neram thirumba odudhu, road-e kaithattal-la athirudhu. Avan kann aval mela mattum dhaan.
 @music none
 @sfx crowd
+@shot on senior_mic
 SENIOR: Guys, guys! One minute. An important announcement. Sorry, but the fest is being postponed. We don't know till when.
   ta: Guys, Guys! Oru nimisham. Oru important announcement. Sorry guys, but namma fest-ah postpone panna poranga and exact ah yeppo-nu therla.
 SENIOR: Quiet, please. There's been a death in our college, and the police will be investigating around the campus.
   ta: Konjam silent ah irunga. Namma college la oru death nadandhruku, and police will be investigating around our campus.
+@shot close that_guy
 NARRATOR: That guy's stomach turns. He grips his bag and edges out of the crowd.
   ta: Andha paiyanukku vayithula edho purattudhu. Bag-a irukki pudichikittu kootathula irundhu nagarraan.
+@shot on senior_mic
 SENIOR: This is for our safety. The police have arrived. Nobody needs to panic. Go back to your rooms; more news on the WhatsApp groups.
   ta: Idhellam namma safety-kaaga dhan panranga. The police also arrived. Yarum bayapada vendam. Now you all may just go to your respective residences. Further information will be shared via whatsapp groups.
 @set v01_fest_cancelled

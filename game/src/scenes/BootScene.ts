@@ -59,13 +59,14 @@ export class BootScene extends Phaser.Scene {
    */
   private devJump(): boolean {
     const q = new URLSearchParams(location.search);
-    // `?venture=5` starts that Act I chapter (in slot 3), optionally at another label: `&label=chase`.
+    // `?venture=5` starts that Act I chapter (in slot 3), optionally at another label and room: `&label=chase&room=cut_road`.
     const v = Number(q.get('venture'));
     const chapter = CHAPTERS.find((c) => c.venture === v);
     if (chapter) {
       session.startWith(3, newGameAt(chapter.room, chapter.script, { purpose: chapter.purpose, venture: chapter.venture }));
       const st = session.state;
       if (q.get('label')) st.resume = { script: chapter.script, label: q.get('label')! };
+      if (q.get('room')) st.location.room = q.get('room')!;
       for (const f of (q.get('flags') ?? '').split(',').filter(Boolean)) st.flags[f] = true;
       audio.unlock();
       this.scene.start('World', { resume: true });
