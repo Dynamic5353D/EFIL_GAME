@@ -17,11 +17,14 @@ describe('localization', () => {
   });
 
   test('settings sanitising keeps valid values only', () => {
-    const s = sanitizeSettings({ language: 'ta', masterVolume: 4, textSpeed: -1, bindings: { jump: ['KeyK'], left: 'nope' } });
-    expect(s.language).toBe('ta');
+    const s = sanitizeSettings({ language: 'ta', descLang: 'en', masterVolume: 4, textSpeed: -1, bindings: { run: ['KeyK'], left: 'nope' } });
+    // An old single `language` carries over to whichever of the two is not set.
+    expect(s.dialogueLang).toBe('ta');
+    expect(s.descLang).toBe('en');
+    expect(s.langChosen).toBe(false);
     expect(s.masterVolume).toBe(1);
     expect(s.textSpeed).toBe(55);
-    expect(s.bindings.jump).toEqual(['KeyK']);
+    expect(s.bindings.run).toEqual(['KeyK']);
     expect(s.bindings.left).toEqual(['ArrowLeft', 'KeyA']);
   });
 });

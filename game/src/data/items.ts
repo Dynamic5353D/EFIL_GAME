@@ -70,4 +70,27 @@ export const ITEMS: Record<string, ItemDef> = {
     desc: loc('A coil of rope from the maintenance shed.', 'Maintenance shed-la irundha oru kayiru churul.'),
     icon: 'gen:rope',
   },
+  // ---------------------------------------------------------------- the pixel game (campus)
+  chai: {
+    id: 'chai',
+    kind: 'consumable',
+    name: loc('Glass of chai', 'Oru glass tea'),
+    desc: loc('Sweet, strong tea from the stall on the MIT road. Restores 25% HP.', 'MIT road kadai-la irundhu inippaana strong tea. 25% HP varum.'),
+    icon: 'gen:chai',
+    heal: 0.25,
+  },
+  fest_poster: {
+    id: 'fest_poster',
+    kind: 'key',
+    name: loc('Sivaranjani poster', 'Sivaranjani poster'),
+    desc: loc('A poster for the college\'s first fest: flashmob on the MIT road, 10:30 AM.', 'College-oda modhal fest poster: MIT road-la flashmob, kaalai 10:30.'),
+    icon: 'gen:poster',
+  },
+  fest_pass: {
+    id: 'fest_pass',
+    kind: 'key',
+    name: loc('Volunteer pass', 'Volunteer pass'),
+    desc: loc('Richard\'s thanks for putting up the posters. Lets you through the fest barricades.', 'Poster ottinadhukku Richard kudutha thanks. Fest barricade-a thaandi poga vidum.'),
+    icon: 'gen:pass',
+  },
 };

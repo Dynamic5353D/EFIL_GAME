@@ -2,7 +2,8 @@ import { isKnownMember, newGame, type GameState } from './GameState';
 import { readJSON, storage, writeJSON, type KV } from './Storage';
 
 export const SLOT_COUNT = 3;
-const PREFIX = 'efil.save.';
+/** The pixel game keeps its own slots, apart from the side-scroller's `efil.save.N`. */
+const PREFIX = 'efil.px.save.';
 
 export interface SaveMeta {
   slot: number;
@@ -45,6 +46,8 @@ export function sanitizeState(raw: unknown): GameState | null {
       y: num(raw.location.y, 0),
       checkpoint: typeof raw.location.checkpoint === 'string' ? raw.location.checkpoint : null,
     };
+    const dir = raw.location.dir;
+    if (dir === 'down' || dir === 'up' || dir === 'left' || dir === 'right') s.location.dir = dir;
   }
   if (isObj(raw.venture)) s.venture = { purpose: num(raw.venture.purpose, 1), venture: num(raw.venture.venture, 1) };
   s.party = strArr(raw.party).filter(isKnownMember);
@@ -91,6 +94,12 @@ export function sanitizeState(raw: unknown): GameState | null {
   s.clues = strArr(raw.clues);
   s.resume = isObj(raw.resume) && typeof raw.resume.script === 'string' && typeof raw.resume.label === 'string'
     ? { script: raw.resume.script, label: raw.resume.label } : null;
+  s.quests = {};
+  if (isObj(raw.quests)) {
+    for (const [k, v] of Object.entries(raw.quests)) {
+      if (isObj(v)) s.quests[k] = { step: Math.max(0, Math.floor(num(v.step, 0))), done: v.done === true };
+    }
+  }
   return s;
 }
 

@@ -10,6 +10,18 @@ export const FLAGS: Record<string, string> = {
   slice_done: 'Test slice: the end of the Winter Path has been reached (the slice is over)',
   won: 'Set by @battle: the last battle was won',
 
+  // ---------------------------------------------------------------- the pixel game: the campus
+  px_awake: 'Pixel: Ragul is up on the morning of the fest',
+  px_saw_road: 'Pixel: Ragul has stepped out onto the MIT road',
+  px_q_posters: 'Pixel: Richard handed over the fest posters',
+  px_q_posters_done: 'Pixel: the posters quest is finished',
+  px_posted_a: 'Pixel: poster on the hostel board',
+  px_posted_b: 'Pixel: poster on the IT block board',
+  px_posted_c: 'Pixel: poster on the south lawn board',
+  px_posters_up: 'Pixel: how many posters are up (0-3)',
+  px_chai_given: 'Pixel: the tea stall gave Ragul his free chai',
+  px_met_krishnaa: 'Pixel: Krishnaa has already had a go at Ragul this morning',
+
   // ---------------------------------------------------------------- shared state
   hunger_known: 'Ragul knows about his Soul Hunger (the HUD and battles show it)',
   truth_known: 'The player knows Ragul framed Nithish (V8): the Case Board shows the truth',

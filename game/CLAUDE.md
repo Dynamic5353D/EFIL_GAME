@@ -10,16 +10,20 @@ A 2D side-scrolling story RPG (16+), adapted from the user's novel and art.
 **`/home/ragul/CLAUDE.md` is the HumanDex spec, which is a different project. Ignore it here.**
 
 ## Source of truth
-- `game/docs/plan.md`: the approved implementation plan (stack, visuals, systems, content rules, the act table, milestones). Follow it.
+- `game/docs/plan-pixel.md`: the current plan (the pixel RPG). `game/docs/plan.md` is the side-scroller plan: its content rules, story analysis and act table still apply, but not its visuals or controls.
 - `game/docs/story-bible.md`: a condensed, chapter-by-chapter reference for all 120 Ventures. Use it when writing each act's script, and re-read the original `.docx` when a scene needs more detail:
   `pandoc "/home/ragul/Documents/EFIL: The Game/Story/PURPOSE N/Venture M.docx" -t plain --wrap=none`
 - Never modify `Story/` or `images/`.
 
 ## User decisions (fixed)
-- Hollow Knight-style real-time **side-scrolling exploration** combined with **turn-based battles**. The party is set by the story; there is no free character swapping. The priority is constant progression and variety: areas, abilities, gear, collectibles, revelations.
-- The user's artwork is the canonical visual style. Keep everything consistent with it (palette-sampled terrain, cut-outs, rim-lit silhouettes). The four protagonists have no art yet, so they use stylized rim-lit silhouettes and can be swapped out through `game/public/assets/override/`.
-- Dialogue is English by default, with a **Tanglish toggle**. Every line needs both `en` and `ta`.
-- Build **one Purpose (act) per milestone**. Stop for the user's review after each one.
+- **Pixel-art top-down RPG** in the style of the NDS-era handheld RPGs (Gen 3–5: Emerald, Diamond, Black/White), but all original: no Pokémon names, creatures, UI layouts, sounds or fonts, and no creature collecting. Decided 2026-09-29, after the side-scroller play-test. See `docs/plan-pixel.md`.
+  - The Hollow Knight-style side-scroller (Act I) is paused, not deleted: git tag `side-scroller-act1`, playable page https://claude.ai/artifact/VqaFmJqdwTLLdQvQXn2weh (v7).
+- **One playable character: Ragul.** The other three are NPCs, partners and quest-givers. Turn-based battles and word battles stay.
+- The game is **inspired by** the novel, not a line-by-line retelling: an open hub full of NPCs, main quests in waves (any order within a wave), and side quests. Constant progression and variety.
+- **Single screen, 16:9:** 480×270, 16 px tiles, scaled up with nearest-neighbour filtering. The UI must be very good.
+- **Art:** code-drawn pixel art in one palette, plus the user's paintings converted into pixel battle sprites, portraits and icons. Anything can be swapped through `game/public/assets/override/`.
+- **Language:** English or Tanglish, with **separate defaults for dialogue and for descriptions** (narration, captions, items, quests), chosen on first launch. Every line needs both `en` and `ta`.
+- Build one milestone at a time, and stop for the user's review after each one.
 - `rembg` is approved for cut-outs. Install it in a venv at `game/tools/.venv`, not system pip.
 
 ## Content rules (non-negotiable)
@@ -31,7 +35,7 @@ A 2D side-scrolling story RPG (16+), adapted from the user's novel and art.
 - Never remove watermarks. The third-party images must be replaced before any public release.
 
 ## Environment
-- bun is at `~/.bun/bin/bun` (add it to PATH). node and npm are **not** installed. Python 3.12, PIL, ImageMagick and pandoc are available.
+- bun is at `~/.bun/bin/bun` (add it to PATH). node and npm are **not** installed; for the play-test tools, put a `node` symlink to bun on PATH and set `CHROME=/usr/bin/google-chrome`. Python 3.12, PIL, ImageMagick and pandoc are available.
 - Latest versions checked on 2026-09-28: **phaser 4.2.1**, vite 8.3.1, typescript 7.0.2.
   - **The plan says Phaser 3, but Phaser 4 is now the stable release.** Before scaffolding, check the Phaser 4 docs for Light2D/lighting, Mesh/Plane (puppet warp), and the Arcade physics APIs. Prefer v4 if it supports what the plan needs. Log the choice in `game/docs/decisions.md`.
 - Dev server: add `.claude/launch.json` (bun + vite) and preview it in the browser pane.
@@ -48,7 +52,14 @@ A 2D side-scrolling story RPG (16+), adapted from the user's novel and art.
   - 13 Earth rooms with code-painted backdrops (`data/rooms_p01.ts`), 12 scripts `src/story/p01/v01..v12.story` in English and the novel's Tanglish, 5 word battles, the daydream fights, stealth, chases, the Case Board and Memory Fragments.
   - Dev jump: `?venture=5` starts that Venture in slot 3; add `&label=walk` to start at a label (and `&room=mit_road` to start that label in another room), `&fast` for fast battles.
   - Play-test round 2 (29 Sep): staged story scenes with a cinematic camera (`scenes/StageScene.ts`, commands in `story/parser.ts`), the pause menu rework, the powers waking at the V1 dance, Memory Fragment bonuses. See `docs/decisions.md`.
-- [ ] M3–M11: Acts II–X
-- [ ] M12: polish
+- [ ] **Pixel RPG** (`docs/plan-pixel.md`, branch `claude/pixel-rpg`):
+  - [x] **N1: engine + look test:** built, **awaiting the user's review**. Playable page: https://claude.ai/artifact/Ufei2xKb45qjqJdpAeoSi4 (a separate artifact; the side-scroller keeps its own URL).
+    - Code: `src/px/` (scenes, overworld, UI, maps, quests, director), scripts in `src/story/px/`. Art: `python3 tools/pixel/build.py [--preview]` writes `public/assets/pixel/` (tiles, props, UI, bitmap font, 18 characters with portraits).
+    - Maps: `hostel_room`, `mit_road` (ASCII ground plus buildings, props, NPCs, looks, warps, triggers, `enter` scripts). Quests: `src/px/quest/quests.ts`, `@quest start|done id`.
+    - Dev jumps: `?new` starts a new game; `?map=mit_road&x=20&y=13&flags=a,b=2&items=chai&quest=posters` starts in slot 3.
+    - Autopilot: `node drive.mjs ./pxauto.mjs px "?new"` (walks the grid, talks to everyone, must finish `GOAL`, default `posters`); `pxmenu.mjs` checks the menu, saving and Continue.
+    - The old Act I scripts are in `legacy/story/` as source material.
+  - [ ] N2: MIT campus + Chromepet slice (Purpose 1 as main quests in waves, about 10 side quests, battles).
+- (Paused) side-scroller M3–M12.
 
 Update this Status list at the end of each milestone, and add one line per spec-changing decision to `game/docs/decisions.md`.

@@ -2,8 +2,6 @@ import { ABILITIES } from '../data/abilities';
 import { CHARACTERS } from '../data/characters';
 import { CLUES } from '../data/clues';
 import { CODEX } from '../data/codex';
-import { EARTH_SCENE_NAMES } from '../data/earthScenes';
-import { ROOMS } from '../data/rooms';
 import { WORD_BATTLES } from '../data/wordbattles';
 import { BATTLES } from '../data/enemies';
 import { FLAGS } from '../data/flags';
@@ -11,7 +9,8 @@ import { ITEMS } from '../data/items';
 import { BANNED_TAGS, BANNED_WORDS, FX, MUSIC, SFX } from '../data/media';
 import { CAST_RE, rigFor, SHOTS, SPEAKERS, STAGE_POSES } from '../data/speakers';
 import { parseStory, type TextNode } from './parser';
-import { PROP_VISUALS } from '../world/EarthProps';
+import { MAPS } from '../px/maps/index';
+import { QUESTS } from '../px/quest/quests';
 
 export interface LintIssue { file: string; line: number; message: string }
 
@@ -65,9 +64,10 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
         const a = n.args[0] ?? '';
         const check = (ok: boolean, what: string) => { if (!ok) bad(n.line, `unknown ${what} "${a}"`); };
         switch (n.name) {
-          case 'scene': check(a === 'none' || ctx.scenes.has(a) || EARTH_SCENE_NAMES.includes(a), 'scene (not an environment in asset-manifest.json or an Earth scene)'); break;
+          case 'scene': check(a === 'none' || ctx.scenes.has(a), 'scene'); break;
           case 'room':
-            check(a in ROOMS, 'room');
+            check(a in MAPS, 'map');
+            if (MAPS[a] && n.args[1] && !(n.args[1] in MAPS[a]!.spawns)) bad(n.line, `unknown spawn "${n.args[1]}" in ${a}`);
             if (n.args[2] && !(n.args[2] in script.labels)) bad(n.line, `unknown label "${n.args[2]}"`);
             break;
           case 'save': if (!(a in script.labels)) bad(n.line, `unknown label "${a}"`); break;
@@ -104,11 +104,9 @@ export function lintStory(source: string, file: string, ctx: LintContext): LintI
             if (n.name === 'pose' && !STAGE_POSES.includes(n.args[1] ?? '')) bad(n.line, `unknown pose "${n.args[1]}"`);
             break;
           case 'shot': if (!SHOTS.includes(a)) bad(n.line, `unknown shot "${a}"`); break;
-          case 'prop':
-            for (const c of n.args) {
-              const m = /^([a-z_]+)(?:@([\d.]+))?([<>])?(\^)?$/.exec(c);
-              if (!m || !(PROP_VISUALS as string[]).includes(m[1]!)) bad(n.line, `bad prop "${c}" (visual@x)`);
-            }
+          case 'quest':
+            if (a !== 'start' && a !== 'done') bad(n.line, '@quest takes start or done');
+            if (!((n.args[1] ?? '') in QUESTS)) bad(n.line, `unknown quest "${n.args[1]}"`);
             break;
         }
         break;

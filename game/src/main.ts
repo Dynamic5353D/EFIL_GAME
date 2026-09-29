@@ -1,44 +1,41 @@
-import '@fontsource/alegreya-sans/400.css';
-import '@fontsource/alegreya-sans/400-italic.css';
-import '@fontsource/alegreya-sans/700.css';
-import '@fontsource/cormorant-garamond/500.css';
-import '@fontsource/cormorant-garamond/500-italic.css';
-import '@fontsource/cormorant-garamond/600.css';
 import Phaser from 'phaser';
-import { effectOf } from './battle/WordCore';
 import { audio } from './core/AudioSynth';
 import { input } from './core/Input';
 import { session } from './core/Session';
-import { BattleScene } from './scenes/BattleScene';
-import { BootScene } from './scenes/BootScene';
-import { ChapterCardScene } from './scenes/ChapterCardScene';
-import { CreditsScene } from './scenes/CreditsScene';
-import { DialogueScene } from './scenes/DialogueScene';
-import { HudScene } from './scenes/HudScene';
-import { StageScene } from './scenes/StageScene';
-import { MenuScene } from './scenes/MenuScene';
-import { SettingsScene } from './scenes/SettingsScene';
-import { TitleScene } from './scenes/TitleScene';
-import { WordBattleScene } from './scenes/WordBattleScene';
-import { WorldScene } from './scenes/WorldScene';
-import { MOVE } from './world/movement';
+import { VIEW_H, VIEW_W } from './px/config';
+import { applyScale } from './px/scale';
+import { BootScene } from './px/scenes/BootScene';
+import { LanguageScene } from './px/scenes/LanguageScene';
+import { TitleScene } from './px/scenes/TitleScene';
+import { MenuScene } from './px/ui/MenuScene';
+import { OptionsScene } from './px/ui/OptionsScene';
+import { UiScene } from './px/ui/UiScene';
+import { OverworldScene } from './px/world/OverworldScene';
 
 input.attach();
 window.addEventListener('pointerdown', () => audio.unlock());
+input.onAnyKey(() => audio.unlock());
 
+// The pixel game draws at 480x270 and is scaled up with nearest-neighbour filtering (see px/scale.ts).
 // Scene order is draw order: overlays come last.
 const game = new Phaser.Game({
   type: Phaser.WEBGL,
   parent: 'game',
-  backgroundColor: '#05070d',
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, width: 1280, height: 720 },
-  physics: { default: 'arcade', arcade: { gravity: { x: 0, y: MOVE.gravity }, debug: false } },
+  width: VIEW_W,
+  height: VIEW_H,
+  backgroundColor: '#0c0d16',
+  pixelArt: true,
+  roundPixels: true,
+  scale: { mode: Phaser.Scale.NONE, autoCenter: Phaser.Scale.NO_CENTER },
   input: { gamepad: false },
-  scene: [BootScene, TitleScene, WorldScene, BattleScene, WordBattleScene, HudScene, StageScene, DialogueScene, ChapterCardScene, MenuScene, SettingsScene, CreditsScene],
+  scene: [BootScene, LanguageScene, TitleScene, OverworldScene, UiScene, MenuScene, OptionsScene],
 });
+
+game.events.once(Phaser.Core.Events.READY, () => applyScale(game));
+window.addEventListener('resize', () => applyScale(game));
 
 // Input is polled once per frame, before any scene updates.
 game.events.on(Phaser.Core.Events.PRE_STEP, () => input.update());
 
-// Dev builds expose the game for automated play-throughs (tools in the test scratchpad).
-if (import.meta.env.DEV) Object.assign(window, { game, __efil_state: () => session.state, __efil_word: { effectOf } });
+// Dev builds expose the game for automated play-throughs (tools/playtest).
+if (import.meta.env.DEV) Object.assign(window, { game, __efil_state: () => session.state });

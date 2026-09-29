@@ -4,7 +4,7 @@ import { readJSON, storage, writeJSON, type KV } from './Storage';
 export type Lang = 'en' | 'ta';
 
 export const ACTIONS = [
-  'left', 'right', 'up', 'down', 'jump', 'dash', 'attack', 'interact', 'menu', 'bag', 'confirm', 'cancel', 'language',
+  'left', 'right', 'up', 'down', 'run', 'confirm', 'cancel', 'menu', 'language',
 ] as const;
 export type Action = (typeof ACTIONS)[number];
 
@@ -14,19 +14,22 @@ export const DEFAULT_BINDINGS: Record<Action, string[]> = {
   right: ['ArrowRight', 'KeyD'],
   up: ['ArrowUp', 'KeyW'],
   down: ['ArrowDown', 'KeyS'],
-  jump: ['Space', 'KeyZ'],
-  dash: ['ShiftLeft', 'KeyC'],
-  attack: ['KeyX', 'KeyJ'],
-  interact: ['KeyE', 'ArrowUp'],
-  menu: ['Escape', 'Tab', 'KeyP'],
-  bag: ['KeyI', 'KeyB'],
-  confirm: ['Enter', 'Space', 'KeyZ'],
-  cancel: ['Escape', 'Backspace', 'KeyX'],
+  run: ['ShiftLeft', 'ShiftRight', 'KeyX'],
+  confirm: ['KeyZ', 'Enter', 'Space', 'KeyE'],
+  cancel: ['KeyX', 'Backspace', 'Escape'],
+  menu: ['Tab', 'KeyC', 'Escape'],
   language: ['KeyL'],
 };
 
 export interface SettingsData {
-  language: Lang;
+  /** Language of spoken lines. */
+  dialogueLang: Lang;
+  /** Language of everything else: narration, captions, items, quests, menus. */
+  descLang: Lang;
+  /** Set once the player has answered the first-launch language questions. */
+  langChosen: boolean;
+  /** Scale the 480x270 screen by whole numbers only (sharpest pixels, may leave borders). */
+  pixelPerfect: boolean;
   /** Characters per second for dialogue; 0 shows text instantly. */
   textSpeed: number;
   masterVolume: number;
@@ -42,7 +45,10 @@ export interface SettingsData {
 }
 
 export const DEFAULT_SETTINGS: SettingsData = {
-  language: 'en',
+  dialogueLang: 'en',
+  descLang: 'en',
+  langChosen: false,
+  pixelPerfect: true,
   textSpeed: 55,
   masterVolume: 0.8,
   musicVolume: 0.6,
@@ -55,7 +61,7 @@ export const DEFAULT_SETTINGS: SettingsData = {
   bindings: DEFAULT_BINDINGS,
 };
 
-const KEY = 'efil.settings.v1';
+const KEY = 'efil.px.settings.v1';
 
 function clamp01(n: unknown, d: number) {
   return typeof n === 'number' && Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : d;
@@ -72,8 +78,14 @@ export function sanitizeSettings(raw: unknown): SettingsData {
       if (Array.isArray(b) && b.every((k) => typeof k === 'string')) bindings[a] = b.slice(0, 3) as string[];
     }
   }
+  // Older settings had one `language` for everything.
+  const legacy = (r as { language?: unknown }).language === 'ta' ? 'ta' : 'en';
+  const lang = (v: unknown): Lang => (v === 'ta' ? 'ta' : v === 'en' ? 'en' : legacy);
   return {
-    language: r.language === 'ta' ? 'ta' : 'en',
+    dialogueLang: lang(r.dialogueLang),
+    descLang: lang(r.descLang),
+    langChosen: typeof r.langChosen === 'boolean' ? r.langChosen : false,
+    pixelPerfect: typeof r.pixelPerfect === 'boolean' ? r.pixelPerfect : d.pixelPerfect,
     textSpeed: typeof r.textSpeed === 'number' && r.textSpeed >= 0 && r.textSpeed <= 200 ? r.textSpeed : d.textSpeed,
     masterVolume: clamp01(r.masterVolume, d.masterVolume),
     musicVolume: clamp01(r.musicVolume, d.musicVolume),
@@ -101,7 +113,7 @@ class SettingsStore {
     this.data[key] = value;
     writeJSON(this.kv, KEY, this.data);
     bus.emit('settings', { key });
-    if (key === 'language') bus.emit('language', { lang: value as Lang });
+    if (key === 'dialogueLang' || key === 'descLang') bus.emit('language', { lang: value as Lang });
   }
   resetBindings() { this.set('bindings', structuredClone(DEFAULT_BINDINGS)); }
 }

@@ -24,7 +24,7 @@ test('flags missing translations, unknown references and banned content', () => 
   expect(m.some((x) => x.startsWith('8:banned word'))).toBe(true);
 });
 
-test('the slice script is clean', () => {
-  const src = readFileSync(new URL('../src/story/slice/glacia_slice.story', import.meta.url), 'utf8');
+test('the campus script is clean', () => {
+  const src = readFileSync(new URL('../src/story/px/campus.story', import.meta.url), 'utf8');
   expect(msgs(src)).toEqual([]);
 });

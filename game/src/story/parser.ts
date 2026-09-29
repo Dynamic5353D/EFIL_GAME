@@ -94,6 +94,11 @@ export const COMMANDS: Record<string, { min: number; max: number }> = {
   credits: { min: 0, max: 0 },
   /** Adds to a numeric flag: `@add v04_asked` (1) or `@add score 5`. */
   add: { min: 1, max: 2 },
+  // ---- The pixel game.
+  /** Quests (src/px/quest/quests.ts): `@quest start posters`, `@quest done posters`. */
+  quest: { min: 2, max: 2 },
+  /** Turns the speaking NPC (or a named one) toward the player: `@face_player` / `@face_player richard`. */
+  face_player: { min: 0, max: 1 },
   // ---- Staging (see scenes/StageScene.ts). A `@scene` casts everyone who speaks in it unless a `@cast` follows.
   /** Who is on stage: `@cast guy1@0.35:sit krishnaa@0.7<` (x 0..1, `<`/`>` facing, `:pose`, `^` at the back). */
   cast: { min: 1, max: 10 },

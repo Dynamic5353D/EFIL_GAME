@@ -27,9 +27,9 @@ describe('saves', () => {
   test('bad or tampered data never crashes the loader', () => {
     const kv = new MemoryKV();
     const saves = new SaveSystem(kv);
-    kv.set('efil.save.1', '{not json');
+    kv.set('efil.px.save.1', '{not json');
     expect(saves.load(1)).toBeNull();
-    kv.set('efil.save.1', JSON.stringify({ format: 'efil-save', state: { version: 1, party: ['ragul', 'bob'], members: { ragul: { level: 'x', hp: 5 }, bob: {} }, ammo: 99, flags: { a: {} } } }));
+    kv.set('efil.px.save.1', JSON.stringify({ format: 'efil-save', state: { version: 1, party: ['ragul', 'bob'], members: { ragul: { level: 'x', hp: 5 }, bob: {} }, ammo: 99, flags: { a: {} } } }));
     const s = saves.load(1)!;
     expect(s.party).toEqual(['ragul']);
     expect(s.members.ragul!.level).toBe(1);

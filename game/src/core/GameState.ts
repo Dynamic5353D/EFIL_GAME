@@ -13,8 +13,11 @@ export interface MemberState {
 export interface GameState {
   version: 1;
   playtimeMs: number;
-  /** Where the player is. On load they appear at `checkpoint` if set, else at (x, y) in `room`. */
-  location: { room: string; x: number; y: number; checkpoint: string | null };
+  /**
+   * Where the player is: a map id and a tile (x, y), facing `dir`. On load they appear at `checkpoint`
+   * (a named spawn) if set, else at (x, y).
+   */
+  location: { room: string; x: number; y: number; checkpoint: string | null; dir?: Dir };
   venture: { purpose: number; venture: number };
   party: MemberId[];
   members: Partial<Record<MemberId, MemberState>>;
@@ -46,6 +49,16 @@ export interface GameState {
    * chapter). Cleared once that story segment finishes.
    */
   resume: { script: string; label: string } | null;
+  /** Quest progress by quest id (quests are defined in src/px/quest/quests.ts). */
+  quests: Record<string, QuestState>;
+}
+
+export type Dir = 'down' | 'up' | 'left' | 'right';
+
+export interface QuestState {
+  /** Index of the current step; equals the step count once the quest is done. */
+  step: number;
+  done: boolean;
 }
 
 export function newMember(id: MemberId, level = 1): MemberState {
@@ -56,15 +69,15 @@ export function newGame(): GameState {
   return {
     version: 1,
     playtimeMs: 0,
-    location: { room: 'frozen_shore', x: 0, y: 0, checkpoint: null },
-    venture: { purpose: 2, venture: 15 },
+    // The pixel game opens in Ragul's hostel room on the morning of the fest.
+    location: { room: 'hostel_room', x: 0, y: 0, checkpoint: 'start', dir: 'down' },
+    venture: { purpose: 1, venture: 1 },
     party: ['ragul'],
-    members: { ragul: newMember('ragul', 2) },
-    inventory: { red_rosoar: 2 },
+    members: { ragul: newMember('ragul', 1) },
+    inventory: {},
     riShards: 0,
-    abilities: ['sprint', 'double_jump'],
-    // The Glacia slice already knows about Ragul's Soul Hunger; Act I starts before it.
-    flags: { hunger_known: true },
+    abilities: [],
+    flags: {},
     relationships: {},
     codex: [],
     collected: [],
@@ -77,23 +90,8 @@ export function newGame(): GameState {
     objective: null,
     clues: [],
     resume: null,
+    quests: {},
   };
-}
-
-/**
- * A fresh game at the start of a Venture: the right room, the story's opening script queued, and
- * the party that Venture needs (the script's `@party` sets it precisely).
- */
-export function newGameAt(room: string, script: string, venture: { purpose: number; venture: number }): GameState {
-  const s = newGame();
-  delete s.flags.hunger_known;
-  s.location = { room, x: 0, y: 0, checkpoint: null };
-  s.venture = venture;
-  s.inventory = {};
-  s.resume = { script, label: 'start' };
-  // The four wake to their powers at the dance in Venture 1; any later start comes after it.
-  if (venture.purpose > 1 || venture.venture > 1) s.flags.powers_awakened = true;
-  return s;
 }
 
 /** Whether the four have their powers yet (flag `powers_awakened`, set at the dance in Venture 1). */

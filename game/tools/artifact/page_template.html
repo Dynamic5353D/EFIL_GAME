@@ -1,65 +1,72 @@
-<title>EFIL: The Game</title>
+<title>EFIL Chromepet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
-/*FONTS*/
 :root {
   color-scheme: dark;
-  --ink: #05070d;
-  --panel: #0b1220;
-  --edge: rgba(156, 201, 255, 0.28);
-  --text: #e8f0ff;
-  --dim: #8fa3bf;
-  --frost: #7fd4ff;
-  --frost-hi: #a8e2ff;
-  --gold: #ffd98a;
+  --ink: #1a1c2c;
+  --ink2: #2b2d45;
+  --paper: #f4efe0;
+  --frame: #2c4f86;
+  --gold: #f6c63c;
+  --gold-hi: #fde68a;
+  --slate: #4a5068;
+  --red: #c23a3a;
 }
-html, body { height: 100%; margin: 0; background: var(--ink); color: var(--text); overflow: hidden; }
+html, body { height: 100%; margin: 0; background: var(--ink); overflow: hidden; }
 #game { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-canvas { display: block; outline: none; }
+canvas { display: block; outline: none; image-rendering: pixelated; }
 #gate {
   position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
-  padding-inline: 16px; background: rgba(5, 7, 13, 0.84); backdrop-filter: blur(3px);
-  font-family: 'Alegreya Sans', 'Segoe UI', sans-serif;
+  padding-inline: 16px; background: rgba(26, 28, 44, 0.86);
+  font-family: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
 }
 #gate[hidden] { display: none; }
-#gate .card {
-  box-sizing: border-box; width: min(560px, 100%); max-height: 100%; overflow-y: auto;
-  display: grid; gap: 18px; padding: 28px clamp(18px, 4vw, 36px);
-  background: var(--panel); border: 1px solid var(--edge); border-radius: 14px;
+.card {
+  position: relative; box-sizing: border-box; width: min(520px, 100%); max-height: calc(100% - 32px); overflow-y: auto;
+  display: grid; gap: 16px; padding: 26px clamp(18px, 4vw, 32px);
+  background: var(--paper); color: var(--ink);
+  border: 4px solid var(--frame); border-radius: 6px;
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--gold), 0 6px 0 var(--ink2);
 }
-#gate h1 {
+h1 {
   margin: 0; text-align: center; text-wrap: balance;
-  font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: clamp(44px, 9vw, 64px);
-  letter-spacing: 0.22em; text-shadow: 0 0 24px rgba(127, 212, 255, 0.55);
+  font-family: 'Pixelify Sans', ui-monospace, monospace; font-weight: 700; font-size: clamp(44px, 10vw, 64px);
+  letter-spacing: 0.08em; color: var(--paper);
+  text-shadow: 3px 3px 0 var(--frame), -2px -2px 0 var(--ink), 2px -2px 0 var(--ink), -2px 2px 0 var(--ink), 2px 2px 0 var(--ink);
 }
-#gate .sub { margin: -10px 0 0; text-align: center; color: var(--dim); font-size: 13px; letter-spacing: 0.4em; text-transform: uppercase; }
-#gate dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; font-size: 16px; }
-#gate dt { color: var(--frost); }
-#gate dd { margin: 0; }
-#gate .note { margin: 0; color: var(--dim); font-size: 14px; line-height: 1.45; }
-#gate button {
-  justify-self: center; padding: 10px 34px; border: 0; border-radius: 8px; cursor: pointer;
-  font: 600 22px 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.08em; color: var(--ink); background: var(--frost);
+.sub { margin: -8px 0 0; text-align: center; color: var(--slate); font-family: 'Pixelify Sans', ui-monospace, monospace; font-size: 15px; letter-spacing: 0.06em; }
+dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 7px 16px; font-size: 15px; }
+dt { font-family: 'Pixelify Sans', ui-monospace, monospace; font-weight: 500; color: var(--frame); }
+dd { margin: 0; }
+kbd { font-family: inherit; }
+.note { margin: 0; color: var(--slate); font-size: 13.5px; line-height: 1.5; max-width: 62ch; }
+.note strong { color: var(--ink); }
+button {
+  justify-self: center; padding: 9px 34px; border: 3px solid var(--ink); border-radius: 4px; cursor: pointer;
+  font: 700 20px 'Pixelify Sans', ui-monospace, monospace; letter-spacing: 0.06em; color: var(--ink); background: var(--gold);
+  box-shadow: 0 3px 0 var(--ink);
 }
-#gate button:hover { background: var(--frost-hi); }
-#gate button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+button:hover { background: var(--gold-hi); }
+button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+button:focus-visible { outline: 3px solid var(--frame); outline-offset: 3px; }
+@media (max-width: 420px) { dl { grid-template-columns: 1fr; gap: 2px; } dd { margin-bottom: 6px; } }
 </style>
 <div id="game"></div>
 <div id="gate" role="dialog" aria-labelledby="gate-title">
   <div class="card">
     <h1 id="gate-title">EFIL</h1>
-    <p class="sub">Act I · review build</p>
+    <p class="sub">MIT, Chromepet · 29 September 2022</p>
     <dl>
-      <dt>&larr; &rarr; or A D</dt><dd>Move</dd>
-      <dt>Space or Z</dt><dd>Jump (hold for higher). Press again in mid-air to double jump.</dd>
-      <dt>Shift</dt><dd>Sprint (hold)</dd>
-      <dt>&darr;</dt><dd>Hide behind cover (a bin, a stall, a door)</dd>
-      <dt>E or &uarr;</dt><dd>Talk, look at things, rest</dd>
-      <dt>X</dt><dd>Attack (in Ragul's daydream)</dd>
-      <dt>Enter</dt><dd>Confirm, advance dialogue</dd>
-      <dt>Esc</dt><dd>Pause menu, back</dd>
-      <dt>L</dt><dd>Switch between English and Tanglish</dd>
+      <dt>Arrow keys</dt><dd>Walk. Tap one to turn on the spot.</dd>
+      <dt>Shift or X</dt><dd>Run (hold)</dd>
+      <dt>Z, Enter or E</dt><dd>Talk, look at things, confirm</dd>
+      <dt>X or Backspace</dt><dd>Back</dd>
+      <dt>Tab, C or Esc</dt><dd>Menu: journal, bag, Ragul, save, settings</dd>
+      <dt>L</dt><dd>Switch a line between English and Tanglish</dd>
     </dl>
-    <p class="note">EFIL is for players aged 16 and over. Needs a keyboard (a gamepad also works). New game starts Act I; Chapters on the title screen starts any Venture. The game saves at the start of each Venture and when you rest. Each room takes a few seconds to paint the first time you enter it. Clues gather in the menu under Case Board.</p>
+    <p class="note"><strong>First milestone of the pixel version:</strong> the hostel room and the MIT road, with twelve people to meet and one side quest. On first launch you choose the language for dialogue and for descriptions separately. For players aged 16 and over. A keyboard or gamepad is best; menus also work with a mouse.</p>
     <button id="play" type="button">Play</button>
   </div>
 </div>

@@ -8,3 +8,5 @@ tools/__pycache__/
 tools/.asset-cache.json
 tools/playtest/shots/
 tools/playtest/*.log
+tools/pixel/preview/
+tools/pixel/__pycache__/
