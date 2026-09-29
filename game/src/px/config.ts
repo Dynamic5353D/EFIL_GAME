@@ -2,9 +2,11 @@
 export const VIEW_W = 480;
 export const VIEW_H = 270;
 export const TILE = 16;
-/** Character frames are 16x24: the feet sit on the tile, the head pokes 8 px into the tile above. */
-export const CHAR_W = 16;
-export const CHAR_H = 24;
+/** Character frames are 24x32: the feet sit on the tile's bottom edge, the head rises into the tile above. */
+export const CHAR_W = 24;
+export const CHAR_H = 32;
+/** Dialogue portraits are square. */
+export const PORTRAIT = 48;
 /** Milliseconds per tile when walking and running. */
 export const WALK_MS = 220;
 export const RUN_MS = 120;

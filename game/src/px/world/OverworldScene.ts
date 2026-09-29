@@ -58,6 +58,7 @@ export class OverworldScene extends Phaser.Scene implements WorldHost {
   private turnUntil = 0;
   private stepping = false;
   private petals: { img: Phaser.GameObjects.Image; vx: number; vy: number; ph: number }[] = [];
+  private clouds: Phaser.GameObjects.Image[] = [];
   private data0!: OverworldData;
 
   constructor() {
@@ -86,7 +87,10 @@ export class OverworldScene extends Phaser.Scene implements WorldHost {
     advanceQuests(st);
 
     this.cameras.main.setBackgroundColor(0x0c0d16);
+    this.petals = [];
+    this.clouds = [];
     this.drawTiles();
+    this.drawGroundShadows();
     this.drawProps();
     this.drawSigns();
 
@@ -107,6 +111,7 @@ export class OverworldScene extends Phaser.Scene implements WorldHost {
     const tint = TINTS[def.tint ?? 'noon']!;
     if (tint.alpha > 0) this.add.rectangle(0, 0, VIEW_W, VIEW_H, tint.color, tint.alpha).setOrigin(0).setScrollFactor(0).setDepth(9000).setBlendMode(Phaser.BlendModes.MULTIPLY);
     if (def.petals) this.makePetals();
+    if (def.tint !== 'indoor') this.makeSky(def.tint === 'morning');
 
     audio.music(def.music);
     cam.fadeIn(250, 12, 13, 22);
@@ -139,6 +144,28 @@ export class OverworldScene extends Phaser.Scene implements WorldHost {
       this.props.push({ place: p, img });
     }
     this.applyPropFlags();
+  }
+
+  /** Contact shadows: along the foot of each building and down its sunless east side. */
+  private drawGroundShadows(): void {
+    const g = this.add.graphics().setDepth(-4);
+    for (const b of this.map.def.buildings ?? []) {
+      const x0 = b.x * TILE, y0 = b.y * TILE, w = b.w * TILE, h = (b.roof + b.wall) * TILE;
+      g.fillStyle(0x1a1c2c, 0.22).fillRect(x0 + 2, y0 + h, w, 3);
+      g.fillStyle(0x1a1c2c, 0.1).fillRect(x0 + 4, y0 + h + 3, w, 3);
+      g.fillStyle(0x1a1c2c, 0.18).fillRect(x0 + w, y0 + 6, 5, h - 3);
+      g.fillStyle(0x1a1c2c, 0.08).fillRect(x0 + w + 5, y0 + 10, 4, h - 7);
+    }
+  }
+
+  /** Slow cloud shadows over the ground and, in the morning, a warm wash of light. */
+  private makeSky(morning: boolean): void {
+    const mw = this.map.w * TILE, mh = this.map.h * TILE;
+    for (let i = 0; i < Math.max(2, Math.round((mw * mh) / 120000)); i++) {
+      const img = this.add.image(Math.random() * mw, Math.random() * mh, 'cloud').setDepth(8400).setAlpha(0.55).setScale(1.6);
+      this.clouds.push(img);
+    }
+    if (morning) this.add.image(0, 0, 'sun').setOrigin(0).setScale(2).setScrollFactor(0).setDepth(8600).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.5);
   }
 
   /** Building name boards over the doors. */
@@ -336,6 +363,11 @@ export class OverworldScene extends Phaser.Scene implements WorldHost {
 
   private updatePetals(delta: number): void {
     const dt = delta / 1000;
+    const mw = this.map.w * TILE;
+    for (const c of this.clouds) {
+      c.x += 5 * dt;
+      if (c.x - 220 > mw) c.x = -220;
+    }
     for (const p of this.petals) {
       p.ph += dt * 2;
       p.img.x += (p.vx + Math.sin(p.ph) * 10) * dt;

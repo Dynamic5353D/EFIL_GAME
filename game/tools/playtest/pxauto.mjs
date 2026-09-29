@@ -23,7 +23,7 @@ export default async ({ page, shot, wait }) => {
     const warps = [...m.warps.values()].map((v) => ({ key: `${m.def.id}:warp:${v.x},${v.y}`, x: v.x, y: v.y, dir: v.dir ?? null, to: v.to }));
     const occ = [...w.occupied];
     return {
-      map: m.def.id, busy: !!(ui.busy || w.busy || w.director.running || w.stepping), px: w.player.tx, py: w.player.ty, dir: w.player.dir,
+      map: m.def.id, busy: !!(ui.busy || w.busy || w.director.running), moving: !!w.stepping, px: w.player.tx, py: w.player.ty, dir: w.player.dir,
       solid: m.solid.map((r) => r.map((b) => (b ? 1 : 0)).join('')), occ, targets, warps,
       flags: JSON.stringify(st.flags), quests: st.quests, menu: window.game.scene.isActive('Menu'),
     };
@@ -80,6 +80,8 @@ export default async ({ page, shot, wait }) => {
       if (s.px !== tx || s.py !== ty) { log.push(`blocked ${d}x${n} from ${before.px},${before.py} at ${s.px},${s.py} (dir ${s.dir})`); return 'blocked'; }
       i += n;
     }
+    // Tile coordinates change when a step starts; wait for it to land before facing or talking.
+    for (let k = 0; k < 20 && (await snap()).moving; k++) await wait(30);
     return 'ok';
   };
 
@@ -89,6 +91,7 @@ export default async ({ page, shot, wait }) => {
   while (Date.now() - t0 < maxMs) {
     const s = await snap();
     if (s.menu) { await press('Escape'); continue; }
+    if (s.moving) { await wait(60); continue; }
     if (s.busy) {
       // Dialogue or a choice: the first option is fine.
       await press('KeyZ', 50);
@@ -116,8 +119,8 @@ export default async ({ page, shot, wait }) => {
       if (!w || idlePasses > 6) { log.push('NOTHING LEFT'); break; }
       visitedWarps.add(w.key);
       const p = bfs(s, [[w.x, w.y]], true);
-      log.push(`DOOR ${w.key} -> ${w.to}`);
-      if (p) await walk(p);
+      const res = p ? await walk(p) : 'no path';
+      log.push(`DOOR ${w.key} -> ${w.to}: ${res} (from ${s.px},${s.py}, path ${p ? p.join(',') : '-'})`);
       await wait(900);
       continue;
     }

@@ -700,6 +700,8 @@ def tiles() -> dict[str, Canvas]:
     out['zebra'] = road('zebra', 'zebra')
     out['kerb_n'] = kerb('kerbn', 'n')
     out['kerb_s'] = kerb('kerbs', 's')
+    out['kerb_nd'] = kerb('kerbnd', 'n')
+    out['kerb_sd'] = kerb('kerbsd', 's')
     out['pavers'] = pavers('pav0')
     out['pavers1'] = pavers('pav1')
     out['mosaic'] = floor('mos', 'mosaic')
@@ -710,3 +712,10 @@ def tiles() -> dict[str, Canvas]:
         out.update(building_parts(st))
     out.update(interior_parts())
     return out
+
+
+# ---------------------------------------------------------------------------------------------- second pass
+# Richer ground, building faces and trees (tiles_hd.py) replace the first-pass versions above.
+from tiles_hd import (  # noqa: E402
+    STYLES, building_parts, grass, kerb, palm, path_tile, pavers, petals, road, tree_copperpod, tree_neem,
+)

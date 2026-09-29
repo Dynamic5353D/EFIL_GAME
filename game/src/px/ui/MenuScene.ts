@@ -195,9 +195,10 @@ export class MenuScene extends Phaser.Scene {
     const st = session.state;
     const m = st.members.ragul!;
     const s = memberStats(st, 'ragul');
-    c.add(this.add.rectangle(f.x + 16, f.y + 30, 44, 44, COL.ink2).setOrigin(0));
+    c.add(this.add.rectangle(f.x + 16, f.y + 30, 52, 52, COL.ink2).setOrigin(0));
+    c.add(this.add.rectangle(f.x + 18, f.y + 32, 48, 48, COL.sky).setOrigin(0));
     c.add(this.add.image(f.x + 18, f.y + 32, 'portrait-ragul').setOrigin(0));
-    const x = f.x + 74;
+    const x = f.x + 80;
     c.add(txt(this, x, f.y + 32, `${tr(CHARACTERS.ragul.name)}   Lv ${m.level}`, COL.ink));
     const bar = (y: number, label: string, v: number, max: number, col: number) => {
       c.add(txt(this, x, y, label, COL.slate));
@@ -209,8 +210,8 @@ export class MenuScene extends Phaser.Scene {
     bar(f.y + 60, 'XP', m.xp, xpToNext(m.level), COL.blue);
     const rows: [Loc, number][] = [[loc('Attack', 'Thaakkudhal'), s.atk], [loc('Defence', 'Thadupu'), s.def], [loc('Speed', 'Vegam'), s.spd]];
     rows.forEach(([l, v], i) => {
-      c.add(txt(this, f.x + 20, f.y + 90 + i * 14, tr(l), COL.slate));
-      c.add(txt(this, f.x + 110, f.y + 90 + i * 14, String(v), COL.ink));
+      c.add(txt(this, f.x + 20, f.y + 96 + i * 14, tr(l), COL.slate));
+      c.add(txt(this, f.x + 110, f.y + 96 + i * 14, String(v), COL.ink));
     });
     const note = loc(
       'Second-year IT student at MIT, Chromepet. Writes stories at night. Gets headaches that no doctor can explain.',

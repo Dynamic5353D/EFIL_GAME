@@ -63,8 +63,8 @@ export function compileMap(def: MapDef, tiles: TileIndex, props: PropIndex): Com
         case '=': name = r < 600 ? 'road' : 'road1'; break;
         case '-': name = 'road_dash'; break;
         case 'z': name = 'zebra'; break;
-        case 'n': name = 'kerb_n'; break;
-        case 's': name = 'kerb_s'; break;
+        case 'n': name = x % 7 === 3 ? 'kerb_nd' : 'kerb_n'; break;
+        case 's': name = x % 7 === 5 ? 'kerb_sd' : 'kerb_s'; break;
         case 'm': name = 'mosaic'; break;
         case 'r': name = 'redoxide'; break;
         case 'E': name = 'exit_mat'; break;
@@ -106,8 +106,14 @@ export function compileMap(def: MapDef, tiles: TileIndex, props: PropIndex): Com
           if (isDoor && wj === b.wall - 2) part = 'door_top';
           else if (isDoor && wj === b.wall - 1) part = 'door_bot';
           else if (wj === b.wall - 1) part = `base_${col}`;
-          else if (col === 'c' && i % 2 === 1 && !(b.door && Math.abs(i - b.door.dx) < 1)) part = 'window';
-          else part = `wall_${col}`;
+          else {
+            // Upper floors get a ledge along their top; windows alternate with wall, a pipe near each end.
+            const lg = wj > 0 ? '_l' : '';
+            const nearDoor = b.door && Math.abs(i - b.door.dx) < 1;
+            if (col === 'c' && (i === 2 || i === b.w - 3) && !nearDoor && b.w > 7) part = `pipe${lg}`;
+            else if (col === 'c' && i % 2 === 1 && !nearDoor) part = `window${h2(x, y) % 3}${lg}`;
+            else part = `wall_${col}${lg}`;
+          }
         }
         building[y]![x] = T(`${s}_${part}`);
         // A locked door is part of the wall: you can only knock (a look on the door tile).

@@ -12,8 +12,8 @@ const H = 28;
  * Both ends are closed for the fest (the semi-open world opens them later).
  */
 const g = new Ground(W, H);
-g.rect(2, 8, 16, 3, 'p').rect(8, 11, 3, 2, 'p'); // hostel courtyard and its walk down to the road
-g.rect(32, 8, 13, 3, 'p').rect(37, 11, 3, 2, 'p'); // IT block courtyard
+g.rect(2, 9, 16, 2, 'p').rect(8, 11, 3, 2, 'p'); // hostel courtyard and its walk down to the road
+g.rect(32, 9, 13, 2, 'p').rect(37, 11, 3, 2, 'p'); // IT block courtyard
 g.rect(22, 3, 6, 2, ',').rect(47, 8, 5, 2, ',').rect(6, 22, 5, 2, ',').rect(30, 24, 6, 2, ',');
 g.rect(24, 20, 4, 2, ';').rect(44, 22, 5, 3, ';');
 g.row(12, '*'); // the copper-pod verge
@@ -36,7 +36,7 @@ const props: PropPlace[] = [
   { kind: 'dog_sleep', x: 27, y: 10 },
   { kind: 'palm', x: 47, y: 5 },
   { kind: 'palm', x: 52, y: 4 },
-  { kind: 'palm', x: 29, y: 4 },
+  { kind: 'palm', x: 28, y: 5 },
   { kind: 'hedge', x: 0, y: 7 },
   { kind: 'hedge', x: 1, y: 7 },
   { kind: 'hedge', x: 18, y: 7 },
@@ -46,14 +46,14 @@ const props: PropPlace[] = [
   { kind: 'scooter_blue', x: 4, y: 10 },
   { kind: 'notice_board', x: 14, y: 10 },
   { kind: 'dustbin', x: 16, y: 10 },
-  { kind: 'flowerpot', x: 7, y: 8 },
-  { kind: 'flowerpot', x: 11, y: 8 },
+  { kind: 'flowerpot', x: 7, y: 9 },
+  { kind: 'flowerpot', x: 11, y: 9 },
   { kind: 'tea_stall', x: 18, y: 11 },
   { kind: 'lamp', x: 21, y: 11 },
   // the IT block
   { kind: 'notice_board', x: 34, y: 10 },
-  { kind: 'flowerpot', x: 36, y: 8 },
-  { kind: 'flowerpot', x: 40, y: 8 },
+  { kind: 'flowerpot', x: 36, y: 9 },
+  { kind: 'flowerpot', x: 40, y: 9 },
   { kind: 'signpost', x: 42, y: 10 },
   { kind: 'lamp', x: 31, y: 11 },
   // the south lawn
@@ -85,18 +85,18 @@ export const MIT_ROAD: MapDef = {
   petals: true,
   ground: g.done(),
   buildings: [
-    { x: 3, y: 2, w: 12, roof: 3, wall: 3, style: 'hostel', door: { dx: 6, to: 'hostel_room', spawn: 'door' }, sign: loc('Boys\' hostel', 'Boys hostel') },
+    { x: 3, y: 1, w: 12, roof: 3, wall: 5, style: 'hostel', door: { dx: 6, to: 'hostel_room', spawn: 'door' }, sign: loc('Boys\' hostel', 'Boys hostel') },
     {
-      x: 31, y: 2, w: 16, roof: 3, wall: 3, style: 'dept', sign: loc('Dept. of Information Technology', 'IT Department'),
+      x: 31, y: 1, w: 16, roof: 3, wall: 5, style: 'dept', sign: loc('Dept. of IT', 'IT Department'),
       door: { dx: 7, to: 'mit_road', spawn: 'it_door', locked: true },
     },
   ],
   props,
   spawns: {
-    hostel_door: { x: 9, y: 8, dir: 'down' },
+    hostel_door: { x: 9, y: 9, dir: 'down' },
   },
   looks: [
-    { x: 38, y: 7, talk: { script: S, label: 'it_locked' } },
+    { x: 38, y: 8, talk: { script: S, label: 'it_locked' } },
     ...board(14, 10, 'board_a'),
     ...board(34, 10, 'board_b'),
     ...board(45, 21, 'board_c'),
@@ -115,7 +115,7 @@ export const MIT_ROAD: MapDef = {
     { id: 'kabi', sprite: 'kabi', speaker: 'kabi', x: 31, y: 13, dir: 'left', talk: { script: S, label: 'kabi' } },
     { id: 'sneya', sprite: 'sneya', speaker: 'sneya', x: 41, y: 9, dir: 'right', move: { kind: 'look' }, talk: { script: S, label: 'sneya' } },
     { id: 'sneka', sprite: 'sneka', speaker: 'sneka', x: 42, y: 9, dir: 'left', talk: { script: S, label: 'sneka' } },
-    { id: 'veerabhadran', sprite: 'veerabhadran', speaker: 'veerabhadran', x: 35, y: 9, dir: 'down', move: { kind: 'look' }, talk: { script: S, label: 'veerabhadran' } },
+    { id: 'veerabhadran', sprite: 'veerabhadran', speaker: 'veerabhadran', x: 33, y: 10, dir: 'down', move: { kind: 'look' }, talk: { script: S, label: 'veerabhadran' } },
     { id: 'guard', sprite: 'security', speaker: 'security', x: 54, y: 15, dir: 'left', talk: { script: S, label: 'guard' } },
     { id: 'lawn_guy', sprite: 'guy_b', speaker: 'guy', x: 24, y: 21, dir: 'down', move: { kind: 'wander', r: 3 }, talk: { script: S, label: 'lawn_guy' } },
     { id: 'reader', sprite: 'guy_c', speaker: 'guy', x: 37, y: 22, dir: 'down', talk: { script: S, label: 'reader' } },

@@ -17,7 +17,7 @@ export interface SayOpts {
   kind: TextKind;
 }
 
-const BOX = { x: 6, y: VIEW_H - 64, w: VIEW_W - 12, h: 58 };
+const BOX = { x: 6, y: VIEW_H - 68, w: VIEW_W - 12, h: 62 };
 
 /**
  * Everything drawn over the world: the dialogue box, choices, notices, captions, the location banner,
@@ -52,10 +52,11 @@ export class UiScene extends Phaser.Scene {
       c.add(win(this, BOX.x, BOX.y, BOX.w, BOX.h));
       let tx = BOX.x + 12;
       if (o.portrait && this.textures.exists(o.portrait)) {
-        c.add(this.add.rectangle(BOX.x + 8, BOX.y + 8, 42, 42, COL.ink2).setOrigin(0));
-        c.add(this.add.rectangle(BOX.x + 9, BOX.y + 9, 40, 40, COL.sky).setOrigin(0));
-        c.add(this.add.image(BOX.x + 9, BOX.y + 9, o.portrait).setOrigin(0));
-        tx = BOX.x + 58;
+        c.add(this.add.rectangle(BOX.x + 6, BOX.y + 6, 50, 50, COL.ink2).setOrigin(0));
+        c.add(this.add.rectangle(BOX.x + 7, BOX.y + 7, 48, 48, COL.sky).setOrigin(0));
+        c.add(this.add.rectangle(BOX.x + 7, BOX.y + 31, 48, 24, 0xa8d4ee).setOrigin(0));
+        c.add(this.add.image(BOX.x + 7, BOX.y + 7, o.portrait).setOrigin(0));
+        tx = BOX.x + 64;
       }
       if (o.name) {
         const w = textWidth(this, o.name) + 18;
@@ -63,7 +64,7 @@ export class UiScene extends Phaser.Scene {
         c.add(txt(this, BOX.x + 15, BOX.y - 9, o.name, o.color, COL.ink));
       }
       const maxW = BOX.x + BOX.w - 14 - tx;
-      const text = txt(this, tx, BOX.y + 9, '', kind === 'desc' && !o.name ? COL.ink2 : COL.ink);
+      const text = txt(this, tx, BOX.y + 11, '', kind === 'desc' && !o.name ? COL.ink2 : COL.ink);
       c.add(text);
       const more = this.add.image(BOX.x + BOX.w - 14, BOX.y + BOX.h - 9, 'ui', 'more').setVisible(false);
       c.add(more);

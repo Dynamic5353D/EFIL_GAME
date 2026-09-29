@@ -14,6 +14,7 @@ export const opposite = (d: Dir): Dir => ({ down: 'up', up: 'down', left: 'right
  */
 export class Walker {
   readonly sprite: Phaser.GameObjects.Sprite;
+  private readonly shadow: Phaser.GameObjects.Image;
   tx: number;
   ty: number;
   dir: Dir;
@@ -24,6 +25,7 @@ export class Walker {
     this.tx = tx;
     this.ty = ty;
     this.dir = dir;
+    this.shadow = scene.add.image(0, 0, 'shadow').setDepth(-3);
     this.sprite = scene.add.sprite(0, 0, `char-${sheet}`, ROW[dir] * 3).setOrigin(0.5, 1);
     this.place();
   }
@@ -31,8 +33,13 @@ export class Walker {
   get px() { return this.tx * TILE + TILE / 2; }
   get py() { return this.ty * TILE + TILE; }
 
+  private syncShadow(): void {
+    this.shadow.setPosition(this.sprite.x, this.sprite.y - 2);
+  }
+
   place(): void {
     this.sprite.setPosition(this.px, this.py);
+    this.syncShadow();
     this.sprite.setDepth(this.py);
     this.stand();
   }
@@ -63,12 +70,14 @@ export class Walker {
         duration: ms,
         onUpdate: (tw) => {
           this.sprite.setDepth(this.sprite.y);
+          this.syncShadow();
           if (tw.progress > 0.5) this.sprite.setFrame(ROW[this.dir] * 3);
         },
         onComplete: () => {
           this.moving = false;
           this.sprite.setPosition(this.px, this.py);
           this.sprite.setDepth(this.py);
+          this.syncShadow();
           resolve();
         },
       });
@@ -82,6 +91,7 @@ export class Walker {
   }
 
   destroy(): void {
+    this.shadow.destroy();
     this.sprite.destroy();
   }
 }

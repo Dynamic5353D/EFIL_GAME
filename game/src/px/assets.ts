@@ -60,6 +60,40 @@ export function registerPixelArt(scene: Phaser.Scene): void {
       }
     });
   }
+  // A soft ground shadow for people.
+  if (!tex.exists('shadow')) {
+    const g = scene.make.graphics({}, false);
+    g.fillStyle(0x1a1c2c, 0.18).fillEllipse(8, 3, 16, 6).fillStyle(0x1a1c2c, 0.22).fillEllipse(8, 3, 12, 4);
+    g.generateTexture('shadow', 16, 6);
+    g.destroy();
+  }
+  // Cloud shadows: a few soft blobs drawn once into a texture.
+  if (!tex.exists('cloud')) {
+    const cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 128;
+    const cx = cv.getContext('2d')!;
+    for (const [x, y, r] of [[70, 64, 50], [120, 50, 56], [170, 70, 46], [110, 84, 40], [200, 58, 34]] as const) {
+      const gr = cx.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, 'rgba(40,46,80,0.5)');
+      gr.addColorStop(1, 'rgba(40,46,80,0)');
+      cx.fillStyle = gr;
+      cx.fillRect(0, 0, 256, 128);
+    }
+    tex.addCanvas('cloud', cv);
+  }
+  // Morning light: warm from the top left, fading across the screen.
+  if (!tex.exists('sun')) {
+    const cv = document.createElement('canvas');
+    cv.width = 240; cv.height = 135;
+    const cx = cv.getContext('2d')!;
+    const gr = cx.createRadialGradient(0, 0, 10, 0, 0, 260);
+    gr.addColorStop(0, 'rgba(255,214,150,0.55)');
+    gr.addColorStop(0.5, 'rgba(255,200,140,0.18)');
+    gr.addColorStop(1, 'rgba(255,200,140,0)');
+    cx.fillStyle = gr;
+    cx.fillRect(0, 0, 240, 135);
+    tex.addCanvas('sun', cv);
+  }
   // A 2x2 petal for the falling copper-pod flowers.
   if (!tex.exists('petal')) {
     const g = scene.make.graphics({}, false);
