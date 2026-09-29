@@ -46,7 +46,8 @@ A 2D side-scrolling story RPG (16+), adapted from the user's novel and art.
   - A room's painted layers are drawn on the CPU on first visit and then cached for the session. That took about 3.5 s in headless Chromium, which renders in software; it has not been timed on real hardware.
 - [x] **M2 (Act I, Purpose 1):** built, **awaiting the user's review**. New game starts at Venture 1; Title, Chapters starts any Venture (all unlocked in this build) or the M1 Glacia slice. See `docs/act1.md` and `docs/decisions.md`.
   - 13 Earth rooms with code-painted backdrops (`data/rooms_p01.ts`), 12 scripts `src/story/p01/v01..v12.story` in English and the novel's Tanglish, 5 word battles, the daydream fights, stealth, chases, the Case Board and Memory Fragments.
-  - Dev jump: `?venture=5` starts that Venture in slot 3; add `&label=walk` to start at a label, `&fast` for fast battles.
+  - Dev jump: `?venture=5` starts that Venture in slot 3; add `&label=walk` to start at a label (and `&room=mit_road` to start that label in another room), `&fast` for fast battles.
+  - Play-test round 2 (29 Sep): staged story scenes with a cinematic camera (`scenes/StageScene.ts`, commands in `story/parser.ts`), the pause menu rework, the powers waking at the V1 dance, Memory Fragment bonuses. See `docs/decisions.md`.
 - [ ] M3–M11: Acts II–X
 - [ ] M12: polish
 
